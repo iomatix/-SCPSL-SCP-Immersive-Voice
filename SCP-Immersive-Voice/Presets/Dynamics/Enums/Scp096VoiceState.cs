@@ -8,6 +8,7 @@
         Enraging,
         Enraged,
         Charging,
+        Charged,
         PryingGate
     }
 

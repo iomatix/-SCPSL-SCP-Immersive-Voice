@@ -2,6 +2,7 @@
 {
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.Scp096Events;
+    using LabApi.Events.Arguments.Scp939Events;
     using LabApi.Features.Audio;
     using LabApi.Features.Wrappers;
     using PlayerRoles;
@@ -19,11 +20,19 @@
     public class ScpVoiceEventHandler
     {
         private readonly ImmersiveScpVoiceConfig _config;
-        private readonly Dictionary<Player, Scp096VoiceStateController> _scp096State = new Dictionary<Player, Scp096VoiceStateController>();
 
         private readonly OpusDecoder _decoder = new OpusDecoder();
         private readonly OpusEncoder _encoder = new OpusEncoder(OpusApplicationType.Audio);
 
+        // Constructor
+        public ScpVoiceEventHandler(ImmersiveScpVoiceConfig config)
+        {
+            _config = config;
+        }
+
+        #region SCP State Tracking Controllers
+        // SCP-096 Dynamic State Tracking
+        private readonly Dictionary<Player, Scp096VoiceStateController> _scp096State = new Dictionary<Player, Scp096VoiceStateController>();
         public Dictionary<Player, Scp096VoiceStateController> Scp096States => _scp096State;
         private Scp096VoiceStateController Get096State(Player player)
         {
@@ -35,11 +44,25 @@
 
             return controller;
         }
-        public ScpVoiceEventHandler(ImmersiveScpVoiceConfig config)
-        {
-            _config = config;
-        }
 
+        // SCP-939 Dynamic State Tracking
+        private readonly Dictionary<Player, Scp939VoiceStateController> _scp939State = new Dictionary<Player, Scp939VoiceStateController>();
+
+        public Dictionary<Player, Scp939VoiceStateController> Scp939States => _scp939State;
+
+        private Scp939VoiceStateController Get939State(Player player)
+        {
+            if (!_scp939State.TryGetValue(player, out var controller))
+            {
+                controller = new Scp939VoiceStateController();
+                _scp939State[player] = controller;
+            }
+
+            return controller;
+        }
+        #endregion
+
+        #region Player Voice Events
         public void OnSendingVoiceMessage(PlayerSendingVoiceMessageEventArgs ev)
         {
             if (_config.EnableScpVoiceEffects)
@@ -64,10 +87,25 @@
             if (distance > _config.ProximityDistance) ev.IsAllowed = false;
 
         }
+        #endregion
+
+        #region SCP Dynamic State Events
+        // ----------------------
+        // SCP-096 dynamic states
+        // ----------------------
+        public void On096StartingCrying(Scp096StartCryingEventArgs ev)
+        {
+            Get096State(ev.Player).CurrentState = Scp096VoiceState.Crying;
+        }
 
         public void On096StartedCrying(Scp096StartedCryingEventArgs ev)
         {
             Get096State(ev.Player).CurrentState = Scp096VoiceState.Crying;
+        }
+
+        public void On096Enraging(Scp096EnragingEventArgs ev)
+        {
+            Get096State(ev.Player).CurrentState = Scp096VoiceState.Enraging;
         }
 
         public void On096Enraged(Scp096EnragedEventArgs ev)
@@ -85,8 +123,64 @@
             Get096State(ev.Player).CurrentState = Scp096VoiceState.Charging;
         }
 
+        public void On096Charged(Scp096ChargedEventArgs ev)
+        {
+            Get096State(ev.Player).CurrentState = Scp096VoiceState.Charged;
+        }
+
+        // ----------------------
+        // SCP-939 dynamic states
+        // ----------------------
+        public void On939MimickingEnvironment(Scp939MimickingEnvironmentEventArgs ev)
+        {
+            Get939State(ev.Player).CurrentState = Scp939VoiceState.Mimicking;
+        }
+
+        public void On939MimickedEnvironment(Scp939MimickedEnvironmentEventArgs ev)
+        {
+            Get939State(ev.Player).CurrentState = Scp939VoiceState.IdleWhisper;
+        }
+
+        public void On939Focused(Scp939FocusedEventArgs ev)
+        {
+            Get939State(ev.Player).CurrentState = Scp939VoiceState.Focused;
+        }
+
+        public void On939Attacking(Scp939AttackingEventArgs ev)
+        {
+            Get939State(ev.Player).CurrentState = Scp939VoiceState.Attacking;
+        }
+
+        public void On939Attacked(Scp939AttackedEventArgs ev)
+        {
+            Get939State(ev.Player).CurrentState = Scp939VoiceState.IdleWhisper;
+        }
+
+        public void On939Lunging(Scp939LungingEventArgs ev)
+        {
+            Get939State(ev.Player).CurrentState = Scp939VoiceState.Attacking;
+        }
+
+        public void On939Lunged(Scp939LungedEventArgs ev)
+        {
+            Get939State(ev.Player).CurrentState = Scp939VoiceState.IdleWhisper;
+        }
+
+        public void On939CreatingAmnesticCloud(Scp939CreatingAmnesticCloudEventArgs ev)
+        {
+            Get939State(ev.Player).CurrentState = Scp939VoiceState.AmnesticCloud;
+        }
+
+        public void On939CreatedAmnesticCloud(Scp939CreatedAmnesticCloudEventArgs ev)
+        {
+            Get939State(ev.Player).CurrentState = Scp939VoiceState.IdleWhisper;
+        }
+        #endregion
 
 
+        // ----------------------
+        // Core audio processing
+        // ----------------------
         private void ApplyEffects(byte[] data, int length, Player player)
         {
             float[] pcm = new float[AudioTransmitter.FrameSize];

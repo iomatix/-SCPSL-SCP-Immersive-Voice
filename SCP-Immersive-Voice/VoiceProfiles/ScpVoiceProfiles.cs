@@ -54,6 +54,12 @@
             if (preset.Reverb > 0f)
                 p.Add(new ReverbEffect(preset.Reverb));
 
+            if (preset.BreathNoise > 0f)
+                p.Add(new BreathNoiseEffect(preset.BreathNoise));
+
+            if (preset.WhisperAmount > 0f)
+                p.Add(new WhisperFilterEffect(preset.WhisperAmount));
+
             return p;
         }
 

@@ -1,7 +1,4 @@
-﻿using PlayerRoles;
-using System.Collections.Generic;
-
-namespace SCP_Immersive_Voice.Presets
+﻿namespace SCP_Immersive_Voice.Presets
 {
     public class ScpVoicePreset
     {
@@ -13,6 +10,9 @@ namespace SCP_Immersive_Voice.Presets
         public float LowPass { get; set; } = 0f;
         public float HighPass { get; set; } = 0f;
         public float Reverb { get; set; } = 0f;
+        public float BreathNoise { get; set; } = 0f;
+        public float WhisperAmount { get; set; } = 0f;
+
     }
 
 }

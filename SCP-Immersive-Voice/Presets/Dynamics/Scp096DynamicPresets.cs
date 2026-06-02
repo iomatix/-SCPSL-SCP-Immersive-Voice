@@ -47,6 +47,13 @@
             HighPass = 600f
         };
 
+        public static ScpVoicePreset ChargedPreset = new ScpVoicePreset()
+        {
+            Pitch = 1.2f,
+            Distortion = 2.15f,
+            HighPass = 650f
+        };
+
         public static ScpVoicePreset PryingPreset = new ScpVoicePreset()
         {
             Pitch = 1.1f,
@@ -70,6 +77,8 @@
                     return RagePreset;
                 case Scp096VoiceState.Charging:
                     return ChargingPreset;
+                case Scp096VoiceState.Charged:
+                    return ChargedPreset;
                 case Scp096VoiceState.PryingGate:
                     return PryingPreset;
                 default:

@@ -28,15 +28,34 @@
             _eventHandler = new ScpVoiceEventHandler(Config);
             PlayerEvents.SendingVoiceMessage += _eventHandler.OnSendingVoiceMessage;
             PlayerEvents.ReceivingVoiceMessage += _eventHandler.OnReceivingVoiceMessage;
-            
+
+            #region SCP Event Handlers
+            Scp096Events.Enraging += _eventHandler.On096Enraging;
             Scp096Events.Enraged += _eventHandler.On096Enraged;
+            Scp096Events.StartCrying += _eventHandler.On096StartingCrying;
             Scp096Events.StartedCrying += _eventHandler.On096StartedCrying;
             Scp096Events.TryingNotToCry += _eventHandler.On096TryingNotToCry;
             Scp096Events.Charging += _eventHandler.On096Charging;
-
+            Scp096Events.Charged += _eventHandler.On096Charged;
             ScpVoiceProfiles.DynamicProviders.Add(
                 new Scp096DynamicPresetProvider(_eventHandler.Scp096States)
             );
+
+            Scp939Events.MimickingEnvironment += _eventHandler.On939MimickingEnvironment;
+            Scp939Events.MimickedEnvironment += _eventHandler.On939MimickedEnvironment;
+            Scp939Events.Focused += _eventHandler.On939Focused;
+            Scp939Events.Attacking += _eventHandler.On939Attacking;
+            Scp939Events.Attacked += _eventHandler.On939Attacked;
+            Scp939Events.Lunging += _eventHandler.On939Lunging;
+            Scp939Events.Lunged += _eventHandler.On939Lunged;
+            Scp939Events.CreatingAmnesticCloud += _eventHandler.On939CreatingAmnesticCloud;
+            Scp939Events.CreatedAmnesticCloud += _eventHandler.On939CreatedAmnesticCloud;
+            ScpVoiceProfiles.DynamicProviders.Add(
+                new Scp939DynamicPresetProvider(_eventHandler.Scp939States)
+            );
+            #endregion
+
+
 
         }
 
@@ -46,11 +65,27 @@
             {
                 PlayerEvents.SendingVoiceMessage -= _eventHandler.OnSendingVoiceMessage;
                 PlayerEvents.ReceivingVoiceMessage -= _eventHandler.OnReceivingVoiceMessage;
-                
+
+                #region SCP Event Handlers
+                Scp096Events.Enraging -= _eventHandler.On096Enraging;
                 Scp096Events.Enraged -= _eventHandler.On096Enraged;
+                Scp096Events.StartCrying -= _eventHandler.On096StartingCrying;
                 Scp096Events.StartedCrying -= _eventHandler.On096StartedCrying;
                 Scp096Events.TryingNotToCry -= _eventHandler.On096TryingNotToCry;
                 Scp096Events.Charging -= _eventHandler.On096Charging;
+                Scp096Events.Charged -= _eventHandler.On096Charged;
+
+                Scp939Events.MimickingEnvironment -= _eventHandler.On939MimickingEnvironment;
+                Scp939Events.MimickedEnvironment -= _eventHandler.On939MimickedEnvironment;
+                Scp939Events.Focused -= _eventHandler.On939Focused;
+                Scp939Events.Attacking -= _eventHandler.On939Attacking;
+                Scp939Events.Attacked -= _eventHandler.On939Attacked;
+                Scp939Events.Lunging -= _eventHandler.On939Lunging;
+                Scp939Events.Lunged -= _eventHandler.On939Lunged;
+                Scp939Events.CreatingAmnesticCloud -= _eventHandler.On939CreatingAmnesticCloud;
+                Scp939Events.CreatedAmnesticCloud -= _eventHandler.On939CreatedAmnesticCloud;
+                #endregion
+
                 _eventHandler = null;
             }
         }
