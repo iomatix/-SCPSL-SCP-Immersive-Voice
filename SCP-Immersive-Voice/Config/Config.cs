@@ -19,6 +19,11 @@
         [Description("Audio effect presets for each SCP role")]
         public Dictionary<RoleTypeId, ScpVoicePreset> Presets { get; set; } = ScpVoiceDefaultPresets.Create();
 
+        [Description("Roles excluded from SCP proximity voice")]
+        public HashSet<RoleTypeId> ForbiddenProximity { get; set; } = new HashSet<RoleTypeId>()
+        {
+            RoleTypeId.Scp079,
+        };
 
     }
 }

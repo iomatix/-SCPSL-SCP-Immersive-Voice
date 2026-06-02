@@ -2,6 +2,7 @@
 {
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Features.Audio;
+    using LabApi.Features.Extensions;
     using PlayerRoles;
     using SCP_Immersive_Voice.VoiceProfiles;
     using ScpImmersiveVoice.Config;
@@ -24,30 +25,32 @@
             _config = config;
         }
 
-        private static readonly HashSet<RoleTypeId> ForbiddenProximity = new HashSet<RoleTypeId>()
-        {
-            RoleTypeId.Scp079,   // monitor
-            // RoleTypeId.Scp939,   // whisper system
-        };
-
         public void OnSendingVoiceMessage(PlayerSendingVoiceMessageEventArgs ev)
         {
-                if (ev.Player.Role.GetFaction() == Faction.SCP && _config.EnableScpProximityVoice)
-                {
-                    ev.Message.Channel = VoiceChatChannel.Proximity;
+            
 
-                    if (_config.EnableScpVoiceEffects) ApplyEffects(ev.Message.Data, ev.Message.DataLength, ev.Player.Role);
-                }
+            if (_config.EnableScpVoiceEffects && _config.Presets.TryGetValue(ev.Player.Role, out var preset) && preset.Enable)
+            {
+                ApplyEffects(ev.Message.Data, ev.Message.DataLength, ev.Player.Role);
+            }
+
+            if (!_config.EnableScpProximityVoice) return;
+            if (ev.Player.Role.GetFaction() != Faction.SCP) return;
+            if (_config.ForbiddenProximity.Contains(ev.Player.Role)) return;
+            
+
+            ev.Message.Channel = VoiceChatChannel.Proximity;     
         }
 
         public void OnReceivingVoiceMessage(PlayerReceivingVoiceMessageEventArgs ev)
         {
-            if (ev.Sender.Role.GetFaction() == Faction.SCP && _config.EnableScpProximityVoice)
-            {
-                float distance = Vector3.Distance(ev.Player.Position, ev.Sender.Position);
-                if (distance > _config.ProximityDistance)
-                    ev.IsAllowed = false;
-            }
+            if (!_config.EnableScpProximityVoice) return;
+            if (ev.Sender.Role.GetFaction() != Faction.SCP) return;
+            if (_config.ForbiddenProximity.Contains(ev.Sender.Role)) return;   
+
+            float distance = Vector3.Distance(ev.Player.Position, ev.Sender.Position);
+            if (distance > _config.ProximityDistance) ev.IsAllowed = false;
+
         }
 
         private void ApplyEffects(byte[] data, int length, RoleTypeId role)
