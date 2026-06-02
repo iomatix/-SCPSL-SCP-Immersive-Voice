@@ -29,10 +29,13 @@
             {
                 ev.Message.Channel = VoiceChatChannel.Proximity;
 
-                if (_config.ApplyDistortion)
+                if (ev.Player.Role.GetFaction() == Faction.SCP && _config.EnableScpProximityVoice)
                 {
-                    ApplyEffects(ev.Message.Data, ev.Message.DataLength, ev.Player.Role);
+                    ev.Message.Channel = VoiceChatChannel.Proximity;
+
+                    if (_config.EnableScpVoiceEffects) ApplyEffects(ev.Message.Data, ev.Message.DataLength, ev.Player.Role);
                 }
+
             }
         }
 
