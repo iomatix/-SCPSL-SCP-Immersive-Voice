@@ -13,11 +13,21 @@
 
         public void Process(float[] pcm, int samples)
         {
+            if (samples < 2)
+                return;
+
             float[] temp = new float[samples];
 
             for (int i = 0; i < samples; i++)
             {
                 float src = i / _pitch;
+
+                // CLAMP src
+                if (src < 0)
+                    src = 0;
+                if (src > samples - 1)
+                    src = samples - 1;
+
                 int i0 = (int)src;
                 int i1 = Math.Min(i0 + 1, samples - 1);
                 float frac = src - i0;
@@ -27,6 +37,7 @@
 
             Array.Copy(temp, pcm, samples);
         }
+
     }
 
 }
