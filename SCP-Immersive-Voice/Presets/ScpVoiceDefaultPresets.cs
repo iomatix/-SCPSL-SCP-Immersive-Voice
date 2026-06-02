@@ -111,37 +111,42 @@
                 [RoleTypeId.Flamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 1.4f,
-                    Formant = 1f,
-                    Distortion = 1.1f
+                    Pitch = 1.45f,
+                    Formant = 1.25f,
+                    Distortion = 0.15f,
+                    Chirp = 0.4f
                 },
                 [RoleTypeId.AlphaFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 1.4f,
-                    Formant = 1f,
-                    Distortion = 1.1f
+                    Pitch = 1.35f,
+                    Formant = 1.2f,
+                    Distortion = 0.2f,
+                    Chirp = 0.35f
                 },
                 [RoleTypeId.ZombieFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 1.4f,
-                    Formant = 1f,
-                    Distortion = 1.1f
+                    Pitch = 1.1f,
+                    Formant = 0.9f,
+                    Distortion = 0.4f,
+                    Chirp = 0.2f
                 },
                 [RoleTypeId.NtfFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 1.4f,
-                    Formant = 1f,
-                    Distortion = 1.1f
+                    Pitch = 1.3f,
+                    Formant = 1.1f,
+                    Distortion = 0.25f,
+                    Chirp = 0.3f
                 },
                 [RoleTypeId.ChaosFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 1.4f,
-                    Formant = 1f,
-                    Distortion = 1.1f
+                    Pitch = 1.25f,
+                    Formant = 1.05f,
+                    Distortion = 0.3f,
+                    Chirp = 0.25f
                 },
             };
         }

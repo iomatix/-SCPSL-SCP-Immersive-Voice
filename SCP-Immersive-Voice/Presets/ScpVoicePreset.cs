@@ -26,6 +26,7 @@
         public float Guttural { get; set; } = 0f;
         public float DryCrackle { get; set; } = 0f;
         public float Subharmonic { get; set; } = 0f;
+        public float Chirp { get; set; } = 0f;
 
 
     }

@@ -102,6 +102,9 @@
             if (preset.Subharmonic > 0f)
                 p.Add(new SubharmonicGrowlEffect(preset.Subharmonic));
 
+            if (preset.Chirp > 0f)
+                p.Add(new ChirpEffect(preset.Chirp));
+
             return p;
         }
 
