@@ -66,6 +66,20 @@
             if (preset.StoneGrind > 0f)
                 p.Add(new StoneGrindEffect(preset.StoneGrind));
 
+            if (preset.WetDecay > 0f)
+                p.Add(new WetDecayEffect(preset.WetDecay));
+
+            if (preset.PocketEcho > 0f)
+                p.Add(new PocketDimensionEchoEffect(preset.PocketEcho));
+
+            if (preset.FormantDrift > 0f)
+                p.Add(new FormantDriftEffect(preset.FormantDrift));
+
+            if (preset.FleshCrackle > 0f)
+                p.Add(new FleshCrackleEffect(preset.FleshCrackle));
+
+            if (preset.WetOrganic > 0f)
+                p.Add(new WetOrganicEffect(preset.WetOrganic));
 
             return p;
         }

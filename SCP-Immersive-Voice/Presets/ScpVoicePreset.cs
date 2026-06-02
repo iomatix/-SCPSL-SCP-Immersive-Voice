@@ -14,6 +14,11 @@
         public float WhisperAmount { get; set; } = 0f;
         public float StoneCrack { get; set; } = 0f;
         public float StoneGrind { get; set; } = 0f;
+        public float WetDecay { get; set; } = 0f;
+        public float PocketEcho { get; set; } = 0f;
+        public float FormantDrift { get; set; } = 0f;
+        public float FleshCrackle { get; set; } = 0f;
+        public float WetOrganic { get; set; } = 0f;
 
     }
 

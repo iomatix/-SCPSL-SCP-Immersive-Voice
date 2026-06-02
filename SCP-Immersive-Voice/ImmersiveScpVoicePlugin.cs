@@ -28,7 +28,6 @@
             _eventHandler = new ScpVoiceEventHandler(Config);
             PlayerEvents.SendingVoiceMessage += _eventHandler.OnSendingVoiceMessage;
             PlayerEvents.ReceivingVoiceMessage += _eventHandler.OnReceivingVoiceMessage;
-
             #region SCP Event Handlers
             Scp096Events.Enraging += _eventHandler.On096Enraging;
             Scp096Events.Enraged += _eventHandler.On096Enraged;
@@ -52,6 +51,18 @@
             Scp939Events.CreatedAmnesticCloud += _eventHandler.On939CreatedAmnesticCloud;
             ScpVoiceProfiles.DynamicProviders.Add(
                 new Scp939DynamicPresetProvider(_eventHandler.Scp939States)
+            );
+
+            Scp3114Events.Disguising += _eventHandler.On3114Disguising;
+            Scp3114Events.Disguised += _eventHandler.On3114Disguised;
+            Scp3114Events.Revealing += _eventHandler.On3114Revealing;
+            Scp3114Events.Revealed += _eventHandler.On3114Revealed;
+            Scp3114Events.StrangleStarting += _eventHandler.On3114StrangleStarting;
+            Scp3114Events.StrangleStarted += _eventHandler.On3114StrangleStarted;
+            Scp3114Events.StrangleAborting += _eventHandler.On3114StrangleAborting;
+            Scp3114Events.StrangleAborted += _eventHandler.On3114StrangleAborted;
+            ScpVoiceProfiles.DynamicProviders.Add(
+                new Scp3114DynamicPresetProvider(_eventHandler.Scp3114States)
             );
             #endregion
 
@@ -84,6 +95,15 @@
                 Scp939Events.Lunged -= _eventHandler.On939Lunged;
                 Scp939Events.CreatingAmnesticCloud -= _eventHandler.On939CreatingAmnesticCloud;
                 Scp939Events.CreatedAmnesticCloud -= _eventHandler.On939CreatedAmnesticCloud;
+
+                Scp3114Events.Disguising -= _eventHandler.On3114Disguising;
+                Scp3114Events.Disguised -= _eventHandler.On3114Disguised;
+                Scp3114Events.Revealing -= _eventHandler.On3114Revealing;
+                Scp3114Events.Revealed -= _eventHandler.On3114Revealed;
+                Scp3114Events.StrangleStarting -= _eventHandler.On3114StrangleStarting;
+                Scp3114Events.StrangleStarted -= _eventHandler.On3114StrangleStarted;
+                Scp3114Events.StrangleAborting -= _eventHandler.On3114StrangleAborting;
+                Scp3114Events.StrangleAborted -= _eventHandler.On3114StrangleAborted;
                 #endregion
 
                 _eventHandler = null;

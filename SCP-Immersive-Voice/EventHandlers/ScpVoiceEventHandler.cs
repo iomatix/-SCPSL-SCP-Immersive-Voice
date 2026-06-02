@@ -2,6 +2,7 @@
 {
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.Scp096Events;
+    using LabApi.Events.Arguments.Scp3114Events;
     using LabApi.Events.Arguments.Scp939Events;
     using LabApi.Features.Audio;
     using LabApi.Features.Wrappers;
@@ -60,6 +61,23 @@
 
             return controller;
         }
+
+        // SCP-3114 Dynamic State Tracking
+        private readonly Dictionary<Player, Scp3114VoiceStateController> _scp3114State = new Dictionary<Player, Scp3114VoiceStateController>();
+
+        public Dictionary<Player, Scp3114VoiceStateController> Scp3114States => _scp3114State;
+
+        private Scp3114VoiceStateController Get3114State(Player player)
+        {
+            if (!_scp3114State.TryGetValue(player, out var controller))
+            {
+                controller = new Scp3114VoiceStateController();
+                _scp3114State[player] = controller;
+            }
+
+            return controller;
+        }
+
         #endregion
 
         #region Player Voice Events
@@ -174,6 +192,50 @@
         public void On939CreatedAmnesticCloud(Scp939CreatedAmnesticCloudEventArgs ev)
         {
             Get939State(ev.Player).CurrentState = Scp939VoiceState.IdleWhisper;
+        }
+
+        // ----------------------
+        // SCP-3114 dynamic states
+        // ----------------------
+
+        public void On3114Disguising(Scp3114DisguisingEventArgs ev)
+        {
+            Get3114State(ev.Player).CurrentState = Scp3114VoiceState.Disguising;
+        }
+
+        public void On3114Disguised(Scp3114DisguisedEventArgs ev)
+        {
+            Get3114State(ev.Player).CurrentState = Scp3114VoiceState.Disguised;
+        }
+
+        public void On3114Revealing(Scp3114RevealingEventArgs ev)
+        {
+            Get3114State(ev.Player).CurrentState = Scp3114VoiceState.Revealing;
+        }
+
+        public void On3114Revealed(Scp3114RevealedEventArgs ev)
+        {
+            Get3114State(ev.Player).CurrentState = Scp3114VoiceState.Undisguised;
+        }
+
+        public void On3114StrangleStarting(Scp3114StrangleStartingEventArgs ev)
+        {
+            Get3114State(ev.Player).CurrentState = Scp3114VoiceState.Strangling;
+        }
+
+        public void On3114StrangleStarted(Scp3114StrangleStartedEventArgs ev)
+        {
+            Get3114State(ev.Player).CurrentState = Scp3114VoiceState.Strangling;
+        }
+
+        public void On3114StrangleAborting(Scp3114StrangleAbortingEventArgs ev)
+        {
+            Get3114State(ev.Player).CurrentState = Scp3114VoiceState.Undisguised;
+        }
+
+        public void On3114StrangleAborted(Scp3114StrangleAbortedEventArgs ev)
+        {
+            Get3114State(ev.Player).CurrentState = Scp3114VoiceState.Undisguised;
         }
         #endregion
 
