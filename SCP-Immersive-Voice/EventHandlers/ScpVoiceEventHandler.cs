@@ -51,7 +51,8 @@
             float[] pcm = new float[AudioTransmitter.FrameSize];
             int samples = _decoder.Decode(data, length, pcm);
 
-            var pipeline = ScpVoiceProfiles.GetPipelineFor(role);
+            var pipeline = ScpVoiceProfiles.GetPipelineFor(role, _config);
+
             pipeline.Process(pcm, samples);
 
             byte[] encoded = new byte[AudioTransmitter.MaxEncodedSize];

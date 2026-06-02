@@ -9,6 +9,7 @@
     using ScpImmersiveVoice.Config;
     using ScpImmersiveVoice.EventHandlers;
     using System;
+    using System.Data;
 
     public class ImmersiveScpVoicePlugin : Plugin<ImmersiveScpVoiceConfig>
     {

@@ -17,7 +17,8 @@
         public bool ApplyDistortion { get; set; } = true;
 
         [Description("Audio effect presets for each SCP role")]
-        public Dictionary<RoleTypeId, ScpVoicePreset> Presets { get; set; }
+        public Dictionary<RoleTypeId, ScpVoicePreset> Presets { get; set; } = ScpVoiceDefaultPresets.Create();
+
 
     }
 }

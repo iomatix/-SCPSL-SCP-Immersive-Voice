@@ -64,6 +64,7 @@
     <Compile Include="AudioProcessing\Interfaces\IAudioEffect.cs" />
     <Compile Include="Config\Config.cs" />
     <Compile Include="ImmersiveScpVoicePlugin.cs" />
+    <Compile Include="Presets\ScpVoiceDefaultPresets.cs" />
     <Compile Include="Presets\ScpVoicePreset.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="EventHandlers\ScpVoiceEventHandler.cs" />
