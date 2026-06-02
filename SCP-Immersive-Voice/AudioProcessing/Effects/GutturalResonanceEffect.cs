@@ -19,11 +19,11 @@
             {
                 float x = samples[i];
 
-                // wolna modulacja niskiego rezonansu
+                // slow modulation of low resonance
                 _phase += 0.002f;
                 float mod = 0.6f + 0.4f * (float)Math.Sin(_phase);
 
-                // prosty resonator (low-shelf style)
+                // simple one-pole filter with feedback
                 _res = _res + mod * 0.1f * (x - _res);
 
                 samples[i] = x * (1f - _amount * 0.5f) + _res * (_amount * 0.5f);

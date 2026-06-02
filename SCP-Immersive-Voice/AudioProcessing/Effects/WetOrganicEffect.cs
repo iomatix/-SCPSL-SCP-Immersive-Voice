@@ -22,11 +22,11 @@
             {
                 float x = samples[i];
 
-                // 1. Powolna modulacja filtra (śluzowy efekt)
+                // 1. Slow filter modulation (slimy effect)
                 _phase += 0.0012f;
                 float wobble = 0.5f + 0.5f * (float)Math.Sin(_phase * 1.4f);
 
-                // dynamiczne cutoffy
+                // dynamic cutoffs based on wobble
                 float lpCut = 0.2f + wobble * 0.3f;  // 0.2–0.5
                 float hpCut = 0.8f - wobble * 0.2f;  // 0.6–0.8
 
@@ -36,7 +36,7 @@
                 // 3. High-pass
                 _hp = x - _lp * hpCut;
 
-                // 4. Subtelny organiczny noise
+                // 4. Subtle organic noise
                 float noise = (float)(_rng.NextDouble() * 2.0 - 1.0) * 0.05f * _amount;
 
                 // 5. Mix

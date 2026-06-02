@@ -15,7 +15,7 @@
 
         public void Process(float[] samples, int length)
         {
-            int skip = (int)(1 + _amount * 12f); // 1–12 próbek
+            int skip = (int)(1 + _amount * 12f); // 1–12 samples per hold
 
             for (int i = 0; i < length; i++)
             {

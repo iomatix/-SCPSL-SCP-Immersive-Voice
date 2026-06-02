@@ -60,6 +60,7 @@
     <Compile Include="AudioProcessing\AudioEffectPipeline.cs" />
     <Compile Include="AudioProcessing\Effects\BitcrushEffect.cs" />
     <Compile Include="AudioProcessing\Effects\BreathNoiseEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\ChirpEffect.cs" />
     <Compile Include="AudioProcessing\Effects\DistortionEffect.cs" />
     <Compile Include="AudioProcessing\Effects\DryCrackleEffect.cs" />
     <Compile Include="AudioProcessing\Effects\FleshCrackleEffect.cs" />

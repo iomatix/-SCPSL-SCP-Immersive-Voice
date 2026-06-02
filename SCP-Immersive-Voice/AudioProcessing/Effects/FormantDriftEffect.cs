@@ -22,12 +22,12 @@
             {
                 float x = samples[i];
 
-                // 1. Noise-modulated LFO (nieregularna modulacja)
+                // 1. Noise-modulated LFO
                 _phase += 0.0007f;
                 float noise = (float)(_rng.NextDouble() * 2.0 - 1.0);
                 float drift = (float)Math.Sin(_phase * 1.3f + noise * 0.5f);
 
-                // 2. Dynamiczne przesuwanie formantu (LP + HP)
+                // 2. Dynamic formant shifting (LP + HP)
                 float lpCut = 0.15f + 0.25f * drift; // 0.15–0.40
                 float hpCut = 0.85f + 0.10f * drift; // 0.75–0.95
 
