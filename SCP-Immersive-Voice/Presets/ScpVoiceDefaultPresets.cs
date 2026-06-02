@@ -56,9 +56,12 @@
                 [RoleTypeId.Scp106] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 0.6f,
+                    Pitch = 0.58f,
                     Formant = 0.5f,
-                    Distortion = 1.5f
+                    Distortion = 1.4f,
+                    LowPass = 1200f,   // Muffled and distant sound
+                    HighPass = 0f,
+                    Reverb = 0.35f 
                 },
 
                 // SCP-3114 — "The Flesh That Hates"
