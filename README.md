@@ -13,7 +13,7 @@ The result is a far more immersive, atmospheric, and expressive SCP experience �
 ## ✨ Features
 
 ### 🎤 Proximity Voice Chat for SCPs
-SCPs can communicate using proximity voice, with configurable distance and role‑based restrictions.
+SCPs communicate using proximity voice, with configurable distance and role‑based restrictions.
 
 ### 🔊 Advanced DSP Audio Pipeline
 Each voice message is decoded, processed through a modular chain of audio effects, and re‑encoded in real time.
