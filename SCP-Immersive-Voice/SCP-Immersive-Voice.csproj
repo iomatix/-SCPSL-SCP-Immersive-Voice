@@ -60,7 +60,10 @@
     <Compile Include="AudioProcessing\AudioEffectPipeline.cs" />
     <Compile Include="AudioProcessing\Effects\DistortionEffect.cs" />
     <Compile Include="AudioProcessing\Effects\FormantShiftEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\HighPassEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\LowPassEffect.cs" />
     <Compile Include="AudioProcessing\Effects\PitchShiftEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\ReverbEffect.cs" />
     <Compile Include="AudioProcessing\Interfaces\IAudioEffect.cs" />
     <Compile Include="Config\Config.cs" />
     <Compile Include="ImmersiveScpVoicePlugin.cs" />

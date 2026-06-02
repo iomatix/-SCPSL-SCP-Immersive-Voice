@@ -2,10 +2,13 @@
 {
     public class ScpVoicePreset
     {
-        public float Pitch { get; set; }
-        public float Formant { get; set; }
-        public float Distortion { get; set; }
-        public bool Enable { get; set; }
+        public bool Enable { get; set; } = true;
+        public float Pitch { get; set; } = 1f;
+        public float Formant { get; set; } = 1f;
+        public float Distortion { get; set; } = 0f;
+        public float LowPass { get; set; } = 0f;
+        public float HighPass { get; set; } = 0f;
+        public float Reverb { get; set; } = 0f;
     }
 
 }

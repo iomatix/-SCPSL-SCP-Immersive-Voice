@@ -14,9 +14,11 @@
                 [RoleTypeId.Scp049] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 0.7f,
+                    Pitch = 0.72f,
                     Formant = 0.85f,
-                    Distortion = 1.2f
+                    Distortion = 0.15f,
+                    LowPass = 3200f,
+                    Reverb = 0.25f
                 },
 
                 // SCP-096 — "Shy Guy"

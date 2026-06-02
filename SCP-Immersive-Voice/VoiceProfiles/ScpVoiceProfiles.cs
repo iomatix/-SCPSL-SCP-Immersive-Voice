@@ -23,6 +23,16 @@
             if (preset.Distortion > 0f)
                 p.Add(new DistortionEffect(preset.Distortion));
 
+            if (preset.LowPass > 0f)
+                p.Add(new LowPassEffect(preset.LowPass));
+
+            if (preset.HighPass > 0f)
+                p.Add(new HighPassEffect(preset.HighPass));
+
+            if (preset.Reverb > 0f)
+                p.Add(new ReverbEffect(preset.Reverb));
+
+
             return p;
         }
 
