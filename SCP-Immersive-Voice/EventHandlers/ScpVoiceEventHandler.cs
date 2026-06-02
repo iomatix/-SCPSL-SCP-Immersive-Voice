@@ -59,36 +59,5 @@
 
             Buffer.BlockCopy(encoded, 0, data, 0, encodedLength);
         }
-
-
-        private void ApplyPitchShift(float[] pcm, int samples, float pitch)
-        {
-            float[] temp = new float[samples];
-
-            for (int i = 0; i < samples; i++)
-            {
-                float src = i / pitch;
-                int i0 = (int)src;
-                int i1 = Math.Min(i0 + 1, samples - 1);
-                float frac = src - i0;
-
-                temp[i] = pcm[i0] * (1 - frac) + pcm[i1] * frac;
-            }
-
-            Array.Copy(temp, pcm, samples);
-        }
-
-        private void ApplyDistortion(float[] pcm, int samples, float drive)
-        {
-            for (int i = 0; i < samples; i++)
-            {
-                float x = pcm[i] * drive;
-
-                if (x > 0.8f) x = 0.8f;
-                if (x < -0.8f) x = -0.8f;
-
-                pcm[i] = x;
-            }
-        }
     }
 }
