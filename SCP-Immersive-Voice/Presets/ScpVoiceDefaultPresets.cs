@@ -85,7 +85,26 @@
                     Enable = true,
                     Pitch = 1f,
                     Formant = 1f,
-                    Distortion = 0.4f
+                    Distortion = 0.25f,
+                    Bitcrush = 0.65f,
+                    SampleRateReduce = 0.55f,
+                    Glitch = 0.35f,
+                    StaticNoise = 0.25f
+                },
+
+                // SCP-049-2 — "Zombie"
+                // Growly and guttural, but not too distorted. Should still be intelligible, just very rough.
+                [RoleTypeId.Scp0492] = new ScpVoicePreset
+                {
+                    Enable = true,
+                    Pitch = 0.75f,
+                    Formant = 0.8f,
+                    Distortion = 0.3f,
+                    LowPass = 1800f,
+                    HighPass = 150f,
+                    Guttural = 0.9f,
+                    DryCrackle = 0.6f,
+                    Subharmonic = 0.7f
                 },
 
                 // Flamingo variants — comedic SCP, but lets give them a slightly weird pitch

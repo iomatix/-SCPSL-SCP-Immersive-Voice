@@ -19,6 +19,14 @@
         public float FormantDrift { get; set; } = 0f;
         public float FleshCrackle { get; set; } = 0f;
         public float WetOrganic { get; set; } = 0f;
+        public float Bitcrush { get; set; } = 0f;
+        public float SampleRateReduce { get; set; } = 0f;
+        public float Glitch { get; set; } = 0f;
+        public float StaticNoise { get; set; } = 0f;
+        public float Guttural { get; set; } = 0f;
+        public float DryCrackle { get; set; } = 0f;
+        public float Subharmonic { get; set; } = 0f;
+
 
     }
 

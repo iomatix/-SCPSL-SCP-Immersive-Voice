@@ -81,6 +81,27 @@
             if (preset.WetOrganic > 0f)
                 p.Add(new WetOrganicEffect(preset.WetOrganic));
 
+            if (preset.Bitcrush > 0f)
+                p.Add(new BitcrushEffect(preset.Bitcrush));
+
+            if (preset.SampleRateReduce > 0f)
+                p.Add(new SampleRateReducerEffect(preset.SampleRateReduce));
+
+            if (preset.Glitch > 0f)
+                p.Add(new GlitchBurstEffect(preset.Glitch));
+
+            if (preset.StaticNoise > 0f)
+                p.Add(new StaticNoiseEffect(preset.StaticNoise));
+
+            if (preset.Guttural > 0f)
+                p.Add(new GutturalResonanceEffect(preset.Guttural));
+
+            if (preset.DryCrackle > 0f)
+                p.Add(new DryCrackleEffect(preset.DryCrackle));
+
+            if (preset.Subharmonic > 0f)
+                p.Add(new SubharmonicGrowlEffect(preset.Subharmonic));
+
             return p;
         }
 
