@@ -83,16 +83,20 @@
         #region Player Voice Events
         public void OnSendingVoiceMessage(PlayerSendingVoiceMessageEventArgs ev)
         {
-            if (_config.EnableScpVoiceEffects)
+            var role = ev.Player.Role;
+
+            if (_config.EnableScpVoiceEffects &&
+                role.GetFaction() == Faction.SCP &&
+                !_config.ForbiddenProximity.Contains(role))
             {
                 ApplyEffects(ev.Message.Data, ev.Message.DataLength, ev.Player);
             }
 
             if (!_config.EnableScpProximityVoice) return;
             if (ev.Player.Role.GetFaction() != Faction.SCP) return;
-            if (_config.ForbiddenProximity.Contains(ev.Player.Role)) return;     
+            if (_config.ForbiddenProximity.Contains(role)) return;
 
-            ev.Message.Channel = VoiceChatChannel.Proximity;     
+            ev.Message.Channel = VoiceChatChannel.Proximity;
         }
 
         public void OnReceivingVoiceMessage(PlayerReceivingVoiceMessageEventArgs ev)
