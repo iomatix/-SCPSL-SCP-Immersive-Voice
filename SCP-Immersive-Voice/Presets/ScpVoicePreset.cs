@@ -1,8 +1,12 @@
-﻿namespace SCP_Immersive_Voice.Presets
+﻿using PlayerRoles;
+using System.Collections.Generic;
+
+namespace SCP_Immersive_Voice.Presets
 {
     public class ScpVoicePreset
     {
         public bool Enable { get; set; } = true;
+        public ScpVoicePresetMode Mode { get; set; } = ScpVoicePresetMode.Default;
         public float Pitch { get; set; } = 1f;
         public float Formant { get; set; } = 1f;
         public float Distortion { get; set; } = 0f;

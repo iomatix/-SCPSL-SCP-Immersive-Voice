@@ -26,9 +26,10 @@
                 [RoleTypeId.Scp096] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 1.3f,
-                    Formant = 1f,
-                    Distortion = 2.0f
+                    Pitch = 1.0f,
+                    Formant = 1.0f,
+                    Distortion = 0.2f,
+                    LowPass = 3500f,
                 },
 
                 // SCP-939 — "With Many Voices"

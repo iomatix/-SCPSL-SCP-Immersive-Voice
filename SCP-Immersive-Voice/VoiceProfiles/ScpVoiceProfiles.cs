@@ -1,18 +1,40 @@
 ﻿namespace SCP_Immersive_Voice.VoiceProfiles
 {
+    using LabApi.Features.Wrappers;
     using PlayerRoles;
     using SCP_Immersive_Voice.AudioProcessing;
     using SCP_Immersive_Voice.AudioProcessing.Effects;
+    using SCP_Immersive_Voice.Presets;
+    using SCP_Immersive_Voice.Presets.Dynamics.Interfaces;
     using ScpImmersiveVoice.Config;
+    using System.Collections.Generic;
 
     public static class ScpVoiceProfiles
     {
-        public static AudioEffectPipeline GetPipelineFor(RoleTypeId role, ImmersiveScpVoiceConfig config)
+        public static List<IDynamicVoicePresetProvider> DynamicProviders { get; } = new List<IDynamicVoicePresetProvider>();
+
+
+        public static AudioEffectPipeline GetPipelineFor(Player player, ImmersiveScpVoiceConfig config)
+        {
+            var role = player.Role;
+
+            // 1. Dynamic presets
+            foreach (var provider in DynamicProviders)
+            {
+                if (provider.TryGetDynamicPreset(player, out var dynamicPreset))
+                    return BuildPipelineFromPreset(dynamicPreset);
+            }
+
+            // 2. Static presets
+            if (!config.Presets.TryGetValue(role, out var preset) || !preset.Enable)
+                return new AudioEffectPipeline();
+
+            return BuildPipelineFromPreset(preset);
+        }
+
+        private static AudioEffectPipeline BuildPipelineFromPreset(ScpVoicePreset preset)
         {
             var p = new AudioEffectPipeline();
-
-            if (!config.Presets.TryGetValue(role, out var preset) || !preset.Enable)
-                return p;
 
             if (preset.Pitch != 1f)
                 p.Add(new PitchShiftEffect(preset.Pitch));
@@ -32,10 +54,8 @@
             if (preset.Reverb > 0f)
                 p.Add(new ReverbEffect(preset.Reverb));
 
-
             return p;
         }
 
     }
-
 }

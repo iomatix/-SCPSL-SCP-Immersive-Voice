@@ -2,14 +2,13 @@
 {
     using LabApi.Events.Handlers;
     using LabApi.Features;
-    using LabApi.Features.Console;
-    using LabApi.Loader;
     using LabApi.Loader.Features.Plugins;
     using LabApi.Loader.Features.Plugins.Enums;
+    using SCP_Immersive_Voice.Presets.Dynamics;
+    using SCP_Immersive_Voice.VoiceProfiles;
     using ScpImmersiveVoice.Config;
     using ScpImmersiveVoice.EventHandlers;
     using System;
-    using System.Data;
 
     public class ImmersiveScpVoicePlugin : Plugin<ImmersiveScpVoiceConfig>
     {
@@ -23,11 +22,22 @@
 
         private ScpVoiceEventHandler _eventHandler;
 
+
         public override void Enable()
         {
             _eventHandler = new ScpVoiceEventHandler(Config);
             PlayerEvents.SendingVoiceMessage += _eventHandler.OnSendingVoiceMessage;
             PlayerEvents.ReceivingVoiceMessage += _eventHandler.OnReceivingVoiceMessage;
+            
+            Scp096Events.Enraged += _eventHandler.On096Enraged;
+            Scp096Events.StartedCrying += _eventHandler.On096StartedCrying;
+            Scp096Events.TryingNotToCry += _eventHandler.On096TryingNotToCry;
+            Scp096Events.Charging += _eventHandler.On096Charging;
+
+            ScpVoiceProfiles.DynamicProviders.Add(
+                new Scp096DynamicPresetProvider(_eventHandler.Scp096States)
+            );
+
         }
 
         public override void Disable()
@@ -36,6 +46,11 @@
             {
                 PlayerEvents.SendingVoiceMessage -= _eventHandler.OnSendingVoiceMessage;
                 PlayerEvents.ReceivingVoiceMessage -= _eventHandler.OnReceivingVoiceMessage;
+                
+                Scp096Events.Enraged -= _eventHandler.On096Enraged;
+                Scp096Events.StartedCrying -= _eventHandler.On096StartedCrying;
+                Scp096Events.TryingNotToCry -= _eventHandler.On096TryingNotToCry;
+                Scp096Events.Charging -= _eventHandler.On096Charging;
                 _eventHandler = null;
             }
         }
