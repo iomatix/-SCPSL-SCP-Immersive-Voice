@@ -65,6 +65,8 @@
     <Compile Include="AudioProcessing\Effects\LowPassEffect.cs" />
     <Compile Include="AudioProcessing\Effects\PitchShiftEffect.cs" />
     <Compile Include="AudioProcessing\Effects\ReverbEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\StoneCrackEffect .cs" />
+    <Compile Include="AudioProcessing\Effects\StoneGrindEffect.cs" />
     <Compile Include="AudioProcessing\Effects\TremoloEffect.cs" />
     <Compile Include="AudioProcessing\Effects\WhisperFilterEffect.cs" />
     <Compile Include="AudioProcessing\Interfaces\IAudioEffect.cs" />

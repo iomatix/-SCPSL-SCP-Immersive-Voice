@@ -60,6 +60,13 @@
             if (preset.WhisperAmount > 0f)
                 p.Add(new WhisperFilterEffect(preset.WhisperAmount));
 
+            if (preset.StoneCrack > 0f)
+                p.Add(new StoneCrackEffect(preset.StoneCrack));
+
+            if (preset.StoneGrind > 0f)
+                p.Add(new StoneGrindEffect(preset.StoneGrind));
+
+
             return p;
         }
 

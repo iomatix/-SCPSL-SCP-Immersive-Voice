@@ -49,7 +49,9 @@
                     Enable = true,
                     Pitch = 1f,
                     Formant = 1f,
-                    Distortion = 3.0f
+                    Distortion = 3.0f,
+                    StoneCrack = 1.0f,
+                    StoneGrind = 0.8f
                 },
 
                 // SCP-106 — "Old Man"

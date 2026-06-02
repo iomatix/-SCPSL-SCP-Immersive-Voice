@@ -12,6 +12,8 @@
         public float Reverb { get; set; } = 0f;
         public float BreathNoise { get; set; } = 0f;
         public float WhisperAmount { get; set; } = 0f;
+        public float StoneCrack { get; set; } = 0f;
+        public float StoneGrind { get; set; } = 0f;
 
     }
 
