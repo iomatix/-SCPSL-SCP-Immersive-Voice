@@ -6,6 +6,7 @@
     using SCP_Immersive_Voice.VoiceProfiles;
     using ScpImmersiveVoice.Config;
     using System;
+    using System.Collections.Generic;
     using UnityEngine;
     using VoiceChat;
     using VoiceChat.Codec;
@@ -23,20 +24,20 @@
             _config = config;
         }
 
+        private static readonly HashSet<RoleTypeId> ForbiddenProximity = new HashSet<RoleTypeId>()
+        {
+            RoleTypeId.Scp079,   // monitor
+            // RoleTypeId.Scp939,   // whisper system
+        };
+
         public void OnSendingVoiceMessage(PlayerSendingVoiceMessageEventArgs ev)
         {
-            if (ev.Player.Role.GetFaction() == Faction.SCP && _config.EnableScpProximityVoice)
-            {
-                ev.Message.Channel = VoiceChatChannel.Proximity;
-
                 if (ev.Player.Role.GetFaction() == Faction.SCP && _config.EnableScpProximityVoice)
                 {
                     ev.Message.Channel = VoiceChatChannel.Proximity;
 
                     if (_config.EnableScpVoiceEffects) ApplyEffects(ev.Message.Data, ev.Message.DataLength, ev.Player.Role);
                 }
-
-            }
         }
 
         public void OnReceivingVoiceMessage(PlayerReceivingVoiceMessageEventArgs ev)
