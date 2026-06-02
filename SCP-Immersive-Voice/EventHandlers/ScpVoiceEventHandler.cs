@@ -55,7 +55,7 @@
             pipeline.Process(pcm, samples);
 
             byte[] encoded = new byte[AudioTransmitter.MaxEncodedSize];
-            int encodedLength = _encoder.Encode(pcm, samples, encoded);
+            int encodedLength = _encoder.Encode(pcm, encoded, samples);
 
             Buffer.BlockCopy(encoded, 0, data, 0, encodedLength);
         }
