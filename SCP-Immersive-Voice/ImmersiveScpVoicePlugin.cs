@@ -21,11 +21,15 @@
         public override LoadPriority Priority { get; } = LoadPriority.High;
 
         private ScpVoiceEventHandler _eventHandler;
+        private ScpVoiceManager _voiceManager;
 
 
+        public static ImmersiveScpVoiceConfig StaticConfig { get; private set; } 
         public override void Enable()
         {
+            StaticConfig = Config;
             _eventHandler = new ScpVoiceEventHandler(Config);
+            _voiceManager = new ScpVoiceManager(Config);
             PlayerEvents.SendingVoiceMessage += _eventHandler.OnSendingVoiceMessage;
             PlayerEvents.ReceivingVoiceMessage += _eventHandler.OnReceivingVoiceMessage;
             #region SCP Event Handlers

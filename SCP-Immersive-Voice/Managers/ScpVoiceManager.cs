@@ -6,9 +6,12 @@
     using LabApi.Features.Wrappers;
     using System.Collections.Generic;
     using System.Runtime.InteropServices;
+    using ScpImmersiveVoice;
 
     public class ScpVoiceManager
     {
+
+        private readonly ImmersiveScpVoiceConfig _config = ImmersiveScpVoicePlugin.StaticConfig;
 
         public static ScpVoiceManager Instance { get; } = new ScpVoiceManager();
         private readonly Dictionary<Player, int> _sessions = new Dictionary<Player, int>();
@@ -23,7 +26,7 @@
                 loop: false,
                 volume: 1f,
                 minDistance: 0.5f,
-                maxDistance: ImmersiveScpVoiceConfig,
+                maxDistance: _config.ProximityDistance,
                 isSpatial: true,
                 priority: AudioPriority.High,
                 validPlayersFilter: p => p != scp
