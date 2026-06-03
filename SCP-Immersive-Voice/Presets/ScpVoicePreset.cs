@@ -4,6 +4,8 @@
     {
         public bool Enable { get; set; } = true;
         public ScpVoicePresetMode Mode { get; set; } = ScpVoicePresetMode.Default;
+
+        public float OutputGain { get; set; } = 1.0f;
         public float Pitch { get; set; } = 1f;
         public float Formant { get; set; } = 1f;
         public float Distortion { get; set; } = 0f;

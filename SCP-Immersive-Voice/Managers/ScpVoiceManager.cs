@@ -6,6 +6,7 @@
     using LabApi.Features.Wrappers;
     using System.Collections.Generic;
     using ScpImmersiveVoice;
+    using LabApi.Features.Console;
 
     public class ScpVoiceManager
     {
@@ -26,7 +27,7 @@
                 maxDistance: _config.ProximityDistance,
                 volume: 1f,
                 priority: AudioPriority.High,
-                validPlayersFilter: p => p.PlayerId != scp.PlayerId
+                validPlayersFilter: p => p != null && p.IsReady
             );
 
             _sessions[scp] = sessionId;
@@ -51,11 +52,35 @@
 
         public void AppendPcm(Player scp, short[] pcm)
         {
+            if (pcm == null || pcm.Length == 0)
+            {
+                Logger.Warn($"[SCP-VOICE] AppendPcm: EMPTY PCM from {scp.Nickname}");
+                return;
+            }
+
             if (!_sessions.TryGetValue(scp, out int sessionId))
+            {
+                Logger.Warn($"[SCP-VOICE] AppendPcm: NO SESSION for {scp.Nickname}, creating new one");
                 sessionId = StartSession(scp);
+            }
 
             DefaultAudioManager.Instance.AppendPcmData(sessionId, pcm);
+
+            // EXTRA: sprawdzamy czy speaker istnieje
+            var state = DefaultAudioManager.Instance.GetSessionState(sessionId);
+            if (state == null)
+            {
+                Logger.Error($"[SCP-VOICE] AppendPcm: state NULL for session {sessionId}");
+                return;
+            }
+
+            if (!state.HasPhysicalSpeaker || state.PhysicalSpeaker == null)
+            {
+                Logger.Warn($"[SCP-VOICE] AppendPcm: NO PHYSICAL SPEAKER for session {sessionId}");
+            }
+
         }
+
 
         public void UpdatePositions()
         {

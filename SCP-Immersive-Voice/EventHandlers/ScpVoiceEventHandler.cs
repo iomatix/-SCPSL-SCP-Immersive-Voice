@@ -5,6 +5,7 @@
     using LabApi.Events.Arguments.Scp3114Events;
     using LabApi.Events.Arguments.Scp939Events;
     using LabApi.Features.Audio;
+    using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
     using PlayerRoles;
     using PlayerRoles.Voice;
@@ -26,9 +27,6 @@
     public class ScpVoiceEventHandler
     {
         private readonly ImmersiveScpVoiceConfig _config;
-
-        private readonly OpusDecoder _decoder = new OpusDecoder();
-        private readonly OpusEncoder _encoder = new OpusEncoder(OpusApplicationType.Audio);
 
         // Constructor
         public ScpVoiceEventHandler(ImmersiveScpVoiceConfig config)
@@ -90,38 +88,44 @@
         {
             var sender = ev.Player;
 
-            // Only for SCP players    
-            if (!sender.IsSCP)
+            // Only process if this class has a preset
+            var preset = ScpVoiceProfiles.GetPreset(sender);
+            if (!preset.Enable)
                 return;
 
-            // Only for SCPs    
-            if (sender.Role.GetFaction() != Faction.SCP)
+            // Only process voice messages
+            if (ev.Message.Channel == VoiceChatChannel.None)
                 return;
 
-            // Only ScpChat channel (Q)    
-            if (ev.Message.Channel != VoiceChatChannel.ScpChat)
-                return;
-
-            // Apply Opus → PCM → DSP → Opus (legacy effects)
-            if (_config.EnableScpVoiceEffects)
-                ApplyEffects(ev.Message.Data, ev.Message.DataLength, sender);
-
-            // Check if sender's role can use proximity voice  
-            if (_config.ForbiddenProximity.Contains(sender.Role)) return;
-
-            // BLOCK original SCP chat
-            ev.IsAllowed = false;
+            bool isForbidden = _config.ForbiddenProximity.Contains(sender.Role);
 
             // Decode Opus → PCM
             short[] pcm = ScpVoiceDecoder.Decode(ev.Message);
 
-            // Apply PCM DSP (proximity effects)
+            if (pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 300))
+                return;
+
+            // Apply DSP for ALL classes
             pcm = ScpVoiceDecoder.ApplyEffects(pcm, sender);
+            pcm = ScpVoiceDecoder.Normalize(pcm);
 
-            // Send PCM to proximity audio system
+            // --- CASE 1: Forbidden proximity (e.g. 079, humans, etc.) ---
+            if (isForbidden)
+            {
+                // re-encode PCM → OPUS so original channel sends modified voice
+                byte[] encoded = ScpVoiceDecoder.EncodeToOpus(pcm);
+                Buffer.BlockCopy(encoded, 0, ev.Message.Data, 0, encoded.Length);
+
+                ev.IsAllowed = true;
+                return;
+            }
+
+            // --- CASE 2: Allowed proximity (SCPs) ---
+            if (ev.Message.Channel == VoiceChatChannel.ScpChat) ev.IsAllowed = false; // block original SCPChat
+
             ScpVoiceManager.Instance.AppendPcm(sender, pcm);
-
         }
+
 
         public void OnReceivingVoiceMessage(PlayerReceivingVoiceMessageEventArgs ev)
         {
@@ -280,24 +284,5 @@
             Get3114State(ev.Player).CurrentState = Scp3114VoiceState.Undisguised;
         }
         #endregion
-
-
-        // ----------------------
-        // Core audio processing
-        // ----------------------
-        private void ApplyEffects(byte[] data, int length, Player player)
-        {
-            float[] pcm = new float[AudioTransmitter.FrameSize];
-            int samples = _decoder.Decode(data, length, pcm);
-
-            var pipeline = ScpVoiceProfiles.GetPipelineFor(player, _config);
-
-            pipeline.Process(pcm, samples);
-
-            byte[] encoded = new byte[AudioTransmitter.MaxEncodedSize];
-            int encodedLength = _encoder.Encode(pcm, encoded, samples);
-
-            Buffer.BlockCopy(encoded, 0, data, 0, encodedLength);
-        }
     }
 }

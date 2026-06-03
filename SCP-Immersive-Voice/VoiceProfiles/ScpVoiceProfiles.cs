@@ -6,15 +6,18 @@
     using SCP_Immersive_Voice.AudioProcessing.Effects;
     using SCP_Immersive_Voice.Presets;
     using SCP_Immersive_Voice.Presets.Dynamics.Interfaces;
+    using ScpImmersiveVoice;
     using ScpImmersiveVoice.Config;
     using System.Collections.Generic;
 
     public static class ScpVoiceProfiles
     {
         public static List<IDynamicVoicePresetProvider> DynamicProviders { get; } = new List<IDynamicVoicePresetProvider>();
+        
+        private readonly static ImmersiveScpVoiceConfig _config = ImmersiveScpVoicePlugin.StaticConfig;
 
 
-        public static AudioEffectPipeline GetPipelineFor(Player player, ImmersiveScpVoiceConfig config)
+        public static AudioEffectPipeline GetPipelineFor(Player player)
         {
             var role = player.Role;
 
@@ -26,11 +29,31 @@
             }
 
             // 2. Static presets
-            if (!config.Presets.TryGetValue(role, out var preset) || !preset.Enable)
+            if (!_config.Presets.TryGetValue(role, out var preset) || !preset.Enable)
                 return new AudioEffectPipeline();
 
             return BuildPipelineFromPreset(preset);
         }
+
+        public static ScpVoicePreset GetPreset(Player player)
+        {
+            var role = player.Role;
+
+            // dynamic first
+            foreach (var provider in DynamicProviders)
+            {
+                if (provider.TryGetDynamicPreset(player, out var dynamicPreset))
+                    return dynamicPreset;
+            }
+
+            // static
+            if (_config.Presets.TryGetValue(role, out var preset))
+                return preset;
+
+            // fallback
+            return new ScpVoicePreset();
+        }
+
 
         private static AudioEffectPipeline BuildPipelineFromPreset(ScpVoicePreset preset)
         {
