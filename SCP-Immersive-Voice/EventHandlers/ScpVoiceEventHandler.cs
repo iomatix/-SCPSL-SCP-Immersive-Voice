@@ -8,6 +8,8 @@ namespace ScpImmersiveVoice.EventHandlers
     using LabApi.Features.Wrappers;
     using PlayerRoles;
     using PlayerRoles.Voice;
+    using SCP_Immersive_Voice.Decoders;
+    using SCP_Immersive_Voice.Managers;
     using SCP_Immersive_Voice.Presets.Dynamics.Controllers;
     using SCP_Immersive_Voice.Presets.Dynamics.Enums;
     using SCP_Immersive_Voice.VoiceProfiles;
@@ -104,9 +106,13 @@ namespace ScpImmersiveVoice.EventHandlers
             if (_config.EnableScpVoiceEffects)
                 ApplyEffects(ev.Message.Data, ev.Message.DataLength, sender);
 
-            // Set channel to Proximity
-            ev.Message.Channel = VoiceChatChannel.Proximity;
-            
+            ev.IsAllowed = false;
+
+            short[] pcm = ScpVoiceDecoder.Decode(ev.Message);
+            pcm = ScpVoiceDecoder.ApplyEffects(pcm, sender);
+
+            ScpVoiceManager.Instance.AppendPcm(ev.Player, pcm);
+
         }
 
         public void OnReceivingVoiceMessage(PlayerReceivingVoiceMessageEventArgs ev)
