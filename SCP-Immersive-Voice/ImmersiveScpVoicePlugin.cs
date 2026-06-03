@@ -1,5 +1,7 @@
 ﻿namespace ScpImmersiveVoice
 {
+    using LabApi.Events;
+    using LabApi.Events.Arguments.ServerEvents;
     using LabApi.Events.Handlers;
     using LabApi.Features;
     using LabApi.Loader.Features.Plugins;
@@ -10,27 +12,59 @@
     using ScpImmersiveVoice.Config;
     using ScpImmersiveVoice.EventHandlers;
     using System;
+    using UnityEngine;
 
     public class ImmersiveScpVoicePlugin : Plugin<ImmersiveScpVoiceConfig>
     {
+        #region Plugin Metadata
         public override string Name => "SCP Voice Chat";
         public override string Description => "Enables proximity voice chat for SCPs and adds audio effects";
         public override string Author => "iomatix";
         public override Version Version => new Version(0, 2, 0);
         public override Version RequiredApiVersion { get; } = new Version(LabApiProperties.CompiledVersion);
+        #endregion
 
         public override LoadPriority Priority { get; } = LoadPriority.High;
 
+        #region Handlers and Managers
         private ScpVoiceEventHandler _eventHandler;
         private ScpVoiceManager _voiceManager;
+        #endregion
 
+        #region Unity Objects
+        private GameObject _updaterObject;
+        #endregion
 
-        public static ImmersiveScpVoiceConfig StaticConfig { get; private set; } 
+        public static ImmersiveScpVoiceConfig StaticConfig { get; private set; }
+
+        public void OnRoundStart()
+        {
+            Enable();
+        }
+
+        public void OnRoundEnd(RoundEndedEventArgs ev)
+        {
+            Disable();
+        }
+
         public override void Enable()
         {
             StaticConfig = Config;
             _eventHandler = new ScpVoiceEventHandler(Config);
             _voiceManager = new ScpVoiceManager();
+
+            ServerEvents.RoundStarted += OnRoundStart;
+            ServerEvents.RoundEnded += OnRoundEnd;
+
+            #region Initialize Updater
+            if (_updaterObject == null)
+            {
+                _updaterObject = new GameObject("ScpVoiceUpdater");
+                GameObject.DontDestroyOnLoad(_updaterObject);
+                _updaterObject.AddComponent<ScpVoiceUpdater>();
+            }
+            #endregion
+
             PlayerEvents.SendingVoiceMessage += _eventHandler.OnSendingVoiceMessage;
             PlayerEvents.ReceivingVoiceMessage += _eventHandler.OnReceivingVoiceMessage;
             #region SCP Event Handlers
@@ -79,6 +113,17 @@
         {
             if (_eventHandler != null)
             {
+                ServerEvents.RoundStarted -= OnRoundStart;
+                ServerEvents.RoundEnded -= OnRoundEnd;
+
+                #region Disable Updater
+                if (_updaterObject != null)
+                {
+                    GameObject.Destroy(_updaterObject);
+                    _updaterObject = null;
+                }
+                #endregion
+
                 PlayerEvents.SendingVoiceMessage -= _eventHandler.OnSendingVoiceMessage;
                 PlayerEvents.ReceivingVoiceMessage -= _eventHandler.OnReceivingVoiceMessage;
 

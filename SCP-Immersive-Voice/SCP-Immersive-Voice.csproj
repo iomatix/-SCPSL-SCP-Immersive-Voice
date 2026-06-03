@@ -123,6 +123,7 @@
     <Compile Include="Config\Config.cs" />
     <Compile Include="Decoders\ScpVoiceDecoder.cs" />
     <Compile Include="Managers\ScpVoiceManager.cs" />
+    <Compile Include="Managers\ScpVoiceUpdater.cs" />
     <Compile Include="Presets\Dynamics\Controllers\Scp3114VoiceStateController.cs" />
     <Compile Include="Presets\Dynamics\Controllers\Scp939VoiceStateController.cs" />
     <Compile Include="Presets\Dynamics\Controllers\Scp096VoiceStateController.cs" />
