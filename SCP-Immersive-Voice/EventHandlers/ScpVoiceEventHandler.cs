@@ -7,16 +7,19 @@
     using LabApi.Features.Audio;
     using LabApi.Features.Wrappers;
     using PlayerRoles;
+    using PlayerRoles.Voice;
     using SCP_Immersive_Voice.Presets.Dynamics.Controllers;
     using SCP_Immersive_Voice.Presets.Dynamics.Enums;
     using SCP_Immersive_Voice.VoiceProfiles;
     using ScpImmersiveVoice.Config;
     using System;
     using System.Collections.Generic;
+    using System.Reflection;
     using UnityEngine;
     using VoiceChat;
     using VoiceChat.Codec;
     using VoiceChat.Codec.Enums;
+    using VoiceChat.Networking;
 
     public class ScpVoiceEventHandler
     {
@@ -83,31 +86,70 @@
         #region Player Voice Events
         public void OnSendingVoiceMessage(PlayerSendingVoiceMessageEventArgs ev)
         {
-            var role = ev.Player.Role;
+            var sender = ev.Player;
 
-            if (_config.EnableScpVoiceEffects &&
-                role.GetFaction() == Faction.SCP &&
-                !_config.ForbiddenProximity.Contains(role))
+            // Only for SCP players    
+            if (!sender.IsSCP)
+                return;
+
+            // Only for SCPs    
+            if (sender.Role.GetFaction() != Faction.SCP)
+                return;
+
+            // Only ScpChat channel (Q)    
+            if (ev.Message.Channel != VoiceChatChannel.ScpChat)
+                return;
+
+            // Add DSP effects if enabled    
+            if (_config.EnableScpVoiceEffects)
+                ApplyEffects(ev.Message.Data, ev.Message.DataLength, sender);
+
+            // Cancel the original ScpChat transmission  
+            ev.IsAllowed = false;
+
+            // Manually send to nearby players
+            byte controllerId = GetControllerId(sender.ReferenceHub);
+            foreach (var receiver in Player.List)
             {
-                ApplyEffects(ev.Message.Data, ev.Message.DataLength, ev.Player);
+                if (receiver == sender)
+                    continue;
+
+                float dist = Vector3.Distance(receiver.Position, sender.Position);
+                if (dist > _config.ProximityDistance)
+                    continue;
+                receiver.Connection.Send(
+                    new AudioMessage(
+                        controllerId,
+                        ev.Message.Data,
+                        ev.Message.DataLength
+                    )
+                );
             }
-
-            if (!_config.EnableScpProximityVoice) return;
-            if (ev.Player.Role.GetFaction() != Faction.SCP) return;
-            if (_config.ForbiddenProximity.Contains(role)) return;
-
-            ev.Message.Channel = VoiceChatChannel.Proximity;
         }
 
         public void OnReceivingVoiceMessage(PlayerReceivingVoiceMessageEventArgs ev)
         {
-            if (!_config.EnableScpProximityVoice) return;
-            if (ev.Sender.Role.GetFaction() != Faction.SCP) return;
-            if (_config.ForbiddenProximity.Contains(ev.Sender.Role)) return;   
+            // This event can be used for additional client-side processing if needed, but for now we rely on the sender-side processing and proximity filtering in OnSendingVoiceMessage.
 
-            float distance = Vector3.Distance(ev.Player.Position, ev.Sender.Position);
-            if (distance > _config.ProximityDistance) ev.IsAllowed = false;
+            //var sender = ev.Sender;
+            //var receiver = ev.Player;
 
+            //// Only process SCP messages  
+            //if (!sender.IsSCP) return;
+
+            //// Only process ScpChat channel messages  
+            //if (ev.Message.Channel != VoiceChatChannel.ScpChat) return;
+
+            //// Check if sender's role can use proximity voice  
+            //if (_config.ForbiddenProximity.Contains(sender.Role)) return;      
+
+            //// Distance filter - only allow if within proximity distance  
+            //float dist = Vector3.Distance(receiver.Position, sender.Position);
+            //if (dist > _config.ProximityDistance)
+            //{
+            //    ev.IsAllowed = false;
+            //    return;
+            //}
         }
         #endregion
 
