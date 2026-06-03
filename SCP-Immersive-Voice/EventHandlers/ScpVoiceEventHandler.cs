@@ -1,4 +1,4 @@
-﻿namespace ScpImmersiveVoice.EventHandlers
+namespace ScpImmersiveVoice.EventHandlers
 {
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.Scp096Events;
@@ -104,27 +104,9 @@
             if (_config.EnableScpVoiceEffects)
                 ApplyEffects(ev.Message.Data, ev.Message.DataLength, sender);
 
-            // Cancel the original ScpChat transmission  
-            ev.IsAllowed = false;
-
-            // Manually send to nearby players
-            byte controllerId = GetControllerId(sender.ReferenceHub);
-            foreach (var receiver in Player.List)
-            {
-                if (receiver == sender)
-                    continue;
-
-                float dist = Vector3.Distance(receiver.Position, sender.Position);
-                if (dist > _config.ProximityDistance)
-                    continue;
-                receiver.Connection.Send(
-                    new AudioMessage(
-                        controllerId,
-                        ev.Message.Data,
-                        ev.Message.DataLength
-                    )
-                );
-            }
+            // Set channel to Proximity
+            ev.Message.Channel = VoiceChatChannel.Proximity;
+            
         }
 
         public void OnReceivingVoiceMessage(PlayerReceivingVoiceMessageEventArgs ev)
