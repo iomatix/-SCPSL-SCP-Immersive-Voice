@@ -20,7 +20,7 @@
         public override string Name => "SCP Voice Chat";
         public override string Description => "Enables proximity voice chat for SCPs and adds audio effects";
         public override string Author => "iomatix";
-        public override Version Version => new Version(0, 2, 0);
+        public override Version Version => new Version(0, 2, 1);
         public override Version RequiredApiVersion { get; } = new Version(LabApiProperties.CompiledVersion);
         #endregion
 
