@@ -2,36 +2,60 @@
 {
     using LabApi.Features.Audio;
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
-    using UnityEngine;
+    using System;
 
-    public class HighPassEffect : IAudioEffect
+    /// <summary>
+    /// Removes low‑frequency rumble using a one‑pole high‑pass filter. Useful for
+    /// radio clarity, SCP‑079 comms, or removing proximity boominess.
+    /// </summary>
+    public class HighPassEffect : IAudioEffectShort
     {
         private readonly float _cutoff;
 
+        // Filter memory (float required for stability)
+        private float _prevLow;
+
         public HighPassEffect(float cutoffHz)
         {
-            _cutoff = cutoffHz;
+            // cutoff must be within a safe and meaningful range
+            _cutoff = Clamp(cutoffHz, 20f, 20000f);
         }
 
-        public void Process(float[] pcm, int samples)
+        public void Process(short[] pcm, int length)
         {
-            float rc = 1.0f / (2 * Mathf.PI * _cutoff);
+            // Precompute filter coefficients
+            float rc = 1.0f / (2f * (float)Math.PI * _cutoff);
             float dt = 1.0f / AudioTransmitter.SampleRate;
             float alpha = dt / (rc + dt);
 
-            float prevInput = pcm[0];
-            float prevLow = pcm[0];
-
-            for (int i = 1; i < samples; i++)
+            for (int i = 0; i < length; i++)
             {
-                float low = prevLow + alpha * (pcm[i] - prevLow);
-                float high = pcm[i] - low;
+                // Convert PCM to float -1..1
+                float x = pcm[i] / 32768f;
 
-                pcm[i] = high;
+                // 1. Low-pass stage (extract low frequencies)
+                float low = _prevLow + alpha * (x - _prevLow);
+                _prevLow = low;
 
-                prevLow = low;
-                prevInput = pcm[i];
+                // 2. High-pass = input - low frequencies
+                float high = x - low;
+
+                // 3. Convert back to PCM
+                int sample = (int)(high * 32767f);
+
+                // 4. Clamp to valid PCM range
+                if (sample > short.MaxValue) sample = short.MaxValue;
+                if (sample < short.MinValue) sample = short.MinValue;
+
+                pcm[i] = (short)sample;
             }
+        }
+
+        private static float Clamp(float v, float min, float max)
+        {
+            if (v < min) return min;
+            if (v > max) return max;
+            return v;
         }
     }
 }

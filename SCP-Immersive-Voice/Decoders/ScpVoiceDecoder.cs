@@ -9,43 +9,57 @@
     using VoiceChat.Codec.Enums;
     using VoiceChat.Networking;
 
+    /// <summary>
+    /// Handles Opus decoding/encoding and applies the SCP voice DSP pipeline
+    /// on 16-bit PCM audio. Designed for real-time voice processing with
+    /// short-native DSP, zero-copy where possible, and minimal allocations.
+    /// </summary>
     public static class ScpVoiceDecoder
     {
-        // Constant decoder for Opus → PCM (float)
+        // Shared Opus decoder: Opus → float PCM
         private static readonly OpusDecoder _decoder = new OpusDecoder();
 
-        // Float buffer (LabAPI uses 48000 Hz, mono, frame size = 1920 float samples)
-        private static readonly float[] _floatBuffer = new float[1920];
+        // Shared Opus encoder: float PCM → Opus
+        private static readonly OpusEncoder _encoder = new OpusEncoder(OpusApplicationType.Voip);
 
-        // Main decoder: VoiceMessage → short[] PCM
+        // Max Opus frame size in samples (48 kHz, mono, 120 ms)
+        private const int MaxOpusSamples = 5760;
+
+        // Float buffer for Opus decode (shared, reused)
+        private static readonly float[] _floatBuffer = new float[MaxOpusSamples];
+
+        // Optional: enable/disable post-DSP normalization
+        private const bool NormalizeEnabled = true;
+
+        /// <summary>
+        /// Decodes an incoming VoiceMessage from Opus to 16-bit PCM (short[]).
+        /// Returns an empty array on invalid or empty data.
+        /// </summary>
         public static short[] Decode(VoiceMessage msg)
         {
-
-            // Validate input
             try
             {
-                if (msg.Data == null || msg.DataLength <= 0) return Array.Empty<short>();
+                if (msg.Data == null || msg.DataLength <= 0)
+                    return Array.Empty<short>();
             }
             catch
             {
                 return Array.Empty<short>();
             }
 
-            // Decode Opus → float[]
             int samples = _decoder.Decode(msg.Data, msg.DataLength, _floatBuffer);
+
             Logger.Debug($"[SCP-VOICE] Decode: data={msg.DataLength}, samples={samples}");
 
-
-            if (samples <= 0)
+            if (samples <= 0 || samples > MaxOpusSamples)
                 return Array.Empty<short>();
 
-            // Convert the float samples to short (16-bit PCM)
             short[] pcm = new short[samples];
+
             for (int i = 0; i < samples; i++)
             {
                 float f = _floatBuffer[i];
 
-                // Clamp → convert
                 if (f > 1f) f = 1f;
                 if (f < -1f) f = -1f;
 
@@ -55,65 +69,91 @@
             return pcm;
         }
 
+        /// <summary>
+        /// Encodes 16-bit PCM (short[]) to Opus using a shared encoder.
+        /// </summary>
         public static byte[] EncodeToOpus(short[] pcm)
         {
+            if (pcm == null || pcm.Length == 0)
+                return Array.Empty<byte>();
+
             float[] f = ToFloat(pcm);
 
-            var encoder = new OpusEncoder(OpusApplicationType.Voip);
             byte[] encoded = new byte[AudioTransmitter.MaxEncodedSize];
+            int len = _encoder.Encode(f, encoded, f.Length);
 
-            int len = encoder.Encode(f, encoded, f.Length);
-            Array.Resize(ref encoded, len);
+            if (len <= 0)
+                return Array.Empty<byte>();
 
-            return encoded;
+            if (len == encoded.Length)
+                return encoded;
+
+            byte[] trimmed = new byte[len];
+            Buffer.BlockCopy(encoded, 0, trimmed, 0, len);
+            return trimmed;
         }
 
-
-        // DSP pipeline
+        /// <summary>
+        /// Applies the SCP voice DSP pipeline, output gain, and optional
+        /// normalization to the given PCM buffer in-place.
+        /// </summary>
         public static short[] ApplyEffects(short[] pcm, Player scp)
         {
-            // 1. Convert to float
-            float[] f = ToFloat(pcm);
+            if (pcm == null || pcm.Length == 0)
+                return pcm ?? Array.Empty<short>();
 
-            // 2. Get DSP pipeline
             var pipeline = ScpVoiceProfiles.GetPipelineFor(scp);
+            pipeline.Process(pcm, pcm.Length);
 
-            // 3. Process float PCM
-            pipeline.Process(f, f.Length);
-
-            // 4. Convert back to short
-            short[] processed = ToShort(f);
-
-            // 5. Apply OutputGain
             var preset = ScpVoiceProfiles.GetPreset(scp);
             if (preset.OutputGain != 1f)
             {
-                for (int i = 0; i < processed.Length; i++)
-                    processed[i] = (short)Clamp(processed[i] * preset.OutputGain, short.MinValue, short.MaxValue);
+                float gain = preset.OutputGain;
+                for (int i = 0; i < pcm.Length; i++)
+                {
+                    int v = (int)(pcm[i] * gain);
+                    if (v > short.MaxValue) v = short.MaxValue;
+                    if (v < short.MinValue) v = short.MinValue;
+                    pcm[i] = (short)v;
+                }
             }
 
-            // 6. Normalize
-            processed = Normalize(processed);
+            if (NormalizeEnabled)
+                pcm = Normalize(pcm);
 
-            return processed;
+            return pcm;
         }
 
+        /// <summary>
+        /// Returns true if the frame is considered silent based on a simple
+        /// amplitude threshold.
+        /// </summary>
         public static bool IsSilent(short[] pcm, int threshold = 200)
         {
-            // threshold = max amplitude below which we consider the frame silent
+            if (pcm == null || pcm.Length == 0)
+                return true;
+
             for (int i = 0; i < pcm.Length; i++)
             {
                 if (Math.Abs(pcm[i]) > threshold)
-                    return false; // real speech
+                    return false;
             }
-            return true; // silence
+
+            return true;
         }
 
+        /// <summary>
+        /// Normalizes the buffer in-place so that the peak amplitude reaches
+        /// targetPeak of full-scale (0–1 range). Skips if signal is effectively
+        /// silent.
+        /// </summary>
         public static short[] Normalize(short[] pcm, float targetPeak = 0.9f)
         {
+            if (pcm == null || pcm.Length == 0)
+                return pcm ?? Array.Empty<short>();
+
             short max = 0;
 
-            // find peak amplitude
             for (int i = 0; i < pcm.Length; i++)
             {
                 short abs = (short)Math.Abs(pcm[i]);
@@ -121,41 +161,33 @@
             }
 
             if (max < 1)
-                return pcm; // silence
+                return pcm;
 
             float gain = (targetPeak * 32767f) / max;
 
-            short[] output = new short[pcm.Length];
             for (int i = 0; i < pcm.Length; i++)
             {
-                output[i] = (short)Clamp(pcm[i] * gain, short.MinValue, short.MaxValue);
+                int v = (int)(pcm[i] * gain);
+                if (v > short.MaxValue) v = short.MaxValue;
+                if (v < short.MinValue) v = short.MinValue;
+                pcm[i] = (short)v;
             }
 
-            return output;
+            return pcm;
         }
 
-        public static float[] ToFloat(short[] pcm)
+        /// <summary>
+        /// Converts 16-bit PCM to float PCM in the -1..1 range.
+        /// </summary>
+        private static float[] ToFloat(short[] pcm)
         {
             float[] f = new float[pcm.Length];
+            const float inv = 1f / 32768f;
+
             for (int i = 0; i < pcm.Length; i++)
-                f[i] = pcm[i] / 32768f;
+                f[i] = pcm[i] * inv;
+
             return f;
         }
-
-        public static short[] ToShort(float[] pcm)
-        {
-            short[] s = new short[pcm.Length];
-            for (int i = 0; i < pcm.Length; i++)
-                s[i] = (short)Clamp(pcm[i] * 32767f, short.MinValue, short.MaxValue);
-            return s;
-        }
-
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
-        }
-
     }
 }

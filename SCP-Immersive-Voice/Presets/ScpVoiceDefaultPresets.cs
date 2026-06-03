@@ -10,146 +10,159 @@
             return new Dictionary<RoleTypeId, ScpVoicePreset>()
             {
                 // SCP-049 — "Plague Doctor"
-                // Calm, deep, muffled voice behind a mask. Slightly eerie but controlled.
+                // Muffled mask, deep, calm, eerie authority.
                 [RoleTypeId.Scp049] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 0.72f,
-                    Formant = 0.85f,
-                    Distortion = 0.15f,
-                    LowPass = 3200f,
-                    Reverb = 0.25f
+                    Pitch = 0.70f,
+                    Formant = 0.82f,
+                    LowPass = 2800f,
+                    Distortion = 0.18f,
+                    Reverb = 0.32f,
+                    WhisperAmount = 0.15f
                 },
 
                 // SCP-096 — "Shy Guy"
-                // Quiet trembling voice normally, but extremely distorted and high-pitched during rage.
+                // Calm: trembling, unstable. Rage: handled dynamically.
                 [RoleTypeId.Scp096] = new ScpVoicePreset
+                {
+                    Enable = true,
+                    Pitch = 0.95f,
+                    Formant = 1.0f,
+                    Distortion = 0.25f,
+                    FormantDrift = 0.35f,
+                    LowPass = 3600f,
+                    WetOrganic = 0.25f
+                },
+
+                // SCP-939 — "With Many Voices"
+                // Whisper mimicry, breathy, soft, uncanny.
+                [RoleTypeId.Scp939] = new ScpVoicePreset
+                {
+                    Enable = true,
+                    Pitch = 0.55f,
+                    Formant = 0.65f,
+                    WhisperAmount = 0.85f,
+                    BreathNoise = 0.45f,
+                    WetOrganic = 0.35f,
+                    Distortion = 0.05f
+                },
+
+                // SCP-173 — "The Sculpture"
+                // Stone grinding, cracking, zero humanity.
+                [RoleTypeId.Scp173] = new ScpVoicePreset
+                {
+                    Enable = true,
+                    Pitch = 0.90f,
+                    Formant = 0.95f,
+                    StoneCrack = 1.0f,
+                    StoneGrind = 1.0f,
+                    Distortion = 0.4f,
+                    LowPass = 2500f
+                },
+
+                // SCP-106 — "Old Man"
+                // Wet, decayed, dimensional echo, deep and horrifying.
+                [RoleTypeId.Scp106] = new ScpVoicePreset
+                {
+                    Enable = true,
+                    Pitch = 0.52f,
+                    Formant = 0.42f,
+                    Distortion = 1.35f,
+                    LowPass = 850f,
+                    Reverb = 0.55f,
+                    WetDecay = 1.0f,
+                    WetOrganic = 0.25f,
+                    PocketEcho = 0.85f
+                },
+
+                // SCP-3114 — "The Flesh That Hates"
+                // High, unstable, organic, wet, twitchy.
+                [RoleTypeId.Scp3114] = new ScpVoicePreset
+                {
+                    Enable = true,
+                    Pitch = 1.65f,
+                    Formant = 1.15f,
+                    WetOrganic = 0.85f,
+                    FleshCrackle = 0.55f,
+                    Distortion = 0.15f,
+                    FormantDrift = 0.45f
+                },
+
+                // SCP-079 — "Old AI"
+                // Digital corruption, bitcrush, glitch, static.
+                [RoleTypeId.Scp079] = new ScpVoicePreset
                 {
                     Enable = true,
                     Pitch = 1.0f,
                     Formant = 1.0f,
-                    Distortion = 0.2f,
-                    LowPass = 3500f,
-                },
-
-                // SCP-939 — "With Many Voices"
-                // Whisper mimicry creature. Soft, low-pitch, breathy voice.
-                [RoleTypeId.Scp939] = new ScpVoicePreset
-                {
-                    Enable = true,
-                    Pitch = 0.5f,
-                    Formant = 0.6f,
-                    Distortion = 0f
-                },
-
-                // SCP-173 — "The Sculpture"
-                // Does not speak. If forced, should sound like stone grinding or cracking.
-                [RoleTypeId.Scp173] = new ScpVoicePreset
-                {
-                    Enable = true,
-                    Pitch = 1f,
-                    Formant = 1f,
-                    Distortion = 3.0f,
-                    StoneCrack = 1.0f,
-                    StoneGrind = 0.8f
-                },
-
-                // SCP-106 — "Old Man"
-                // Deep, wet, decayed voice. Echoing from another dimension.
-                [RoleTypeId.Scp106] = new ScpVoicePreset
-                {
-                    Enable = true,
-                    Pitch = 0.55f,
-                    Formant = 0.45f,
-                    Distortion = 1.2f,
-                    LowPass = 900f,
-                    Reverb = 0.45f,
-                    WetDecay = 0.9f,
-                    PocketEcho = 0.7f
-                },
-
-                // SCP-3114 — "The Flesh That Hates"
-                // High-pitched, organic, unstable voice.
-                [RoleTypeId.Scp3114] = new ScpVoicePreset
-                {
-                    Enable = true,
-                    Pitch = 1.8f,
-                    Formant = 1f,
-                    Distortion = 0f
-                },
-
-                // SCP-079 — "Old AI / Computer"
-                // Robotic, glitchy, bitcrushed voice. Not proximity-based.
-                [RoleTypeId.Scp079] = new ScpVoicePreset
-                {
-                    Enable = true,
-                    Pitch = 1f,
-                    Formant = 1f,
+                    Bitcrush = 0.75f,
+                    SampleRateReduce = 0.65f,
+                    Glitch = 0.45f,
+                    StaticNoise = 0.35f,
                     Distortion = 0.25f,
-                    Bitcrush = 0.65f,
-                    SampleRateReduce = 0.55f,
-                    Glitch = 0.35f,
-                    StaticNoise = 0.25f
+                    HighPass = 300f
                 },
 
                 // SCP-049-2 — "Zombie"
-                // Growly and guttural, but not too distorted. Should still be intelligible, just very rough.
+                // Guttural, subharmonic, rough, decayed but intelligible.
                 [RoleTypeId.Scp0492] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 0.75f,
-                    Formant = 0.8f,
-                    Distortion = 0.3f,
-                    LowPass = 1800f,
-                    HighPass = 150f,
-                    Guttural = 0.9f,
-                    DryCrackle = 0.6f,
-                    Subharmonic = 0.7f
+                    Pitch = 0.68f,
+                    Formant = 0.78f,
+                    Distortion = 0.35f,
+                    LowPass = 1600f,
+                    HighPass = 120f,
+                    Guttural = 0.95f,
+                    Subharmonic = 0.85f,
+                    DryCrackle = 0.55f,
+                    WetDecay = 0.35f
                 },
 
-                // Flamingo variants — comedic SCP, but lets give them a slightly weird pitch
+                // Flamingo variants — comedic, but still SCP-weird
                 [RoleTypeId.Flamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 1.45f,
+                    Pitch = 1.55f,
                     Formant = 1.25f,
-                    Distortion = 0.15f,
-                    Chirp = 0.4f
+                    Chirp = 0.45f,
+                    Distortion = 0.15f
                 },
                 [RoleTypeId.AlphaFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 1.35f,
-                    Formant = 1.2f,
-                    Distortion = 0.2f,
-                    Chirp = 0.35f
+                    Pitch = 1.45f,
+                    Formant = 1.20f,
+                    Chirp = 0.40f,
+                    Distortion = 0.20f
                 },
                 [RoleTypeId.ZombieFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 1.1f,
-                    Formant = 0.9f,
-                    Distortion = 0.4f,
-                    Chirp = 0.2f
+                    Pitch = 1.15f,
+                    Formant = 0.95f,
+                    Chirp = 0.25f,
+                    Distortion = 0.45f,
+                    Subharmonic = 0.35f
                 },
                 [RoleTypeId.NtfFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    Pitch = 1.3f,
-                    Formant = 1.1f,
-                    Distortion = 0.25f,
-                    Chirp = 0.3f
+                    Pitch = 1.35f,
+                    Formant = 1.10f,
+                    Chirp = 0.35f,
+                    Distortion = 0.25f
                 },
                 [RoleTypeId.ChaosFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
                     Pitch = 1.25f,
                     Formant = 1.05f,
-                    Distortion = 0.3f,
-                    Chirp = 0.25f
+                    Chirp = 0.30f,
+                    Distortion = 0.30f
                 },
             };
         }
     }
-
 }

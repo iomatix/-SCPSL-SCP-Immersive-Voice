@@ -119,7 +119,8 @@
     <Compile Include="AudioProcessing\Effects\WetDecayEffect.cs" />
     <Compile Include="AudioProcessing\Effects\WetOrganicEffect.cs" />
     <Compile Include="AudioProcessing\Effects\WhisperFilterEffect.cs" />
-    <Compile Include="AudioProcessing\Interfaces\IAudioEffect.cs" />
+    <Compile Include="AudioProcessing\Interfaces\IAudioEffectShort.cs" />
+    <Compile Include="AudioProcessing\Interfaces\IAudioEffectLegacyFloat.cs" />
     <Compile Include="Config\Config.cs" />
     <Compile Include="Decoders\ScpVoiceDecoder.cs" />
     <Compile Include="Managers\ScpVoiceManager.cs" />

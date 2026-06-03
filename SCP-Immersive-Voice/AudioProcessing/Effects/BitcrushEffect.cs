@@ -2,25 +2,50 @@
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
     using System;
-    public class BitcrushEffect : IAudioEffect
+
+    /// <summary>
+    /// Reduces bit depth to create gritty, digital degradation. Includes dithering
+    /// for smoother quantization and reduced harsh artifacts. Ideal for SCP‑079,
+    /// corrupted radio, or retro digital distortion.
+    /// </summary>
+
+    public class BitcrushEffect : IAudioEffectShort
     {
-        private readonly float _amount;
+        private readonly int _steps;
+        private static readonly Random _rng = new Random();
 
         public BitcrushEffect(float amount)
         {
-            _amount = Clamp(amount, 0f, 1f);
+            // amount 0 → full quality
+            // amount 1 → lowest bit amount
+            amount = Clamp(amount, 0f, 1f);
+
+            // 256 levels = 8-bit
+            // 32 levels = 5-bit
+            _steps = (int)(256 * (1f - amount));
+            if (_steps < 2) _steps = 2;
         }
 
-        public void Process(float[] samples, int length)
+        public void Process(short[] pcm, int length)
         {
-            int steps = (int)(256 * (1f - _amount)); // 256 → 8-bit
-            if (steps < 2) steps = 2;
-
             for (int i = 0; i < length; i++)
             {
-                float x = samples[i];
-                float crushed = (float)Math.Round(x * steps) / steps;
-                samples[i] = crushed;
+                // Convert to int for processing
+                int sample = pcm[i];
+
+                // Add small TPDF dither to reduce quantization artifacts
+                // Range is very small compared to full PCM scale
+                float dither = (float)(_rng.NextDouble() - _rng.NextDouble()) * (_steps * 0.25f);
+                float withDither = sample + dither;
+
+                // Quantization
+                int crushed = (int)Math.Round(withDither / _steps) * _steps;
+
+                // Clamp to valid PCM range
+                if (crushed > short.MaxValue) crushed = short.MaxValue;
+                if (crushed < short.MinValue) crushed = short.MinValue;
+
+                pcm[i] = (short)crushed;
             }
         }
 
