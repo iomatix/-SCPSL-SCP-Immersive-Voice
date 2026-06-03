@@ -14,10 +14,10 @@
 
         public static ScpVoiceManager Instance { get; } = new ScpVoiceManager();
         private readonly Dictionary<Player, int> _sessions = new Dictionary<Player, int>();
-        public void StartSession(Player scp)
+        public int StartSession(Player scp)
         {
-            if (_sessions.ContainsKey(scp))
-                return;
+            if (_sessions.TryGetValue(scp, out int existing))
+                return existing;
 
             int sessionId = DefaultAudioManager.Instance.PlayAudio(
                 key: "scp_voice_" + scp.PlayerId,
@@ -32,6 +32,7 @@
             );
 
             _sessions[scp] = sessionId;
+            return sessionId;
         }
 
         public void StopSession(Player scp)
@@ -45,10 +46,7 @@
 
         public void StopAllSessions()
         {
-            foreach (var kvp in _sessions)
-            {
-                DefaultAudioManager.Instance.DestroySession(kvp.Value);
-            }
+            foreach (var kvp in _sessions) DefaultAudioManager.Instance.DestroySession(kvp.Value);
 
             _sessions.Clear();
         }
@@ -56,7 +54,7 @@
         public void AppendPcm(Player scp, short[] pcm)
         {
             if (!_sessions.TryGetValue(scp, out int sessionId))
-                StartSession(scp);
+                sessionId = StartSession(scp);
 
             DefaultAudioManager.Instance.AppendPcmData(sessionId, pcm);
         }

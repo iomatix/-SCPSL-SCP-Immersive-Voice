@@ -1,4 +1,4 @@
-namespace ScpImmersiveVoice.EventHandlers
+﻿namespace ScpImmersiveVoice.EventHandlers
 {
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.Scp096Events;
@@ -102,16 +102,24 @@ namespace ScpImmersiveVoice.EventHandlers
             if (ev.Message.Channel != VoiceChatChannel.ScpChat)
                 return;
 
-            // Add DSP effects if enabled    
+            // Apply Opus → PCM → DSP → Opus (legacy effects)
             if (_config.EnableScpVoiceEffects)
                 ApplyEffects(ev.Message.Data, ev.Message.DataLength, sender);
 
+            // Check if sender's role can use proximity voice  
+            if (_config.ForbiddenProximity.Contains(sender.Role)) return;
+
+            // BLOCK original SCP chat
             ev.IsAllowed = false;
 
+            // Decode Opus → PCM
             short[] pcm = ScpVoiceDecoder.Decode(ev.Message);
+
+            // Apply PCM DSP (proximity effects)
             pcm = ScpVoiceDecoder.ApplyEffects(pcm, sender);
 
-            ScpVoiceManager.Instance.AppendPcm(ev.Player, pcm);
+            // Send PCM to proximity audio system
+            ScpVoiceManager.Instance.AppendPcm(sender, pcm);
 
         }
 
