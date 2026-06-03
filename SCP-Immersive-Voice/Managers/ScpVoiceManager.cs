@@ -5,7 +5,6 @@
     using AudioManagerAPI.Features.Enums;
     using LabApi.Features.Wrappers;
     using System.Collections.Generic;
-    using System.Runtime.InteropServices;
     using ScpImmersiveVoice;
 
     public class ScpVoiceManager
@@ -25,11 +24,11 @@
                 position: scp.Position,
                 loop: false,
                 volume: 1f,
-                minDistance: 0.5f,
+                minDistance: 0.05f,
                 maxDistance: _config.ProximityDistance,
                 isSpatial: true,
                 priority: AudioPriority.High,
-                validPlayersFilter: p => p != scp
+                validPlayersFilter: p => p.PlayerId != scp.PlayerId
             );
 
             _sessions[scp] = sessionId;
@@ -40,8 +39,18 @@
             if (!_sessions.TryGetValue(scp, out int sessionId))
                 return;
 
-            DefaultAudioManager.Instance.Stop(sessionId);
+            DefaultAudioManager.Instance.DestroySession(sessionId);
             _sessions.Remove(scp);
+        }
+
+        public void StopAllSessions()
+        {
+            foreach (var kvp in _sessions)
+            {
+                DefaultAudioManager.Instance.DestroySession(kvp.Value);
+            }
+
+            _sessions.Clear();
         }
 
         public void AppendPcm(Player scp, short[] pcm)
@@ -59,7 +68,7 @@
                 var scp = kvp.Key;
                 var sessionId = kvp.Value;
 
-                DefaultAudioManager.Instance.UpdatePosition(sessionId, scp.Position);
+                DefaultAudioManager.Instance.SetSessionPosition(sessionId, scp.Position);
             }
         }
     }
