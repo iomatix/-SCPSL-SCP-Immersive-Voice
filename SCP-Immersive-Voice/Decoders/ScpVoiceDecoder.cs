@@ -49,8 +49,6 @@
 
             int samples = _decoder.Decode(msg.Data, msg.DataLength, _floatBuffer);
 
-            Logger.Debug($"[SCP-VOICE] Decode: data={msg.DataLength}, samples={samples}");
-
             if (samples <= 0 || samples > MaxOpusSamples)
                 return Array.Empty<short>();
 
