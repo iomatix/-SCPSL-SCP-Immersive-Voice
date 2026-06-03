@@ -5,11 +5,11 @@
 
     public class AudioEffectPipeline
     {
-        private readonly List<IAudioEffectShort> _effects = new List<IAudioEffectShort>();
+        private readonly List<IAudioEffect> _effects = new List<IAudioEffect>();
 
-        public void Add(IAudioEffectShort effect) => _effects.Add(effect);
+        public void Add(IAudioEffect effect) => _effects.Add(effect);
 
-        public void Process(short[] pcm, int samples)
+        public void Process(float[] pcm, int samples)
         {
             foreach (var effect in _effects)
                 effect.Process(pcm, samples);
