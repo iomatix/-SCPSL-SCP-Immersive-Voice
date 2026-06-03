@@ -19,14 +19,12 @@
             if (_sessions.TryGetValue(scp, out int existing))
                 return existing;
 
-            int sessionId = DefaultAudioManager.Instance.PlayAudio(
-                key: "scp_voice_" + scp.PlayerId,
+            int sessionId = DefaultAudioManager.Instance.CreateStreamSession(
                 position: scp.Position,
-                loop: false,
-                volume: 1f,
+                isSpatial: true,
                 minDistance: 0.05f,
                 maxDistance: _config.ProximityDistance,
-                isSpatial: true,
+                volume: 1f,
                 priority: AudioPriority.High,
                 validPlayersFilter: p => p.PlayerId != scp.PlayerId
             );
