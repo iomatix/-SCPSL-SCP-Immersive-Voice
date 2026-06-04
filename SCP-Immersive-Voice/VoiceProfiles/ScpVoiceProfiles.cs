@@ -110,7 +110,7 @@
                 p.Add(new DryCrackleEffect(preset.DryCrackle));
 
             if (preset.FleshCrackle > 0f)
-                p.Add(new FleshCrackleEffect(preset.FleshCrackle));
+                p.Add(new FleshCrackleEffect(preset.FleshCrackle, currentSampleRate));
 
             // --- Noise layers BEFORE filters ---
             if (preset.WhisperAmount > 0f)
