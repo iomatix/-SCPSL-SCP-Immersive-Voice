@@ -5,7 +5,6 @@
         public bool Enable { get; set; } = false;
         public ScpVoicePresetMode Mode { get; set; } = ScpVoicePresetMode.Default;
 
-        public float InputGain { get; set; } = 1f;
         public float OutputGain { get; set; } = 1f;
         public bool UseNoiseGate { get; set; } = false;
         public float NoiseGateThreshold { get; set; } = 0.02f;

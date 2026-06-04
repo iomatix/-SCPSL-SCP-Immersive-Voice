@@ -154,6 +154,7 @@
     <Compile Include="AudioProcessing\Effects\GutturalResonanceEffect.cs" />
     <Compile Include="AudioProcessing\Effects\HighPassEffect.cs" />
     <Compile Include="AudioProcessing\Effects\LowPassEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\NoiseGateEffect.cs" />
     <Compile Include="AudioProcessing\Effects\PitchShiftEffect.cs" />
     <Compile Include="AudioProcessing\Effects\PocketDimensionEchoEffect.cs" />
     <Compile Include="AudioProcessing\Effects\ReverbEffect.cs" />
