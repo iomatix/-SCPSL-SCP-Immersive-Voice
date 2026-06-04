@@ -7,7 +7,7 @@
 
         public float OutputGain { get; set; } = 1f;
         public bool UseNoiseGate { get; set; } = false;
-        public float NoiseGateThreshold { get; set; } = 0.02f;
+        public float NoiseGateThreshold { get; set; } = -40.05f;
         public float Pitch { get; set; } = 1f;
         public float Formant { get; set; } = 1f;
         public float Distortion { get; set; } = 0f;

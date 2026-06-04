@@ -127,39 +127,9 @@
         }
 
         /// <summary>
-        /// Normalizes the buffer in-place so that the peak amplitude reaches targetPeak.
+        /// Applies a studio-grade stateless soft-limiter to prevent digital clipping.
+        /// Smoothly compresses signals exceeding 0.8f using a soft-knee saturation curve.
         /// </summary>
-        /// <param name="pcm">An array of floating-point PCM audio samples to process.</param>
-        /// <param name="targetPeak"></param>
-        private static void NormalizeInPlace(float[] pcm, float targetPeak = 0.9f)
-        {
-            float max = 0f;
-
-            for (int i = 0; i < pcm.Length; i++)
-            {
-                float abs = Math.Abs(pcm[i]);
-                if (abs > max) max = abs;
-            }
-
-            if (max < 0.0001f)
-                return;
-
-            float gain = targetPeak / max;
-
-            for (int i = 0; i < pcm.Length; i++)
-            {
-                float v = pcm[i] * gain;
-                if (v > 1f) v = 1f;
-                if (v < -1f) v = -1f;
-                pcm[i] = v;
-            }
-        }
-
-        /// <summary>
-        /// Limits the buffer to threshold.
-        /// </summary>
-        /// <param name="pcm">An array of floating-point PCM audio samples to process.</param>
-        /// <param name="threshold"></param>
         private static void ApplyLimiter(float[] pcm, float threshold = 0.98f)
         {
             float t = Math.Abs(threshold);
@@ -167,11 +137,18 @@
             for (int i = 0; i < pcm.Length; i++)
             {
                 float v = pcm[i];
+                float absV = Math.Abs(v);
 
-                if (v > t)
-                    v = t;
-                else if (v < -t)
-                    v = -t;
+                // If sample enters the hot zone, soft-compress it
+                if (absV > 0.8f)
+                {
+                    float excess = absV - 0.8f;
+                    // Fast polynomial soft-knee emulation
+                    absV = 0.8f + excess / (1f + excess * excess);
+
+                    if (absV > t) absV = t;
+                    v = Math.Sign(v) * absV;
+                }
 
                 pcm[i] = v;
             }
@@ -231,12 +208,8 @@
         }
 
         /// <summary>
-        /// Applies automatic gain control to normalize PCM audio samples to a target peak level.
+        /// Pre-DSP Automatic Gain Control to normalize input peaks before modular processing.
         /// </summary>
-        /// <param name="pcm">The array of PCM audio samples to process.</param>
-        /// <param name="targetPeak">The desired peak amplitude after gain adjustment.</param>
-        /// <param name="maxGain">The maximum gain factor to apply.</param>
-        /// <returns>A new array of PCM audio samples adjusted to the target peak level.</returns>
         private static float[] ApplyAgc(float[] pcm, float targetPeak, float maxGain)
         {
             float peak = 0f;
@@ -261,25 +234,16 @@
         }
 
         /// <summary>
-        /// Applies preset OutputGain safely:
-        /// - clamps gain to 0.0–3.0
-        /// - multiplies PCM
-        /// - clamps PCM to -1..1
+        /// Applies preset OutputGain smoothly without redundant clipping loops.
         /// </summary>
         private static void ApplyOutputGain(float[] pcm, float gain)
         {
-            // Safety clamp for gain
             gain = Clamp(gain, 0.0f, 3.0f);
+            if (Math.Abs(gain - 1.0f) < 0.001f) return; // Skip loop if gain is neutral
 
             for (int i = 0; i < pcm.Length; i++)
             {
-                float v = pcm[i] * gain;
-
-                // Clamp to valid PCM range
-                if (v > 1f) v = 1f;
-                else if (v < -1f) v = -1f;
-
-                pcm[i] = v;
+                pcm[i] *= gain;
             }
         }
 
