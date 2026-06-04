@@ -117,10 +117,10 @@
                 p.Add(new WhisperFilterEffect(preset.WhisperAmount, currentSampleRate));
 
             if (preset.BreathNoise > 0f)
-                p.Add(new BreathNoiseEffect(preset.BreathNoise));
+                p.Add(new BreathNoiseEffect(preset.BreathNoise, currentSampleRate));
 
             if (preset.StaticNoise > 0f)
-                p.Add(new StaticNoiseEffect(preset.StaticNoise));
+                p.Add(new StaticNoiseEffect(preset.StaticNoise, currentSampleRate));
 
             // --- Wet / spatial ---
             if (preset.WetOrganic > 0f)
