@@ -1,108 +1,71 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>
-    /// Produces a soft, slimy, organic wet layer using slow filter modulation,
-    /// subtle high‑pass movement, envelope‑reactive shaping, and gentle noise.
-    /// Ideal for SCP‑3114, SCP‑939, or any creature requiring moist, living,
-    /// tissue‑like vocal textures. Designed to be subtle, smooth, and non‑bulky,
-    /// unlike WetDecay which is heavier and more grotesque.
+    /// Subtle organic wet layer simulating moist, living tissue.
+    /// Envelope-driven movement, dual-filter wobble, gentle wet noise
+    /// and nonlinear shaping. Ideal for SCP-3114 or SCP-939.
     /// </summary>
-    public class WetOrganicEffect : IAudioEffectShort
+    public class WetOrganicEffect : IAudioEffect
     {
         private readonly float _amount;
 
-        // Filter states
         private float _lp;
         private float _hp;
-
-        // Envelope follower (reacts to input loudness)
         private float _env;
-
-        // Modulation phase
         private float _phase;
 
-        // Random generator
-        private static readonly Random _rng = new Random();
+        private readonly Random _rng;
 
         public WetOrganicEffect(float amount)
         {
-            // amount 0 → dry
-            // amount 1.5 → strong slimy organic layer
             _amount = Clamp(amount, 0f, 1.5f);
+            _rng = new Random(Guid.NewGuid().GetHashCode());
         }
 
-        public void Process(short[] pcm, int length)
+        public void Process(float[] pcm, int length)
         {
             for (int i = 0; i < length; i++)
             {
-                // Convert PCM to float -1..1
-                float x = pcm[i] / 32768f;
+                float dry = pcm[i];
 
-                // ---------------------------------------------------------
-                // 1. Envelope follower (organic reactivity)
-                // ---------------------------------------------------------
-                float abs = Math.Abs(x);
-                _env += 0.03f * (abs - _env);
+                // Soft envelope follower (living tissue reactivity)
+                float abs = Math.Abs(dry);
+                _env += 0.026f * (abs - _env);
 
-                // ---------------------------------------------------------
-                // 2. Slow filter modulation (slimy wobble)
-                // ---------------------------------------------------------
-                _phase += 0.0011f + _env * 0.0003f;
-                float wobble = 0.5f + 0.5f * (float)Math.Sin(_phase * 1.35f);
+                // Slow dual-filter wobble (slimy movement)
+                _phase += 0.00112f + _env * 0.00031f;
+                float wobble = 0.5f + 0.5f * (float)Math.Sin(_phase * 1.31f);
 
-                // Dynamic cutoffs
-                float lpCut = 0.18f + wobble * 0.32f;  // 0.18–0.50
-                float hpCut = 0.78f - wobble * 0.22f;  // 0.56–0.78
+                float lpCut = 0.16f + wobble * 0.34f;
+                float hpCut = 0.80f - wobble * 0.24f;
 
-                // ---------------------------------------------------------
-                // 3. Low‑pass (soft smear)
-                // ---------------------------------------------------------
-                _lp += lpCut * (x - _lp);
+                // Low-pass smear
+                _lp += lpCut * (dry - _lp);
 
-                // ---------------------------------------------------------
-                // 4. High‑pass (slimy movement)
-                // ---------------------------------------------------------
-                _hp = x - _lp * hpCut;
+                // High-pass shifting texture
+                _hp = dry - _lp * hpCut;
 
-                // ---------------------------------------------------------
-                // 5. Subtle organic noise (wet friction)
-                // ---------------------------------------------------------
+                // Gentle wet noise (subtle friction)
                 float noise = 0f;
-                if (_amount > 0.05f)
+                if (_amount > 0.04f)
                 {
                     float raw = (float)(_rng.NextDouble() * 2.0 - 1.0);
-                    noise = raw * 0.035f * _amount;
+                    noise = raw * 0.028f * _amount;
                 }
 
-                // ---------------------------------------------------------
-                // 6. Soft saturation for organic smoothness
-                // ---------------------------------------------------------
-                float wet = (float)Math.Tanh((_hp + noise) * 1.4f);
+                // Nonlinear shaping (living tissue softness)
+                float shaped = (_hp + noise) * (0.89f + 0.11f * (_hp + noise));
 
-                // ---------------------------------------------------------
-                // 7. Mix dry + wet
-                // ---------------------------------------------------------
-                float mixed = x * (1f - _amount * 0.42f) + wet * (_amount * 0.42f);
+                // Soft saturation
+                float wet = (float)Math.Tanh(shaped * 1.33f);
 
-                // Convert back to PCM
-                int sample = (int)(mixed * 32767f);
-
-                // Clamp
-                if (sample > short.MaxValue) sample = short.MaxValue;
-                if (sample < short.MinValue) sample = short.MinValue;
-
-                pcm[i] = (short)sample;
+                // Wet/dry mix
+                pcm[i] = dry * (1f - _amount * 0.42f) + wet * (_amount * 0.42f);
             }
-        }
-
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
         }
     }
 }

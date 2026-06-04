@@ -1,69 +1,66 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>
-    /// Adds subtle or strong static noise to the signal. 
-    /// Designed for radio distortion, dimensional interference, 
-    /// SCP‑079 corruption, or ambient static layers. 
-    /// Noise is smoothed and micro‑modulated to avoid harsh digital artifacts.
+    /// Organic multi-layer static for SCP-079, radio corruption or dimensional interference.
+    /// Combines white noise, LF drift, HF fizz and nonlinear shaping.
     /// </summary>
-    public class StaticNoiseEffect : IAudioEffectShort
+    public class StaticNoiseEffect : IAudioEffect
     {
         private readonly float _amount;
 
-        // Smoothing state to avoid harsh edges
         private float _smooth;
+        private float _driftPhase;
+        private float _fizzPhase;
 
-        // Random generator for noise
-        private static readonly Random _rng = new Random();
+        // Per-instance RNG to avoid shared-state artifacts
+        private readonly Random _rng;
 
         public StaticNoiseEffect(float amount)
         {
-            // amount 0 → no noise
-            // amount 1 → strong static
             _amount = Clamp(amount, 0f, 1f);
+            _rng = new Random(Guid.NewGuid().GetHashCode());
         }
 
-        public void Process(short[] pcm, int length)
+        public void Process(float[] pcm, int length)
         {
             for (int i = 0; i < length; i++)
             {
-                // Convert PCM to float -1..1
-                float x = pcm[i] / 32768f;
+                float x = pcm[i];
 
-                // 1. Generate static noise (white noise)
-                float noise = (float)(_rng.NextDouble() * 2.0 - 1.0);
+                // White noise layer
+                float white = (float)(_rng.NextDouble() * 2.0 - 1.0);
 
-                // 2. Micro‑modulation to avoid robotic uniformity
-                noise *= 0.02f + _amount * 0.04f;
+                // Low-frequency drift (dimensional instability)
+                _driftPhase += 0.0014f + _amount * 0.0011f;
+                float drift = (float)Math.Sin(_driftPhase * 0.65f) * 0.42f;
 
-                // 3. Smooth noise to avoid harsh digital edges
-                _smooth += 0.15f * (noise - _smooth);
+                // High-frequency fizz (spectral crackle)
+                _fizzPhase += 0.0035f + _amount * 0.0022f;
+                float fizz = (float)Math.Sin(_fizzPhase * 17.3f);
+                fizz = fizz * fizz * 0.22f; // HF bias
 
-                // 4. Soft saturation for analog‑style static
-                float staticOut = (float)Math.Tanh(_smooth * 2.0f);
+                // Layer blend
+                float combined =
+                    white * (0.55f + _amount * 0.25f) +
+                    drift * 0.25f +
+                    fizz * 0.20f;
 
-                // 5. Mix dry + wet
-                float mixed = x + staticOut * _amount;
+                // Organic smoothing
+                _smooth += 0.11f * (combined - _smooth);
 
-                // Convert back to PCM
-                int sample = (int)(mixed * 32767f);
+                // Nonlinear shaping
+                float shaped = _smooth * (0.86f + 0.14f * _smooth);
 
-                // Clamp
-                if (sample > short.MaxValue) sample = short.MaxValue;
-                if (sample < short.MinValue) sample = short.MinValue;
+                // Soft saturation
+                float staticOut = (float)Math.Tanh(shaped * 2.1f);
 
-                pcm[i] = (short)sample;
+                // Wet/dry mix
+                pcm[i] = x * (1f - _amount) + staticOut * _amount;
             }
-        }
-
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
         }
     }
 }

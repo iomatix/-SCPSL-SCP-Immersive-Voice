@@ -1,67 +1,60 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>
-    /// Generates wet, organic crackle resembling tearing flesh or moist tissue.
-    /// Ideal for SCP‑610, SCP‑049‑2, or any grotesque biological transformation.
+    /// Wet, organic crackle resembling tearing flesh or moist tissue.
+    /// Envelope-driven probability, nonlinear shaping and moist decay.
     /// </summary>
-    public class FleshCrackleEffect : IAudioEffectShort
+    public class FleshCrackleEffect : IAudioEffect
     {
         private readonly float _amount;
+
         private float _smooth;
-        private static readonly Random _rng = new Random();
+
+        // Per-instance RNG for isolated wet-crackle behavior
+        private readonly Random _rng;
 
         public FleshCrackleEffect(float amount)
         {
-            // amount 0 → no crackle
-            // amount 1.5 → very strong organic crackle
             _amount = Clamp(amount, 0f, 1.5f);
+            _rng = new Random(Guid.NewGuid().GetHashCode());
         }
 
-        public void Process(short[] pcm, int length)
+        public void Process(float[] pcm, int length)
         {
             for (int i = 0; i < length; i++)
             {
-                // Convert PCM to float -1..1 for envelope analysis
-                float x = pcm[i] / 32768f;
+                float dry = pcm[i];
 
-                // Envelope follower: louder input → more crackle activity
-                float env = Math.Abs(x);
+                // Envelope: louder input → more wet crackle
+                float env = Math.Abs(dry);
 
-                // Probability of crackle increases with loudness and amount
-                float chance = 0.002f + env * 0.03f * _amount;
+                float chance = 0.002f + env * 0.028f * _amount;
 
-                // Generate crackle impulse
                 float crack = 0f;
+
                 if (_rng.NextDouble() < chance)
                 {
-                    // Organic, wet crackle impulse in range -0.6..0.6
-                    crack = (float)(_rng.NextDouble() * 2.0 - 1.0) * 0.6f * _amount;
+                    // Wet fleshy impulse
+                    float raw = (float)(_rng.NextDouble() * 2.0 - 1.0);
+                    crack = raw * 0.58f * _amount;
+
+                    // Nonlinear wet shaping
+                    crack *= 0.72f + 0.28f * crack;
                 }
 
-                // Smooth crackle to avoid harsh digital clicks
-                _smooth += 0.2f * (crack - _smooth);
+                // Moist decay
+                _smooth += 0.19f * (crack - _smooth);
 
-                // Mix crackle into original signal
-                float mixed = x + _smooth * 0.5f;
+                // Mix
+                float mixed = dry + _smooth * 0.48f;
 
-                // Convert back to PCM
-                int sample = (int)(mixed * 32767f);
-
-                // Clamp to valid PCM range
-                if (sample > short.MaxValue) sample = short.MaxValue;
-                if (sample < short.MinValue) sample = short.MinValue;
-
-                pcm[i] = (short)sample;
+                // Soft clip
+                pcm[i] = (float)Math.Tanh(mixed * 1.18f);
             }
-        }
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
         }
     }
 }

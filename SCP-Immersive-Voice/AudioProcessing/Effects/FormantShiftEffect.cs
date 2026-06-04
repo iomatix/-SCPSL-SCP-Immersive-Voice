@@ -1,72 +1,66 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>
-    /// Shifts vocal formants without altering pitch. Produces altered identity,
-    /// creature‑like timbre, or uncanny voice transformations.
+    /// Organic formant shifting using tilt-EQ with envelope-driven movement.
+    /// Ideal for creature timbre, SCP-939 mimicry or identity distortion.
     /// </summary>
-    public class FormantShiftEffect : IAudioEffectShort
+    public class FormantShiftEffect : IAudioEffect
     {
-        private readonly float _formant;
+        private readonly float _target;
 
-        // Filter states for tilt EQ
-        private float _lowState;
-        private float _highState;
+        private float _low;
+        private float _high;
+        private float _env;
+        private float _phase;
 
         public FormantShiftEffect(float formant)
         {
-            // formant 1.0 = neutral
-            // <1.0 = darker / lower formants
-            // >1.0 = brighter / higher formants
-            _formant = Clamp(formant, 0.5f, 2.0f);
+            _target = Clamp(formant, 0.5f, 2.0f);
         }
 
-        public void Process(short[] pcm, int length)
+        public void Process(float[] pcm, int length)
         {
             for (int i = 0; i < length; i++)
             {
-                // Convert PCM to float -1..1 for processing
-                float x = pcm[i] / 32768f;
+                float dry = pcm[i];
 
-                // Time-based modulation (smooth drift across the buffer)
-                float t = (float)i / length;
-                float shift = 1f + (_formant - 1f) * t;
+                // Envelope (formants react to loudness)
+                float abs = Math.Abs(dry);
+                _env += 0.03f * (abs - _env);
 
-                // Tilt EQ coefficients
-                // shift > 1 → boost highs
-                // shift < 1 → boost lows
+                // Slow drift (prevents static timbre)
+                _phase += 0.0009f;
+                float drift = 0.5f + 0.5f * (float)Math.Sin(_phase * 1.4f);
+
+                // Dynamic shift target
+                float shift = Lerp(1f, _target, drift * (0.6f + _env * 0.4f));
+
+                // Tilt-EQ coefficients
                 float lowCut = 0.05f * shift;
                 float highCut = 0.05f * (2f - shift);
 
-                // Low shelf (smooth low-frequency emphasis)
-                _lowState += lowCut * (x - _lowState);
+                // Low shelf
+                _low += lowCut * (dry - _low);
 
-                // High shelf (smooth high-frequency emphasis)
-                _highState += highCut * (x - _highState);
+                // High shelf
+                _high += highCut * (dry - _high);
 
-                // Tilt mix: blend low and high emphasis
-                float tilted = _lowState * (2f - shift) + _highState * shift;
+                // Tilt mix
+                float tilted = _low * (2f - shift) + _high * shift;
 
-                // Mix original + tilted
-                float mixed = x * 0.5f + tilted * 0.5f;
+                // Nonlinear shaping
+                tilted *= 0.89f + 0.11f * tilted;
 
-                // Convert back to PCM
-                int sample = (int)(mixed * 32767f);
+                // Mix
+                float mixed = dry * 0.5f + tilted * 0.5f;
 
-                // Clamp to valid PCM range
-                if (sample > short.MaxValue) sample = short.MaxValue;
-                if (sample < short.MinValue) sample = short.MinValue;
-
-                pcm[i] = (short)sample;
+                // Soft clip
+                pcm[i] = (float)Math.Tanh(mixed * 1.03f);
             }
-        }
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
         }
     }
 }

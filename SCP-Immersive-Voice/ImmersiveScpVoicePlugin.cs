@@ -20,7 +20,7 @@
         public override string Name => "SCP Voice Chat";
         public override string Description => "Enables proximity voice chat for SCPs and adds audio effects";
         public override string Author => "iomatix";
-        public override Version Version => new Version(0, 5, 0);
+        public override Version Version => new Version(0, 6, 0);
         public override Version RequiredApiVersion { get; } = new Version(LabApiProperties.CompiledVersion);
         #endregion
 
@@ -66,7 +66,7 @@
             #endregion
 
             PlayerEvents.SendingVoiceMessage += _eventHandler.OnSendingVoiceMessage;
-            PlayerEvents.ReceivingVoiceMessage += _eventHandler.OnReceivingVoiceMessage;
+            //PlayerEvents.ReceivingVoiceMessage += _eventHandler.OnReceivingVoiceMessage;
             #region SCP Event Handlers
             Scp096Events.Enraging += _eventHandler.On096Enraging;
             Scp096Events.Enraged += _eventHandler.On096Enraged;
@@ -125,7 +125,7 @@
                 #endregion
 
                 PlayerEvents.SendingVoiceMessage -= _eventHandler.OnSendingVoiceMessage;
-                PlayerEvents.ReceivingVoiceMessage -= _eventHandler.OnReceivingVoiceMessage;
+                //PlayerEvents.ReceivingVoiceMessage -= _eventHandler.OnReceivingVoiceMessage;
 
                 #region SCP Event Handlers
                 Scp096Events.Enraging -= _eventHandler.On096Enraging;

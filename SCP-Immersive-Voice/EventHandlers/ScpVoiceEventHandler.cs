@@ -99,57 +99,32 @@
 
             bool isForbidden = _config.ForbiddenProximity.Contains(sender.Role);
 
-            // Decode Opus → PCM
-            short[] pcm = ScpVoiceDecoder.Decode(ev.Message);
+            // Decode Opus → float PCM
+            float[] pcm = ScpVoiceDecoder.Decode(ev.Message);
 
-            if (pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 300))
+            if (pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 0.01f))
                 return;
 
-            // Apply DSP for ALL classes
+            // Apply DSP for ALL classes (float-native)
             pcm = ScpVoiceDecoder.ApplyEffects(pcm, sender);
-            pcm = ScpVoiceDecoder.Normalize(pcm);
 
             // --- CASE 1: Forbidden proximity (e.g. 079, humans, etc.) ---
             if (isForbidden)
             {
-                // re-encode PCM → OPUS so original channel sends modified voice
+                // Re-encode float PCM → OPUS so original channel sends modified voice
                 byte[] encoded = ScpVoiceDecoder.EncodeToOpus(pcm);
-                Buffer.BlockCopy(encoded, 0, ev.Message.Data, 0, encoded.Length);
 
+                Buffer.BlockCopy(encoded, 0, ev.Message.Data, 0, encoded.Length);
                 ev.IsAllowed = true;
                 return;
             }
 
             // --- CASE 2: Allowed proximity (SCPs) ---
-            if (ev.Message.Channel == VoiceChatChannel.ScpChat) ev.IsAllowed = false; // block original SCPChat
+            if (ev.Message.Channel == VoiceChatChannel.ScpChat)
+                ev.IsAllowed = false; // block original SCPChat
 
+            // Send float PCM to proximity audio system
             ScpVoiceManager.Instance.AppendPcm(sender, pcm);
-        }
-
-
-        public void OnReceivingVoiceMessage(PlayerReceivingVoiceMessageEventArgs ev)
-        {
-            // This event can be used for additional client-side processing if needed, but for now we rely on the sender-side processing and proximity filtering in OnSendingVoiceMessage.
-
-            //var sender = ev.Sender;
-            //var receiver = ev.Player;
-
-            //// Only process SCP messages  
-            //if (!sender.IsSCP) return;
-
-            //// Only process ScpChat channel messages  
-            //if (ev.Message.Channel != VoiceChatChannel.ScpChat) return;
-
-            //// Check if sender's role can use proximity voice  
-            //if (_config.ForbiddenProximity.Contains(sender.Role)) return;      
-
-            //// Distance filter - only allow if within proximity distance  
-            //float dist = Vector3.Distance(receiver.Position, sender.Position);
-            //if (dist > _config.ProximityDistance)
-            //{
-            //    ev.IsAllowed = false;
-            //    return;
-            //}
         }
         #endregion
 
