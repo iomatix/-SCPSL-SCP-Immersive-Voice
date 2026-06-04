@@ -4,9 +4,16 @@
 
     public class ScpVoiceUpdater : MonoBehaviour
     {
+        private ScpVoiceManager _manager;
+
+        public void Init(ScpVoiceManager manager)
+        {
+            _manager = manager;
+        }
+
         private void Update()
         {
-            ScpVoiceManager.Instance.UpdatePositions();
+            _manager?.UpdatePositions();
         }
     }
 }

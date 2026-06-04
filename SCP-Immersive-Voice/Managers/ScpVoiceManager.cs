@@ -14,7 +14,6 @@
 
         private readonly ImmersiveScpVoiceConfig _config = ImmersiveScpVoicePlugin.StaticConfig;
 
-        public static ScpVoiceManager Instance { get; } = new ScpVoiceManager();
         /// <summary>
         /// Audio Session IDs.
         /// The key of the dictonary is player.UserId, The value is _sessionId
@@ -36,15 +35,23 @@
             );
 
             _sessions[scp.UserId] = sessionId;
+            Logger.Debug($"[VOICE DEBUG] Session ADDED to dictionary. PlayerId: {scp.PlayerId}, SessionId: {sessionId}");
+            Logger.Debug($"[VOICE DEBUG] Total sessions in dictionary: {_sessions.Count}");
 
-            Logger.Debug($"[VOICE DEBUG] Audio Streaming Seassion no. {sessionId} Created");
+            Logger.Debug($"[VOICE DEBUG] Session created for player: {scp.Nickname}, SessionId: {sessionId}");
             return sessionId;
         }
 
         public void StopSession(Player scp)
         {
+            Logger.Debug($"[VOICE DEBUG] StopSession called for player: {scp.Nickname}, UserId: {scp.UserId}");
+            Logger.Debug($"[VOICE DEBUG] Current sessions: {string.Join(", ", _sessions.Keys)}");
+
             if (!_sessions.TryGetValue(scp.UserId, out int sessionId))
-                return;
+                {
+                    Logger.Debug($"[VOICE DEBUG] Session NOT found for player: {scp.Nickname}");
+                    return;
+                }
 
             DefaultAudioManager.Instance.DestroySession(sessionId);
 

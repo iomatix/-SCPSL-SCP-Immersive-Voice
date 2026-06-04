@@ -73,7 +73,8 @@
             {
                 _updaterObject = new GameObject("ScpVoiceUpdater");
                 GameObject.DontDestroyOnLoad(_updaterObject);
-                _updaterObject.AddComponent<ScpVoiceUpdater>();
+                _updaterObject.AddComponent<ScpVoiceUpdater>().Init(_voiceManager);
+
             }
             #endregion
 
