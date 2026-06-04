@@ -154,10 +154,10 @@
 
             // --- Stone layers ---
             if (preset.StoneCrack > 0f)
-                p.Add(new StoneCrackEffect(preset.StoneCrack));
+                p.Add(new StoneCrackEffect(preset.StoneCrack, currentSampleRate));
 
             if (preset.StoneGrind > 0f)
-                p.Add(new StoneGrindEffect(preset.StoneGrind));
+                p.Add(new StoneGrindEffect(preset.StoneGrind, currentSampleRate));
 
             // --- Creature chirps ---
             if (preset.Chirp > 0f)
