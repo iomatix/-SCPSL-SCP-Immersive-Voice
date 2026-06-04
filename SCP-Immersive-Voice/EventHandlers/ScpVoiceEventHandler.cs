@@ -4,12 +4,7 @@
     using LabApi.Events.Arguments.Scp096Events;
     using LabApi.Events.Arguments.Scp3114Events;
     using LabApi.Events.Arguments.Scp939Events;
-    using LabApi.Features.Audio;
-    using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
-    using LabApi.Loader.Features.Plugins;
-    using PlayerRoles;
-    using PlayerRoles.Voice;
     using SCP_Immersive_Voice.Decoders;
     using SCP_Immersive_Voice.Managers;
     using SCP_Immersive_Voice.Presets.Dynamics.Controllers;
@@ -18,12 +13,7 @@
     using ScpImmersiveVoice.Config;
     using System;
     using System.Collections.Generic;
-    using System.Reflection;
-    using UnityEngine;
     using VoiceChat;
-    using VoiceChat.Codec;
-    using VoiceChat.Codec.Enums;
-    using VoiceChat.Networking;
 
     public class ScpVoiceEventHandler
     {
@@ -115,20 +105,16 @@
 
             // Decode Opus → float PCM
             float[] pcm = ScpVoiceDecoder.Decode(ev.Message);
+            // Gate
+            if (pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 0.001f)) return;
 
-            // Noise gate BEFORE DSP
-            if (pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 0.001f))
-                return;
-
-            // Apply DSP for ALL classes (float-native)
+            // Apply Effects Pipeline
             pcm = ScpVoiceDecoder.ApplyEffects(pcm, sender);
-
-            // Noise gate AFTER DSP
-            if (ScpVoiceDecoder.IsSilent(pcm, threshold: 0.001f))
-                return;
-
-            ev.IsAllowed = false; // disable all events, allow only speaker sound for debugg
-            // --- CASE 1: Forbidden proximity (e.g. 079, humans, etc.) ---
+            
+            // Logic
+            ev.IsAllowed = false; // disable all events, allow only speaker sound for debugg TODO: REMOVE THIS LINE
+            // --- CASE 1: Forbidden proximity (e.g. 079 - defined in config.) ---
+            // Apply effects only TODO
             if (isForbidden)
             {
                 // Re-encode float PCM → OPUS so original channel sends modified voice
@@ -140,38 +126,9 @@
             }
 
             // --- CASE 2: Allowed proximity (SCPs) ---
+            // Disable original channel and make it proxy via Appending TODO
             if (ev.Message.Channel == VoiceChatChannel.ScpChat)
                 ev.IsAllowed = false; // block original SCPChat
-
-            // --- AGC: tylko wyrównanie, bez pompowania szumu ---
-            // --- AGC: only adjustement, without noise pump -
-            float peak = 0f;
-            for (int i = 0; i < pcm.Length; i++)
-            {
-                float a = Math.Abs(pcm[i]);
-                if (a > peak) peak = a;
-            }
-
-            if (peak > 0.0001f)
-            {
-                const float target = 0.7f;
-                float gain = target / peak;
-
-                if (gain > 3f)
-                    gain = 3f;
-
-                for (int i = 0; i < pcm.Length; i++)
-                    pcm[i] *= gain;
-            }
-
-
-            // --- Final limiter (anti‑clipping) ---
-            for (int i = 0; i < pcm.Length; i++)
-            {
-                if (pcm[i] > 0.98f) pcm[i] = 0.98f;
-                if (pcm[i] < -0.98f) pcm[i] = -0.98f;
-            }
-
 
             // Send float PCM to proximity audio system
             _voiceManager.AppendPcm(sender, pcm);

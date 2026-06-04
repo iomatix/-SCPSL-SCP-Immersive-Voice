@@ -1,12 +1,10 @@
 ﻿namespace ScpImmersiveVoice
 {
     using HarmonyLib;
-    using LabApi.Events;
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.ServerEvents;
     using LabApi.Events.Handlers;
     using LabApi.Features;
-    using LabApi.Features.Console;
     using LabApi.Loader.Features.Plugins;
     using LabApi.Loader.Features.Plugins.Enums;
     using SCP_Immersive_Voice.Managers;
@@ -16,7 +14,6 @@
     using ScpImmersiveVoice.EventHandlers;
     using ScpImmersiveVoice.Patches;
     using System;
-    using System.Reflection;
     using UnityEngine;
 
     public class ImmersiveScpVoicePlugin : Plugin<ImmersiveScpVoiceConfig>

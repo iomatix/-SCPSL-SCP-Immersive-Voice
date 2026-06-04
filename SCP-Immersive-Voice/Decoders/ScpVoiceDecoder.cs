@@ -1,13 +1,15 @@
 ﻿namespace SCP_Immersive_Voice.Decoders
 {
     using LabApi.Features.Audio;
-    using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
+    using SCP_Immersive_Voice.AudioProcessing.Processors;
     using SCP_Immersive_Voice.VoiceProfiles;
     using System;
     using VoiceChat.Codec;
     using VoiceChat.Codec.Enums;
     using VoiceChat.Networking;
+
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
 
     /// <summary>
     /// Handles Opus decoding/encoding and applies the SCP voice DSP pipeline
@@ -78,23 +80,31 @@
         }
 
         /// <summary>
-        /// Applies the SCP voice DSP pipeline, output gain, and optional normalization.
-        /// Fully float-native.
+        /// Applies the SCP voice DSP pipeline. Fully float-native.
+        /// <para>
+        /// Decode → RNNoise → AGC(pre-DSP) → DSP (pitch, formant, reverb…) → OutputGain(preset) → Limiter → return pcm
+        /// </para>
         /// </summary>
         public static float[] ApplyEffects(float[] pcm, Player scp)
         {
             if (pcm == null || pcm.Length == 0)
                 return pcm ?? Array.Empty<float>();
 
-            // Apply effects on healthy signal
+            // 1. RNNoise (noise suppression)
+            pcm = RnNoiseProcessor.Process(pcm);
+
+            // 2. AGC (pre‑DSP)
+            pcm = ApplyAgc(pcm, targetPeak: 0.7f, maxGain: 3f);
+
+            // 3. DSP Pipeline (pitch, formant, reverb, etc.)
             var pipeline = ScpVoiceProfiles.GetPipelineFor(scp);
             pipeline.Process(pcm, pcm.Length);
 
-            // Gain after DSP
+            // 4. OutputGain (preset)
             var preset = ScpVoiceProfiles.GetPreset(scp);
             if (preset.OutputGain != 1f)
             {
-                float gain = preset.OutputGain;
+                float gain = Clamp(preset.OutputGain, 0.0f, 3.0f);
                 for (int i = 0; i < pcm.Length; i++)
                 {
                     float v = pcm[i] * gain;
@@ -104,11 +114,12 @@
                 }
             }
 
-            // Clipping fix
+            // 5. Limiter (anti‑clip)
             ApplyLimiter(pcm, threshold: 0.98f);
 
             return pcm;
         }
+
 
         /// <summary>
         /// Returns true if the frame is considered silent based on amplitude threshold.
@@ -233,6 +244,35 @@
             }
         }
 
+        /// <summary>
+        /// Applies automatic gain control to normalize PCM audio samples to a target peak level.
+        /// </summary>
+        /// <param name="pcm">The array of PCM audio samples to process.</param>
+        /// <param name="targetPeak">The desired peak amplitude after gain adjustment.</param>
+        /// <param name="maxGain">The maximum gain factor to apply.</param>
+        /// <returns>A new array of PCM audio samples adjusted to the target peak level.</returns>
+        private static float[] ApplyAgc(float[] pcm, float targetPeak, float maxGain)
+        {
+            float peak = 0f;
+
+            for (int i = 0; i < pcm.Length; i++)
+            {
+                float a = Math.Abs(pcm[i]);
+                if (a > peak) peak = a;
+            }
+
+            if (peak < 0.0001f)
+                return pcm;
+
+            float gain = targetPeak / peak;
+            if (gain > maxGain)
+                gain = maxGain;
+
+            for (int i = 0; i < pcm.Length; i++)
+                pcm[i] *= gain;
+
+            return pcm;
+        }
 
 
     }
