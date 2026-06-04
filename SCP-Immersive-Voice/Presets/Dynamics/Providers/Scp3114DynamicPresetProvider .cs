@@ -1,19 +1,20 @@
-﻿namespace SCP_Immersive_Voice.Presets.Dynamics
+﻿namespace SCP_Immersive_Voice.Presets.Dynamics.Providers
 {
     using LabApi.Features.Wrappers;
     using PlayerRoles;
+    using SCP_Immersive_Voice.Presets;
     using SCP_Immersive_Voice.Presets.Dynamics.Controllers;
     using SCP_Immersive_Voice.Presets.Dynamics.Interfaces;
     using System.Collections.Generic;
-    public class Scp096DynamicPresetProvider : IDynamicVoicePresetProvider
-    {
 
+    public class Scp3114DynamicPresetProvider : IDynamicVoicePresetProvider
+    {
         /// <summary>
         /// The key of this dictionary is PlayerId.
         /// </summary>
-        private readonly Dictionary<int, Scp096VoiceStateController> _states;
+        private readonly Dictionary<int, Scp3114VoiceStateController> _states;
 
-        public Scp096DynamicPresetProvider(Dictionary<int, Scp096VoiceStateController> states)
+        public Scp3114DynamicPresetProvider(Dictionary<int, Scp3114VoiceStateController> states)
         {
             _states = states;
         }
@@ -22,15 +23,14 @@
         {
             preset = null;
 
-            if (player.Role != RoleTypeId.Scp096)
+            if (player.Role != RoleTypeId.Scp3114)
                 return false;
 
             if (!_states.TryGetValue(player.PlayerId, out var controller))
                 return false;
 
-            preset = Scp096DynamicPresets.GetPresetForState(controller.CurrentState);
+            preset = Scp3114DynamicPresets.GetPresetForState(controller.CurrentState);
             return true;
         }
     }
-
 }

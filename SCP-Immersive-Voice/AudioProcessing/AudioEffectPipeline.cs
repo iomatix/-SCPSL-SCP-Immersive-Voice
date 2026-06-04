@@ -7,23 +7,76 @@
 
     public class AudioEffectPipeline
     {
+        // Internal effects storage backed by a dedicated synchronization lock
         private readonly List<IAudioEffect> _effects = new List<IAudioEffect>();
+        private readonly object _pipelineLock = new object();
 
-        public void Add(IAudioEffect effect) => _effects.Add(effect);
+        /// <summary>
+        /// AAA Performance Switch: Set to true ONLY during debugging. 
+        /// When false, the profiling loop overhead is completely bypassed (0 CPU cost).
+        /// </summary>
+        public static bool IsProfilingEnabled { get; set; } = false;
 
-        public void Process(float[] pcm, int samples)
+        public void Add(IAudioEffect effect)
         {
-            foreach (var effect in _effects)
+            if (effect == null) return;
+            lock (_pipelineLock)
             {
-                // Log stats before/after processing each effect
-                var before = Analyze(pcm);
-                effect.Process(pcm, samples);
-                var after = Analyze(pcm);
-
-                DspProfiler.Log(effect.Name, before, after);
+                _effects.Add(effect);
             }
         }
 
+        public void Clear()
+        {
+            lock (_pipelineLock)
+            {
+                _effects.Clear();
+            }
+        }
+
+        public void Process(float[] pcm, int samples)
+        {
+            if (pcm == null || samples < 1) return;
+
+            // Thread-safe isolation of the processing loop
+            lock (_pipelineLock)
+            {
+                int count = _effects.Count;
+                for (int e = 0; e < count; e++)
+                {
+                    var effect = _effects[e];
+
+                    if (IsProfilingEnabled)
+                    {
+                        // Conditional profiling executed only on explicit demand
+                        DspStats before = Analyze(pcm, samples);
+                        try
+                        {
+                            effect.Process(pcm, samples);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error($"[DSP Pipeline] Exception in effect '{effect.Name}': {ex.Message}");
+                        }
+                        DspStats after = Analyze(pcm, samples);
+
+                        DspProfiler.Log(effect.Name, before, after);
+                    }
+                    else
+                    {
+                        // Ultra-fast direct execution path for standard production matches
+                        try
+                        {
+                            effect.Process(pcm, samples);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error($"[DSP Pipeline] Exception in effect '{effect.Name}': {ex.Message}");
+                        }
+                    }
+                }
+            }
+        }
 
         public struct DspStats
         {
@@ -34,50 +87,74 @@
         }
 
         /// <summary>
-        /// Calculates RMS, peak, noise floor and SNR
+        /// Mathematically accurate real-time PCM analyzer bounded strictly by valid sample count.
         /// </summary>
-        /// <param name="pcm">PCM data</param>
-        /// <returns>DSP stats</returns>
-        public static DspStats Analyze(float[] pcm)
+        public static DspStats Analyze(float[] pcm, int samples)
         {
-            float sum = 0f;
-            float peak = 0f;
+            if (pcm == null || samples < 1) return default;
 
-            for (int i = 0; i < pcm.Length; i++)
+            // Protect against bounds overflow
+            int activeSamples = Math.Min(samples, pcm.Length);
+
+            float squaredSum = 0f;
+            float absolutePeak = 0f;
+            float absoluteMinNonZero = 1f;
+
+            for (int i = 0; i < activeSamples; i++)
             {
                 float v = pcm[i];
-                sum += v * v;
+                float absV = Math.Abs(v);
 
-                float a = Math.Abs(v);
-                if (a > peak)
-                    peak = a;
+                squaredSum += v * v;
+
+                if (absV > absolutePeak)
+                    absolutePeak = absV;
+
+                if (absV > 0.0001f && absV < absoluteMinNonZero)
+                    absoluteMinNonZero = absV;
             }
 
-            float rms = (float)Math.Sqrt(sum / pcm.Length);
-            float noise = rms * 0.1f; // not exactly
-            float snr = 20f * (float)Math.Log10((rms + 1e-6f) / (noise + 1e-6f));
+            float rms = (float)Math.Sqrt(squaredSum / activeSamples);
+
+            // True Noise Floor approximation utilizing lowest active discrete state energy
+            float estimatedNoiseFloor = absoluteMinNonZero * 0.5f;
+            if (estimatedNoiseFloor > rms) estimatedNoiseFloor = rms * 0.1f;
+
+            // Mathematically valid Signal-to-Noise ratio formulation: 20 * log10(RMS / Noise)
+            float snr = 0f;
+            if (rms > 1e-5f && estimatedNoiseFloor > 1e-6f)
+            {
+                snr = 20f * (float)Math.Log10(rms / estimatedNoiseFloor);
+            }
 
             return new DspStats
             {
                 Rms = rms,
-                Peak = peak,
-                NoiseFloor = noise,
+                Peak = absolutePeak,
+                NoiseFloor = estimatedNoiseFloor,
                 Snr = snr
             };
         }
 
-        
         /// <summary>
-        /// Class for logging DSP stats in console
+        /// Multi-tier logging diagnostics for analytical performance tracking.
         /// </summary>
         public static class DspProfiler
         {
             public static void Log(string name, DspStats before, DspStats after)
             {
-                if (after.Snr < 5)
-                    Logger.Error($"[DSP] {name}: CRITICAL – SNR={after.Snr:F1} dB (noise)");
-                else if (after.Rms < before.Rms * 0.2f)
-                    Logger.Warn($"[DSP] {name}: WARNING – RMS drop {before.Rms:F3} → {after.Rms:F3}");
+                // Warn about structural DC audio dropouts or full pipeline mutes
+                if (before.Rms > 0.01f && after.Rms < before.Rms * 0.05f)
+                {
+                    Logger.Warn($"[DSP Profiler] '{name}' triggered severe signal degradation! RMS Drop: {before.Rms:F4} -> {after.Rms:F4}");
+                    return;
+                }
+
+                // Check for dynamic clipping or processing overloads
+                if (after.Peak > 1.0f)
+                {
+                    Logger.Error($"[DSP Profiler] '{name}' caused digital CLIPPING! Peak reached: {after.Peak:F2}");
+                }
             }
         }
     }

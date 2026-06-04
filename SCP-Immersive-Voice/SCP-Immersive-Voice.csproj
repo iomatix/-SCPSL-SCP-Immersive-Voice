@@ -171,6 +171,11 @@
     <Compile Include="AudioProcessing\Utils\MathUtils.cs" />
     <Compile Include="Config\Config.cs" />
     <Compile Include="Decoders\ScpVoiceDecoder.cs" />
+    <Compile Include="EventHandlers\CoreVoiceHandler.cs" />
+    <Compile Include="EventHandlers\Scp096AudioHandler.cs" />
+    <Compile Include="EventHandlers\Scp106AudioHandler.cs" />
+    <Compile Include="EventHandlers\Scp3114AudioHandler.cs" />
+    <Compile Include="EventHandlers\Scp939AudioHandler.cs" />
     <Compile Include="Managers\ScpVoiceManager.cs" />
     <Compile Include="Managers\ScpVoiceUpdater.cs" />
     <Compile Include="Patches\OpusDecoderPatch.cs" />
@@ -186,11 +191,11 @@
     <Compile Include="Presets\Dynamics\Enums\Scp939VoiceState.cs" />
     <Compile Include="Presets\Dynamics\Interfaces\IDynamicVoicePresetProvider.cs" />
     <Compile Include="Presets\Dynamics\Resolvers\Scp106PresetResolver.cs" />
-    <Compile Include="Presets\Dynamics\Scp106DynamicPresetProvider.cs" />
+    <Compile Include="Presets\Dynamics\Providers\Scp106DynamicPresetProvider.cs" />
     <Compile Include="Presets\Dynamics\Scp106DynamicPresets.cs" />
-    <Compile Include="Presets\Dynamics\Scp3114DynamicPresetProvider .cs" />
-    <Compile Include="Presets\Dynamics\Scp939DynamicPresetProvider.cs" />
-    <Compile Include="Presets\Dynamics\Scp096DynamicPresetProvider.cs" />
+    <Compile Include="Presets\Dynamics\Providers\Scp3114DynamicPresetProvider .cs" />
+    <Compile Include="Presets\Dynamics\Providers\Scp939DynamicPresetProvider.cs" />
+    <Compile Include="Presets\Dynamics\Providers\Scp096DynamicPresetProvider.cs" />
     <Compile Include="Presets\Dynamics\Scp096DynamicPresets.cs" />
     <Compile Include="Presets\Dynamics\Scp3114DynamicPresets.cs" />
     <Compile Include="Presets\Dynamics\Scp939DynamicPresets.cs" />
@@ -198,7 +203,6 @@
     <Compile Include="Presets\ScpVoicePreset.cs" />
     <Compile Include="Presets\ScpVoicePresetMode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="EventHandlers\ScpVoiceEventHandler.cs" />
     <Compile Include="VoiceProfiles\ScpVoiceProfiles.cs" />
   </ItemGroup>
   <ItemGroup>

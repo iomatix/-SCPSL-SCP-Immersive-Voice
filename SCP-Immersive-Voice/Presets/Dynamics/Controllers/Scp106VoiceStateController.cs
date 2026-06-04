@@ -1,53 +1,57 @@
 ﻿namespace SCP_Immersive_Voice.Presets.Dynamics.Controllers
 {
     using SCP_Immersive_Voice.Presets.Dynamics.Enums;
+    using System;
 
     public class Scp106VoiceStateController
     {
-        public Scp106VoiceState CurrentState { get; private set; } = Scp106VoiceState.Idle;
-
+        private Scp106VoiceState _currentState = Scp106VoiceState.Idle;
+        private DateTime _timestamp = DateTime.UtcNow;
+        private float _timeout = 0f;
         private bool _lowVigorActive = false;
 
-        // Intent: force state with highest priority
-        public void SetState(Scp106VoiceState state)
+        public Scp106VoiceState CurrentState
         {
-            CurrentState = state;
+            get
+            {
+                if (_timeout > 0f && (DateTime.UtcNow - _timestamp).TotalSeconds > _timeout)
+                    _currentState = _lowVigorActive ? Scp106VoiceState.LowVigor : Scp106VoiceState.Idle;
+                return _currentState;
+            }
         }
 
-        // Intent: temporary states like Emerging or PocketDimension (no timer, overwritten by next state)
-        public void SetTemporaryState(Scp106VoiceState state, Scp106VoiceState fallback)
+        public void SetState(Scp106VoiceState state, float timeoutSeconds = 0f)
         {
-            CurrentState = state;
-            // Fallback can be applied explicitly from events if needed later.
+            _currentState = state;
+            _timestamp = DateTime.UtcNow;
+            _timeout = timeoutSeconds;
         }
 
-        // Intent: medium priority states (AtlasDimensional)
         public void TrySetMediumPriorityState(Scp106VoiceState state)
         {
-            if (CurrentState == Scp106VoiceState.Idle ||
-                CurrentState == Scp106VoiceState.LowVigor)
+            if (_currentState == Scp106VoiceState.Idle || _currentState == Scp106VoiceState.LowVigor)
             {
-                CurrentState = state;
+                _currentState = state;
+                _timeout = 0f;
             }
         }
 
-        // Intent: low priority states (LowVigor)
         public void TrySetLowPriorityState(Scp106VoiceState state)
         {
-            if (CurrentState == Scp106VoiceState.Idle)
-            {
-                CurrentState = state;
-                _lowVigorActive = true;
-            }
+            _lowVigorActive = true;
+            if (_currentState == Scp106VoiceState.Idle) _currentState = state;
         }
 
         public void ClearLowVigor()
         {
-            if (_lowVigorActive)
-            {
-                _lowVigorActive = false;
-                CurrentState = Scp106VoiceState.Idle;
-            }
+            _lowVigorActive = false;
+            if (_currentState == Scp106VoiceState.LowVigor) _currentState = Scp106VoiceState.Idle;
+        }
+
+        public void ResetToIdle()
+        {
+            _currentState = Scp106VoiceState.Idle;
+            _timeout = 0f;
         }
     }
 }

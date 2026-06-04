@@ -1,4 +1,4 @@
-﻿namespace SCP_Immersive_Voice.Presets.Dynamics
+﻿namespace SCP_Immersive_Voice.Presets.Dynamics.Providers
 {
     using LabApi.Features.Wrappers;
     using PlayerRoles;

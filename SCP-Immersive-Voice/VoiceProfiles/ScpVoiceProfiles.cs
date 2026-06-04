@@ -183,7 +183,7 @@
 
             // Step 2: In-place reconciliation loop
             var temporaryMap = new Dictionary<string, IAudioEffect>();
-            container.Pipeline.Clear(); // Empty structural list safely without dropping operational memory allocation maps
+            container.Pipeline.Clear();
 
             foreach (var target in targetNodes)
             {
