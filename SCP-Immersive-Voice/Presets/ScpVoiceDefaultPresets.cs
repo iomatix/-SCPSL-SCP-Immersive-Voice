@@ -4,8 +4,8 @@
     using System.Collections.Generic;
 
     /// <summary>
-    /// Default SCP voice presets designed for natural, cinematic and character‑accurate timbre.
-    /// Tuned for the corrected DSP pipeline (Pitch, Formant, Filters, Organic layers).
+    /// AAA Default SCP voice presets designed for natural, cinematic and character‑accurate timbre.
+    /// Perfectly calibrated for the reconstructed high-performance stateful DSP pipeline matrix.
     /// </summary>
     public static class ScpVoiceDefaultPresets
     {
@@ -13,145 +13,165 @@
         {
             return new Dictionary<RoleTypeId, ScpVoicePreset>()
             {
-                // SCP‑049 — masked, calm, authoritative, slightly hollow
+                // =================================================================
+                // SCP‑049 (The Plague Doctor) — Masked, calm, hollow, antique resonance
+                // =================================================================
                 [RoleTypeId.Scp049] = new ScpVoicePreset
                 {
                     Enable = true,
                     OutputGain = 2.8f,
-                    Pitch = 0.78f,          // intent: deeper, controlled tone
-                    Formant = 0.88f,        // intent: masked resonance
-                    LowPass = 2600f,        // intent: cloth + beak muffling
-                    Distortion = 0.12f,     // intent: subtle rasp
-                    Reverb = 0.28f,         // intent: cathedral presence
-                    WhisperAmount = 0.10f   // intent: breath under the mask
+                    Pitch = 0.82f,          // Intent: deeper, aristocratic, controlled pitch
+                    Formant = 0.85f,        // Intent: elongated throat cavity mimicking the ceramic beak
+                    LowPass = 2200f,        // Intent: acoustic cloth + mask boundary muffling absorption
+                    Distortion = 0.14f,     // Intent: subtle structural rasp in the vocal cords
+                    Reverb = 0.35f,         // Intent: isolated, hollow cathedral room presence
+                    WhisperAmount = 0.12f,  // Intent: faint sound of air flowing beneath the heavy hood
+                    BreathNoise = 0.15f     // Intent: audible, calculated mask ventilation
                 },
 
-                // SCP‑096 — trembling, unstable, fragile (rage handled dynamically)
+                // =================================================================
+                // SCP‑096 (The Shy Guy) — Fragile, trembling, sobbing hyperventilation
+                // =================================================================
                 [RoleTypeId.Scp096] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 2.0f,
-                    Pitch = 0.92f,          // intent: fragile but human
-                    Formant = 1.00f,        // intent: neutral timbre baseline
-                    Distortion = 0.18f,     // intent: emotional strain
-                    FormantDrift = 0.25f,   // intent: instability
-                    LowPass = 3400f,        // intent: soft, trembling tone
-                    WetOrganic = 0.18f      // intent: subtle throat wetness
+                    OutputGain = 2.4f,      // Intent: high gain boost to guarantee readability over textures
+                    Pitch = 1.06f,          // Intent: tense, shrunken, high-panic vocal chords
+                    Formant = 0.88f,        // Intent: uncanny biological mismatch (high pitch + wide hollow throat)
+                    FormantDrift = 0.70f,   // Intent: THE CORE CRACKLE: Aggressive LFO modulation creating a weeping, trembling voice
+                    BreathNoise = 0.75f,    // Intent: High-intensity air rush emulating severe sobbing hyperventilation
+                    WhisperAmount = 0.35f,  // Intent: De-voicing layer to split harmonic chords, making the voice sound broken and crying
+                    Distortion = 0.22f,     // Intent: Severe emotional strain / tearing of the vocal tract
+                    WetOrganic = 0.38f,     // Intent: High lacrimal fluid/saliva saturation from constant weeping
+                    LowPass = 4200f         // Intent: Soften high edges to retain a fragile, miserable character
                 },
 
-                // SCP‑939 — whisper mimicry, breathy, uncanny
+                // =================================================================
+                // SCP‑939 (The Predatory Canine) — Unvoiced mimicry, trochanter depth
+                // =================================================================
                 [RoleTypeId.Scp939] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 1.8f,
-                    Pitch = 0.60f,          // intent: predatory depth
-                    Formant = 0.72f,        // intent: widened throat cavity
-                    WhisperAmount = 0.85f,  // intent: signature whisper
-                    BreathNoise = 0.40f,    // intent: soft, animalistic breath
-                    WetOrganic = 0.30f,     // intent: moist vocal tract
-                    Distortion = 0.04f      // intent: minimal rasp
+                    OutputGain = 1.85f,
+                    Pitch = 0.55f,          // Intent: deep, predatory harmonic base
+                    Formant = 0.65f,        // Intent: heavily expanded reptilian vocal tract
+                    WhisperAmount = 0.85f,  // Intent: signature unvoiced camouflage layer (human copycat)
+                    BreathNoise = 0.50f,    // Intent: constant hissing, cold animalistic exhalation
+                    WetOrganic = 0.45f,     // Intent: dense mucous and saliva coating inside the jaw
+                    Distortion = 0.08f      // Intent: minimal laryngeal gravel
                 },
 
-                // SCP‑173 — stone, grinding, zero humanity
+                // =================================================================
+                // SCP‑173 (The Sculpture) — Litospheric, zero humanity, crushing mass
+                // =================================================================
                 [RoleTypeId.Scp173] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 1.05f,
-                    Pitch = 0.95f,          // intent: neutral pitch (stone has no voice)
-                    Formant = 0.90f,        // intent: heavy, material resonance
-                    StoneCrack = 0.85f,     // intent: brittle texture
-                    StoneGrind = 0.90f,     // intent: mass and friction
-                    Distortion = 0.32f,     // intent: harsh edges
-                    LowPass = 2400f         // intent: dense, heavy material
+                    OutputGain = 1.15f,
+                    Pitch = 1.00f,          // Intent: neutral baseline (mineral has no human pitch)
+                    Formant = 0.82f,        // Intent: rigid, heavy concrete block internal resonance
+                    StoneCrack = 0.95f,     // Intent: brittle, high-energy discrete Dirac crystal snaps
+                    StoneGrind = 1.15f,     // Intent: deep sub-harmonic mass rumble and tectonic block friction
+                    Distortion = 0.45f,     // Intent: extreme material hardness waveshaping clipping
+                    LowPass = 2000f         // Intent: heavy acoustic dampening through solid concrete layers
                 },
 
-                // SCP‑106 — decayed, dimensional, wet, horrifying
+                // =================================================================
+                // SCP‑106 (The Old Man) — Corroded, decayed, pocket-dimension leakage
+                // =================================================================
                 [RoleTypeId.Scp106] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 2.2f,
-                    Pitch = 0.58f,          // intent: ancient, decayed depth
-                    Formant = 0.55f,        // intent: collapsed vocal cavity
-                    Distortion = 0.55f,     // intent: corroded texture
-                    LowPass = 900f,         // intent: damp, suffocating tone
-                    Reverb = 0.48f,         // intent: dimensional echo
-                    WetDecay = 0.85f,       // intent: dripping, rotten wetness
-                    WetOrganic = 0.22f,     // intent: decayed throat
-                    PocketEcho = 0.70f      // intent: pocket dimension resonance
+                    OutputGain = 2.25f,
+                    Pitch = 0.52f,          // Intent: ancient, sub-octave dimensional abyss depth
+                    Formant = 0.48f,        // Intent: fully collapsed, rotted vocal cavity architecture
+                    Distortion = 0.65f,     // Intent: severe acidic corrosion texture destroying wave boundaries
+                    LowPass = 850f,         // Intent: extreme, suffocating damp mud and subterranean dirt muffling
+                    Reverb = 0.40f,         // Intent: baseline environment containment leakage
+                    WetDecay = 0.95f,       // Intent: visceral viscous absorption (flooded slime walls)
+                    WetOrganic = 0.35f,     // Intent: slimy throat decomposition mechanics
+                    PocketEcho = 0.85f      // Intent: maximum non-Euclidean phase-inversion echo matrix
                 },
 
-                // SCP‑3114 — flesh, twitchy, wet, unstable
+                // =================================================================
+                // SCP‑3114 (The Skeleton) — Twitching bones, high-tension torn tissue
+                // =================================================================
                 [RoleTypeId.Scp3114] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 2.4f,
-                    Pitch = 1.45f,          // intent: frantic, high‑tension tone
-                    Formant = 1.12f,        // intent: tightened, strained throat
-                    WetOrganic = 0.75f,     // intent: wet, fleshy texture
-                    FleshCrackle = 0.50f,   // intent: twitching tissue
-                    Distortion = 0.12f,     // intent: subtle tearing
-                    FormantDrift = 0.40f    // intent: unstable identity
+                    OutputGain = 2.45f,
+                    Pitch = 1.45f,          // Intent: frantic, high-velocity nerve tension frequency
+                    Formant = 1.20f,        // Intent: shrunken, hollow calcium skull space resonance
+                    DryCrackle = 0.90f,     // Intent: dry bone-on-bone friction and snapping skeletal ligaments
+                    FleshCrackle = 0.70f,   // Intent: rapid wet transients of leftover twitching organic tissue
+                    FormantDrift = 0.45f,   // Intent: unstable bone alignment shifting timbre dynamically
+                    Distortion = 0.20f      // Intent: sharp, jagged tearing edges
                 },
 
-                // SCP‑079 — corrupted digital voice
+                // =================================================================
+                // SCP‑079 (The Old AI) — Corrupted low-bandwidth mainframe hardware
+                // =================================================================
                 [RoleTypeId.Scp079] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 1.1f,
-                    Pitch = 1.00f,          // intent: neutral synthetic pitch
-                    Formant = 1.00f,        // intent: no organic shaping
-                    Bitcrush = 0.70f,       // intent: digital degradation
-                    SampleRateReduce = 0.60f,// intent: corrupted bandwidth
-                    Glitch = 0.40f,         // intent: unstable processing
-                    StaticNoise = 0.30f,    // intent: analog interference
-                    Distortion = 0.20f,     // intent: circuitry strain
-                    HighPass = 350f         // intent: remove low organic tones
+                    OutputGain = 1.15f,
+                    Pitch = 1.00f,          // Intent: sterile synthetic pitch normalization
+                    Formant = 1.00f,        // Intent: bypass any organic larynx shaping
+                    Bitcrush = 0.75f,       // Intent: dynamic quantization step reduction (true 4-bit chip crunch)
+                    SampleRateReduce = 0.65f,// Intent: severe clock-divider aliasing artifact generation (~1.2kHz)
+                    Glitch = 0.45f,         // Intent: stochastic buffer frame looping and transmission dropouts
+                    StaticNoise = 0.40f,    // Intent: heavy background RF analog interference
+                    Distortion = 0.25f,     // Intent: transistor circuitry overload warmth
+                    HighPass = 400f         // Intent: discard human lower-frequency chest coefficients completely
                 },
 
-                // SCP‑049‑2 — guttural, subharmonic, decayed
+                // =================================================================
+                // SCP‑049‑2 (The Genzombie) — Guttural, sub-harmonic undead rattle
+                // =================================================================
                 [RoleTypeId.Scp0492] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 1.37f,
-                    Pitch = 0.65f,          // intent: guttural depth
-                    Formant = 0.80f,        // intent: decayed throat
-                    Distortion = 0.30f,     // intent: rough texture
-                    LowPass = 1500f,        // intent: deadened tone
-                    HighPass = 120f,        // intent: remove mud
-                    Guttural = 0.90f,       // intent: throat resonance
-                    Subharmonic = 0.80f,    // intent: undead growl
-                    DryCrackle = 0.50f,     // intent: bone friction
-                    WetDecay = 0.30f        // intent: moist decomposition
+                    OutputGain = 1.45f,
+                    Pitch = 0.62f,          // Intent: rotting throat depth
+                    Formant = 0.75f,        // Intent: deadened, loose tissue volume
+                    Guttural = 0.95f,       // Intent: aggressive, rasping ventricular fold false-cord vibration
+                    Subharmonic = 0.85f,    // Intent: phase-locked chest growl frequency divider (demonic tone)
+                    DryCrackle = 0.55f,     // Intent: rigor mortis joint cracking and bone friction
+                    WetDecay = 0.40f,       // Intent: wet decomposition echo trail
+                    LowPass = 1400f,        // Intent: deadened, muddy frequency absorption boundaries
+                    HighPass = 120f         // Intent: clean out sub-bass microphone proximity mud
                 },
 
-                // Flamingo variants — comedic but SCP‑weird
+                // =================================================================
+                // Flamingos (The Anomalous Avian Horde) — High-pitched syrinx matrix
+                // =================================================================
                 [RoleTypeId.Flamingo] = new ScpVoicePreset
                 {
                     Enable = true,
                     OutputGain = 2.22f,
-                    Pitch = 1.55f,          // intent: comedic brightness
-                    Formant = 1.20f,        // intent: small vocal cavity
-                    Chirp = 0.45f,          // intent: bird‑like tone
-                    Distortion = 0.12f      // intent: light rasp
+                    Pitch = 1.55f,          // Intent: hyper-tension avian pitch signature
+                    Formant = 1.20f,        // Intent: tiny bird beak cavity resonance
+                    Chirp = 0.50f,          // Intent: stochastic avian syrinx FM frequency micro-sweeps
+                    Distortion = 0.12f      // Intent: light beak crunch
                 },
                 [RoleTypeId.AlphaFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
                     OutputGain = 2.22f,
-                    Pitch = 1.45f,
-                    Formant = 1.15f,
-                    Chirp = 0.40f,
-                    Distortion = 0.18f
+                    Pitch = 1.42f,          // Intent: slightly larger alpha variant frame
+                    Formant = 1.12f,
+                    Chirp = 0.45f,
+                    Distortion = 0.20f
                 },
                 [RoleTypeId.ZombieFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
                     OutputGain = 2.22f,
-                    Pitch = 1.20f,
-                    Formant = 0.95f,
-                    Chirp = 0.25f,
-                    Distortion = 0.40f,
-                    Subharmonic = 0.30f
+                    Pitch = 1.15f,          // Intent: rotted, dropped avian speed
+                    Formant = 0.90f,
+                    Chirp = 0.30f,
+                    Subharmonic = 0.40f,    // Intent: undead bird gut rattle
+                    Distortion = 0.45f
                 },
                 [RoleTypeId.NtfFlamingo] = new ScpVoicePreset
                 {
@@ -159,17 +179,17 @@
                     OutputGain = 2.22f,
                     Pitch = 1.35f,
                     Formant = 1.10f,
-                    Chirp = 0.35f,
+                    Chirp = 0.38f,
                     Distortion = 0.22f
                 },
                 [RoleTypeId.ChaosFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 2.22f,
+                    OutputGain = 2.25f,
                     Pitch = 1.25f,
                     Formant = 1.05f,
-                    Chirp = 0.30f,
-                    Distortion = 0.28f
+                    Chirp = 0.35f,
+                    Distortion = 0.30f
                 },
             };
         }
