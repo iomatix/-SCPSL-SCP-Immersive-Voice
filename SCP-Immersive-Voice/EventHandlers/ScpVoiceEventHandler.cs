@@ -150,7 +150,7 @@
 
             // Apply Effects Pipeline
             pcm = ScpVoiceDecoder.ApplyEffects(pcm, sender);
-            
+
             // Logic
             ev.IsAllowed = false; // disable all events, allow only speaker sound for debugg TODO: REMOVE THIS LINE
             // --- CASE 1: Forbidden proximity (e.g. 079 - defined in config.) ---
