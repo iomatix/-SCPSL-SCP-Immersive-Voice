@@ -191,6 +191,8 @@
 
         private void OnPlayerLeft(PlayerLeftEventArgs ev)
         {
+            if (ev.Player == null) return;
+
             _voiceManager.StopSession(ev.Player);
         }
 

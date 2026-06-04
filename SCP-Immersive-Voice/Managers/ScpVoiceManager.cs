@@ -41,7 +41,7 @@
             int sessionId = DefaultAudioManager.Instance.CreateStreamSession(
                 position: scp.Position,
                 isSpatial: true,
-                minDistance: 0.01f,
+                minDistance: 4.25f,
                 maxDistance: _config.ProximityDistance,
                 volume: 1f,
                 priority: AudioPriority.High,
@@ -147,7 +147,6 @@
                 if (scp == null) continue;
 
                 var sessionId = kvp.Value;
-                Logger.Debug($"[VOICE DEBUG] Updating {playerId} session {sessionId} to position {scp.Position}");
                 DefaultAudioManager.Instance.SetSessionPosition(sessionId, scp.Position);
             }
         }

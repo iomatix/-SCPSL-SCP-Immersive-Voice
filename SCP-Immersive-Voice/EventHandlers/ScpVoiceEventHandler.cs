@@ -105,8 +105,7 @@
 
             // Only process if this class has a preset
             var preset = ScpVoiceProfiles.GetPreset(sender);
-            if (!preset.Enable)
-                return;
+            if (!preset.Enable) return;
 
             // Only process voice messages
             if (ev.Message.Channel == VoiceChatChannel.None || ev.Message.Channel == VoiceChatChannel.Spectator || ev.Message.Channel == VoiceChatChannel.Mimicry || ev.Message.Channel == VoiceChatChannel.PreGameLobby || ev.Message.Channel == VoiceChatChannel.RoundSummary)
@@ -117,26 +116,16 @@
             // Decode Opus → float PCM
             float[] pcm = ScpVoiceDecoder.Decode(ev.Message);
 
-            // DEBUG
-            float max = 0f;
-            for (int i = 0; i < pcm.Length; i++)
-            {
-                float a = Math.Abs(pcm[i]);
-                if (a > max) max = a;
-            }
-
             // Noise gate BEFORE DSP
-            if (pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 0.01f))
+            if (pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 0.001f))
                 return;
 
             // Apply DSP for ALL classes (float-native)
             pcm = ScpVoiceDecoder.ApplyEffects(pcm, sender);
 
             // Noise gate AFTER DSP
-            if (ScpVoiceDecoder.IsSilent(pcm, threshold: 0.01f))
+            if (ScpVoiceDecoder.IsSilent(pcm, threshold: 0.001f))
                 return;
-
-            LabApi.Features.Console.Logger.Debug($"[VOICE DEBUG] {sender.Role} pcmLen={pcm.Length}, max={max}");
 
             ev.IsAllowed = false; // disable all events, allow only speaker sound for debugg
             // --- CASE 1: Forbidden proximity (e.g. 079, humans, etc.) ---
@@ -154,17 +143,38 @@
             if (ev.Message.Channel == VoiceChatChannel.ScpChat)
                 ev.IsAllowed = false; // block original SCPChat
 
-            // Send float PCM to proximity audio system
-
-            // DEBUG
+            // --- Automatic Gain Control (AGC) + Normalization ---
+            float peak = 0f;
             for (int i = 0; i < pcm.Length; i++)
             {
-                float v = pcm[i] * 4f; // 4x głośniej
-                if (v > 1f) v = 1f;
-                if (v < -1f) v = -1f;
-                pcm[i] = v;
+                float a = Math.Abs(pcm[i]);
+                if (a > peak) peak = a;
             }
-            //
+
+            // target loudness similar to vanilla Opus
+            const float target = 0.85f;
+
+            if (peak > 0.0001f)
+            {
+                float gain = target / peak;
+
+                // safety clamp (avoid insane boosts)
+                if (gain > 5f)
+                    gain = 5f;
+
+                for (int i = 0; i < pcm.Length; i++)
+                    pcm[i] *= gain;
+            }
+
+            // --- Final limiter (anti‑clipping) ---
+            for (int i = 0; i < pcm.Length; i++)
+            {
+                if (pcm[i] > 0.98f) pcm[i] = 0.98f;
+                if (pcm[i] < -0.98f) pcm[i] = -0.98f;
+            }
+
+
+            // Send float PCM to proximity audio system
             _voiceManager.AppendPcm(sender, pcm);
         }
         #endregion
