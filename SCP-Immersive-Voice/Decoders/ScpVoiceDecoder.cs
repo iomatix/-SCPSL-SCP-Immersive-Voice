@@ -28,8 +28,6 @@
         // Shared decode buffer
         private static readonly float[] _floatBuffer = new float[MaxOpusSamples];
 
-        private const bool NormalizeEnabled = true;
-
         /// <summary>
         /// Decodes an incoming VoiceMessage from Opus to float[] PCM (-1..1).
         /// Returns an empty array on invalid or empty data.
