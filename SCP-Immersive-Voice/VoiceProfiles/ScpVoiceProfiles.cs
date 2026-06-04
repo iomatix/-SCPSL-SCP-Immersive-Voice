@@ -124,7 +124,7 @@
 
             // --- Wet / spatial ---
             if (preset.WetOrganic > 0f)
-                p.Add(new WetOrganicEffect(preset.WetOrganic));
+                p.Add(new WetOrganicEffect(preset.WetOrganic, currentSampleRate));
 
             if (preset.WetDecay > 0f)
                 p.Add(new WetDecayEffect(preset.WetDecay, currentSampleRate));
