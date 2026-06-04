@@ -5,12 +5,11 @@
     using System;
 
     /// <summary>
-    /// Organic formant shifting using tilt-EQ with envelope-driven movement.
-    /// Ideal for creature timbre, SCP-939 mimicry or identity distortion.
+    /// Natural formant shifting inspired by vocal tract tilt.
+    /// Designed to preserve intelligibility while altering timbre.
     /// </summary>
     public class FormantShiftEffect : IAudioEffect
     {
-
         public string Name => "Formant Shift";
 
         private readonly float _target;
@@ -22,6 +21,7 @@
 
         public FormantShiftEffect(float formant)
         {
+            // keep formant shift in a natural range
             _target = Clamp(formant, 0.5f, 2.0f);
         }
 
@@ -31,38 +31,34 @@
             {
                 float dry = pcm[i];
 
-                // Envelope (formants react to loudness)
+                // formant movement reacts to loudness, but smoothly
                 float abs = Math.Abs(dry);
-                _env += 0.03f * (abs - _env);
+                _env += 0.01f * (abs - _env);
 
-                // Slow drift (prevents static timbre)
-                _phase += 0.0009f;
-                float drift = 0.5f + 0.5f * (float)Math.Sin(_phase * 1.4f);
+                // subtle drift to avoid static timbre
+                _phase += 0.0003f;
+                float drift = 0.5f + 0.5f * (float)Math.Sin(_phase * 0.9f);
 
-                // Dynamic shift target
-                float shift = Lerp(1f, _target, drift * (0.6f + _env * 0.4f));
+                // dynamic but controlled formant target
+                float shift = Lerp(1f, _target, drift * (0.4f + _env * 0.3f));
 
-                // Tilt-EQ coefficients
-                float lowCut = 0.05f * shift;
-                float highCut = 0.05f * (2f - shift);
+                // gentle tilt-EQ to simulate vocal tract shape
+                float lowCut = 0.03f * shift;
+                float highCut = 0.03f * (2f - shift);
 
-                // Low shelf
                 _low += lowCut * (dry - _low);
-
-                // High shelf
                 _high += highCut * (dry - _high);
 
-                // Tilt mix
                 float tilted = _low * (2f - shift) + _high * shift;
 
-                // Nonlinear shaping
-                tilted *= 0.89f + 0.11f * tilted;
+                // mild nonlinear shaping for organic tone
+                tilted *= 0.95f + 0.05f * tilted;
 
-                // Mix
-                float mixed = dry * 0.5f + tilted * 0.5f;
+                // preserve intelligibility by keeping strong dry component
+                float mixed = dry * 0.65f + tilted * 0.35f;
 
-                // Soft clip
-                pcm[i] = (float)Math.Tanh(mixed * 1.03f);
+                // prevent harshness without altering tone
+                pcm[i] = (float)Math.Tanh(mixed * 1.01f);
             }
         }
     }
