@@ -66,6 +66,26 @@
             return controller;
         }
 
+        /// <summary>
+        /// Ensures SCP-939 does not get stuck in a transient state.
+        /// </summary>
+        private void Reset939IfStuck(Player player)
+        {
+            var state = Get939State(player);
+
+            // States that are allowed to persist
+            bool isActive =
+                state.CurrentState == Scp939VoiceState.Mimicking ||
+                state.CurrentState == Scp939VoiceState.Focused ||
+                state.CurrentState == Scp939VoiceState.Attacking ||
+                state.CurrentState == Scp939VoiceState.AmnesticCloud;
+
+            // If not in an active state → fallback to IdleWhisper
+            if (!isActive)
+                state.CurrentState = Scp939VoiceState.IdleWhisper;
+        }
+
+
         // SCP-3114 Dynamic State Tracking
         private readonly Dictionary<int, Scp3114VoiceStateController> _scp3114State = new Dictionary<int, Scp3114VoiceStateController>();
 
@@ -200,46 +220,55 @@
         public void On939MimickingEnvironment(Scp939MimickingEnvironmentEventArgs ev)
         {
             Get939State(ev.Player).CurrentState = Scp939VoiceState.Mimicking;
+            Reset939IfStuck(ev.Player);
         }
 
         public void On939MimickedEnvironment(Scp939MimickedEnvironmentEventArgs ev)
         {
             Get939State(ev.Player).CurrentState = Scp939VoiceState.IdleWhisper;
+            Reset939IfStuck(ev.Player);
         }
 
         public void On939Focused(Scp939FocusedEventArgs ev)
         {
             Get939State(ev.Player).CurrentState = Scp939VoiceState.Focused;
+            Reset939IfStuck(ev.Player);
         }
 
         public void On939Attacking(Scp939AttackingEventArgs ev)
         {
             Get939State(ev.Player).CurrentState = Scp939VoiceState.Attacking;
+            Reset939IfStuck(ev.Player);
         }
 
         public void On939Attacked(Scp939AttackedEventArgs ev)
         {
             Get939State(ev.Player).CurrentState = Scp939VoiceState.IdleWhisper;
+            Reset939IfStuck(ev.Player);
         }
 
         public void On939Lunging(Scp939LungingEventArgs ev)
         {
             Get939State(ev.Player).CurrentState = Scp939VoiceState.Attacking;
+            Reset939IfStuck(ev.Player);
         }
 
         public void On939Lunged(Scp939LungedEventArgs ev)
         {
             Get939State(ev.Player).CurrentState = Scp939VoiceState.IdleWhisper;
+            Reset939IfStuck(ev.Player);
         }
 
         public void On939CreatingAmnesticCloud(Scp939CreatingAmnesticCloudEventArgs ev)
         {
             Get939State(ev.Player).CurrentState = Scp939VoiceState.AmnesticCloud;
+            Reset939IfStuck(ev.Player);
         }
 
         public void On939CreatedAmnesticCloud(Scp939CreatedAmnesticCloudEventArgs ev)
         {
             Get939State(ev.Player).CurrentState = Scp939VoiceState.IdleWhisper;
+            Reset939IfStuck(ev.Player);
         }
 
         // ----------------------
