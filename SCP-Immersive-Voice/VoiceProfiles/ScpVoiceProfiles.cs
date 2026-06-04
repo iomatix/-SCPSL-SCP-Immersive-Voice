@@ -70,51 +70,53 @@
             if (preset.FormantDrift > 0f)
                 p.Add(new FormantDriftEffect(preset.FormantDrift));
 
-            // --- Nonlinear effects ---
-            if (preset.Distortion > 0f)
-                p.Add(new DistortionEffect(preset.Distortion));
+            // --- Harmonic generators BEFORE distortion ---
+            if (preset.Subharmonic > 0f)
+                p.Add(new SubharmonicGrowlEffect(preset.Subharmonic));
 
             if (preset.Guttural > 0f)
                 p.Add(new GutturalResonanceEffect(preset.Guttural));
 
-            if (preset.Subharmonic > 0f)
-                p.Add(new SubharmonicGrowlEffect(preset.Subharmonic));
+            // --- Distortion on full-energy signal ---
+            if (preset.Distortion > 0f)
+                p.Add(new DistortionEffect(preset.Distortion));
 
+            // --- Crackle layers ---
             if (preset.DryCrackle > 0f)
                 p.Add(new DryCrackleEffect(preset.DryCrackle));
 
             if (preset.FleshCrackle > 0f)
                 p.Add(new FleshCrackleEffect(preset.FleshCrackle));
 
-            // --- Filtering ---
+            // --- Noise layers BEFORE filters ---
+            if (preset.WhisperAmount > 0f)
+                p.Add(new WhisperFilterEffect(preset.WhisperAmount));
+
+            if (preset.BreathNoise > 0f)
+                p.Add(new BreathNoiseEffect(preset.BreathNoise));
+
+            if (preset.StaticNoise > 0f)
+                p.Add(new StaticNoiseEffect(preset.StaticNoise));
+
+            // --- Wet / spatial ---
+            if (preset.WetOrganic > 0f)
+                p.Add(new WetOrganicEffect(preset.WetOrganic));
+
+            if (preset.WetDecay > 0f)
+                p.Add(new WetDecayEffect(preset.WetDecay));
+
+            if (preset.PocketEcho > 0f)
+                p.Add(new PocketDimensionEchoEffect(preset.PocketEcho));
+
+            if (preset.Reverb > 0f)
+                p.Add(new ReverbEffect(preset.Reverb));
+
+            // --- Filters LAST ---
             if (preset.LowPass > 0f)
                 p.Add(new LowPassEffect(preset.LowPass));
 
             if (preset.HighPass > 0f)
                 p.Add(new HighPassEffect(preset.HighPass));
-
-            // --- Spatial / wet ---
-            if (preset.Reverb > 0f)
-                p.Add(new ReverbEffect(preset.Reverb));
-
-            if (preset.WetDecay > 0f)
-                p.Add(new WetDecayEffect(preset.WetDecay));
-
-            if (preset.WetOrganic > 0f)
-                p.Add(new WetOrganicEffect(preset.WetOrganic));
-
-            if (preset.PocketEcho > 0f)
-                p.Add(new PocketDimensionEchoEffect(preset.PocketEcho));
-
-            // --- Noise layers ---
-            if (preset.BreathNoise > 0f)
-                p.Add(new BreathNoiseEffect(preset.BreathNoise));
-
-            if (preset.WhisperAmount > 0f)
-                p.Add(new WhisperFilterEffect(preset.WhisperAmount));
-
-            if (preset.StaticNoise > 0f)
-                p.Add(new StaticNoiseEffect(preset.StaticNoise));
 
             // --- Digital degradation ---
             if (preset.Bitcrush > 0f)
@@ -139,6 +141,5 @@
 
             return p;
         }
-
     }
 }
