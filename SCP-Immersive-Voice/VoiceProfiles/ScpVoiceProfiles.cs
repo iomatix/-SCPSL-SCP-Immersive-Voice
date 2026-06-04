@@ -1,9 +1,9 @@
 ﻿namespace SCP_Immersive_Voice.VoiceProfiles
 {
     using LabApi.Features.Wrappers;
-    using PlayerRoles;
     using SCP_Immersive_Voice.AudioProcessing;
     using SCP_Immersive_Voice.AudioProcessing.Effects;
+    using SCP_Immersive_Voice.AudioProcessing.Interfaces;
     using SCP_Immersive_Voice.Presets;
     using SCP_Immersive_Voice.Presets.Dynamics.Interfaces;
     using ScpImmersiveVoice;
@@ -11,159 +11,223 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Reflection;
 
     public static class ScpVoiceProfiles
     {
         public static List<IDynamicVoicePresetProvider> DynamicProviders { get; } = new List<IDynamicVoicePresetProvider>();
 
         private readonly static ImmersiveScpVoiceConfig _config = ImmersiveScpVoicePlugin.StaticConfig;
-       
+
+        // Permanent thread-safe cache containing stateful container blocks instead of raw naked pipelines
+        private readonly static ConcurrentDictionary<int, PipelineContainer> _stableCache = new ConcurrentDictionary<int, PipelineContainer>();
+
         /// <summary>
-        /// Cache of player pipelines to avoid allocations and reset of DSP
+        /// Context container holding the processing pipeline and live instances map to protect memory boundaries.
         /// </summary>
-        private readonly static ConcurrentDictionary<int, AudioEffectPipeline> _pipelineCache = new ConcurrentDictionary<int, AudioEffectPipeline>();
+        private class PipelineContainer
+        {
+            public readonly AudioEffectPipeline Pipeline = new AudioEffectPipeline();
+            public readonly Dictionary<string, IAudioEffect> ActiveNodes = new Dictionary<string, IAudioEffect>();
+            public ScpVoicePreset LastAppliedPreset = null;
+            public readonly object SyncLock = new object();
+        }
 
         public static AudioEffectPipeline GetPipelineFor(Player player)
-        { 
-            // Getting stream from cache or building a new one
-            return _pipelineCache.GetOrAdd(player.PlayerId, id =>
+        {
+            if (player == null) return null;
+
+            // 1. Fetch or initialize the permanent context container container for the player
+            var container = _stableCache.GetOrAdd(player.PlayerId, id => new PipelineContainer());
+
+            // 2. Resolve what preset should be processed at this exact microsecond
+            var targetPreset = GetPreset(player);
+
+            // 3. Thread-safe runtime check to see if the state actually mutated
+            if (container.LastAppliedPreset == null || !ReferenceEquals(container.LastAppliedPreset, targetPreset))
             {
-                var role = player.Role;
-
-                // 1. Dynamic presets
-                foreach (var provider in DynamicProviders)
+                lock (container.SyncLock)
                 {
-                    if (provider.TryGetDynamicPreset(player, out var dynamicPreset))
-                        return BuildPipelineFromPreset(dynamicPreset);
+                    // Re-verify after locking to avoid multi-thread state collisions
+                    if (!ReferenceEquals(container.LastAppliedPreset, targetPreset))
+                    {
+                        SynchronizePipelineGraph(container, targetPreset);
+                        container.LastAppliedPreset = targetPreset;
+                    }
                 }
+            }
 
-                // 2. Static presets
-                if (!_config.Presets.TryGetValue(role, out var preset) || !preset.Enable)
-                    return new AudioEffectPipeline();
-
-                return BuildPipelineFromPreset(preset);
-            });
+            return container.Pipeline;
         }
 
         public static void ClearCacheFor(Player player)
         {
-            _pipelineCache.TryRemove(player.PlayerId, out _);
+            if (player == null) return;
+            _stableCache.TryRemove(player.PlayerId, out _);
         }
 
         public static ScpVoicePreset GetPreset(Player player)
         {
             var role = player.Role;
 
-            // dynamic first
+            // Dynamic states have highest execution priority
             foreach (var provider in DynamicProviders)
             {
                 if (provider.TryGetDynamicPreset(player, out var dynamicPreset))
                     return dynamicPreset;
             }
 
-            // static
-            if (_config.Presets.TryGetValue(role, out var preset))
+            // Fallback to configured static role presets
+            if (_config.Presets.TryGetValue(role, out var preset) && preset.Enable)
                 return preset;
 
-            // fallback
-            return new ScpVoicePreset();
+            return ScpVoiceDefaultPresets.Create().TryGetValue(role, out var defaultPreset)
+                ? defaultPreset
+                : new ScpVoicePreset { Enable = false };
         }
 
-
-        private static AudioEffectPipeline BuildPipelineFromPreset(ScpVoicePreset preset)
+        /// <summary>
+        /// Synchronizes the running processing graph in-place. 
+        /// Reuses active node instances to maintain perfect mathematical filter phase continuity.
+        /// </summary>
+        private static void SynchronizePipelineGraph(PipelineContainer container, ScpVoicePreset preset)
         {
-            var p = new AudioEffectPipeline();
+            float sr = (float)VoiceChat.VoiceChatSettings.SampleRate;
+            if (sr <= 0) sr = 48000f;
 
-            // Getting dynamic sample rate from VoiceChat engine
-            float currentSampleRate = (float)VoiceChat.VoiceChatSettings.SampleRate;
-            if (currentSampleRate <= 0) currentSampleRate = 48000f; // Fallback helper
+            // Step 1: Create the target list representing the execution requirement
+            var targetNodes = new List<(string Key, Func<IAudioEffect> Factory, float ScalarValue, string ScalarFieldName)>();
 
-            // --- Input modifiers ---
-            // AAA Standard Guard: Always maintain a noise gate to sanitize AGC breathing artifacts.
-            // If the preset explicitly disables it or has an unconfigured threshold, fallback to standard -45 dB.
+            // Noise Gate (Always persistent)
             float gateThreshold = preset.UseNoiseGate ? preset.NoiseGateThreshold : -45f;
-            p.Add(new NoiseGateEffect(gateThreshold, currentSampleRate));
+            targetNodes.Add(("NoiseGate", () => new NoiseGateEffect(gateThreshold, sr), gateThreshold, "_threshold"));
 
-            // --- Core voice modifiers ---
+            // Core Voice Modifiers
             if (Math.Abs(preset.Pitch - 1f) > 0.01f)
-                p.Add(new PitchShiftEffect(preset.Pitch, currentSampleRate, windowSizeMs: 40f));
+                targetNodes.Add(("PitchShift", () => new PitchShiftEffect(preset.Pitch, sr, 40f), preset.Pitch, "_pitch"));
 
             if (Math.Abs(preset.Formant - 1f) > 0.01f)
-                p.Add(new FormantShiftEffect(preset.Formant, currentSampleRate));
+                targetNodes.Add(("FormantShift", () => new FormantShiftEffect(preset.Formant, sr), preset.Formant, "_formant"));
 
             if (preset.FormantDrift > 0f)
-                p.Add(new FormantDriftEffect(preset.FormantDrift));
+                targetNodes.Add(("FormantDrift", () => new FormantDriftEffect(preset.FormantDrift), preset.FormantDrift, "_amount"));
 
-            // --- Harmonic generators BEFORE distortion ---
+            // Harmonics
             if (preset.Subharmonic > 0f)
-                p.Add(new SubharmonicGrowlEffect(preset.Subharmonic, currentSampleRate));
+                targetNodes.Add(("Subharmonic", () => new SubharmonicGrowlEffect(preset.Subharmonic, sr), preset.Subharmonic, "_amount"));
 
             if (preset.Guttural > 0f)
-                p.Add(new GutturalResonanceEffect(preset.Guttural, currentSampleRate));
+                targetNodes.Add(("Guttural", () => new GutturalResonanceEffect(preset.Guttural, sr), preset.Guttural, "_amount"));
 
-            // --- Distortion on full-energy signal ---
+            // Distortion
             if (preset.Distortion > 0f)
-                p.Add(new DistortionEffect(preset.Distortion, currentSampleRate));
+                targetNodes.Add(("Distortion", () => new DistortionEffect(preset.Distortion, sr), preset.Distortion, "_amount"));
 
-            // --- Crackle layers ---
+            // Crackles
             if (preset.DryCrackle > 0f)
-                p.Add(new DryCrackleEffect(preset.DryCrackle, currentSampleRate));
+                targetNodes.Add(("DryCrackle", () => new DryCrackleEffect(preset.DryCrackle, sr), preset.DryCrackle, "_amount"));
 
             if (preset.FleshCrackle > 0f)
-                p.Add(new FleshCrackleEffect(preset.FleshCrackle, currentSampleRate));
+                targetNodes.Add(("FleshCrackle", () => new FleshCrackleEffect(preset.FleshCrackle, sr), preset.FleshCrackle, "_amount"));
 
-            // --- Noise layers BEFORE filters ---
+            // Noises
             if (preset.WhisperAmount > 0f)
-                p.Add(new WhisperFilterEffect(preset.WhisperAmount, currentSampleRate));
+                targetNodes.Add(("Whisper", () => new WhisperFilterEffect(preset.WhisperAmount, sr), preset.WhisperAmount, "_amount"));
 
             if (preset.BreathNoise > 0f)
-                p.Add(new BreathNoiseEffect(preset.BreathNoise, currentSampleRate));
+                targetNodes.Add(("Breath", () => new BreathNoiseEffect(preset.BreathNoise, sr), preset.BreathNoise, "_intensity"));
 
             if (preset.StaticNoise > 0f)
-                p.Add(new StaticNoiseEffect(preset.StaticNoise, currentSampleRate));
+                targetNodes.Add(("Static", () => new StaticNoiseEffect(preset.StaticNoise, sr), preset.StaticNoise, "_amount"));
 
-            // --- Wet / spatial ---
+            // Spatial / Wet
             if (preset.WetOrganic > 0f)
-                p.Add(new WetOrganicEffect(preset.WetOrganic, currentSampleRate));
+                targetNodes.Add(("WetOrganic", () => new WetOrganicEffect(preset.WetOrganic, sr), preset.WetOrganic, "_amount"));
 
             if (preset.WetDecay > 0f)
-                p.Add(new WetDecayEffect(preset.WetDecay, currentSampleRate));
+                targetNodes.Add(("WetDecay", () => new WetDecayEffect(preset.WetDecay, sr), preset.WetDecay, "_amount"));
 
             if (preset.PocketEcho > 0f)
-                p.Add(new PocketDimensionEchoEffect(preset.PocketEcho, currentSampleRate));
+                targetNodes.Add(("PocketEcho", () => new PocketDimensionEchoEffect(preset.PocketEcho, sr), preset.PocketEcho, "_amount"));
 
             if (preset.Reverb > 0f)
-                p.Add(new ReverbEffect(preset.Reverb, currentSampleRate));
+                targetNodes.Add(("Reverb", () => new ReverbEffect(preset.Reverb, sr), preset.Reverb, "_amount"));
 
-            // --- Filters LAST ---
+            // Filters
             if (preset.LowPass > 0f)
-                p.Add(new LowPassEffect(preset.LowPass, currentSampleRate));
+                targetNodes.Add(("LowPass", () => new LowPassEffect(preset.LowPass, sr), preset.LowPass, null)); // Filters rebuild on raw frequency shift
 
             if (preset.HighPass > 0f)
-                p.Add(new HighPassEffect(preset.HighPass, currentSampleRate));
+                targetNodes.Add(("HighPass", () => new HighPassEffect(preset.HighPass, sr), preset.HighPass, null));
 
-            // --- Digital degradation ---
+            // Degradation
             if (preset.Bitcrush > 0f)
-                p.Add(new BitcrushEffect(preset.Bitcrush));
+                targetNodes.Add(("Bitcrush", () => new BitcrushEffect(preset.Bitcrush), preset.Bitcrush, null));
 
             if (preset.SampleRateReduce > 0f)
-                p.Add(new SampleRateReducerEffect(preset.SampleRateReduce, currentSampleRate));
+                targetNodes.Add(("SampleRateReduce", () => new SampleRateReducerEffect(preset.SampleRateReduce, sr), preset.SampleRateReduce, null));
 
             if (preset.Glitch > 0f)
-                p.Add(new GlitchBurstEffect(preset.Glitch, currentSampleRate));
+                targetNodes.Add(("Glitch", () => new GlitchBurstEffect(preset.Glitch, sr), preset.Glitch, null));
 
-            // --- Stone layers ---
+            // Stone Layers
             if (preset.StoneCrack > 0f)
-                p.Add(new StoneCrackEffect(preset.StoneCrack, currentSampleRate));
+                targetNodes.Add(("StoneCrack", () => new StoneCrackEffect(preset.StoneCrack, sr), preset.StoneCrack, null));
 
             if (preset.StoneGrind > 0f)
-                p.Add(new StoneGrindEffect(preset.StoneGrind, currentSampleRate));
+                targetNodes.Add(("StoneGrind", () => new StoneGrindEffect(preset.StoneGrind, sr), preset.StoneGrind, null));
 
-            // --- Creature chirps ---
+            // Chirps
             if (preset.Chirp > 0f)
-                p.Add(new ChirpEffect(preset.Chirp, currentSampleRate));
+                targetNodes.Add(("Chirp", () => new ChirpEffect(preset.Chirp, sr), preset.Chirp, null));
 
-            return p;
+            // Step 2: In-place reconciliation loop
+            var temporaryMap = new Dictionary<string, IAudioEffect>();
+            container.Pipeline.Clear(); // Empty structural list safely without dropping operational memory allocation maps
+
+            foreach (var target in targetNodes)
+            {
+                if (container.ActiveNodes.TryGetValue(target.Key, out var existingInstance) && target.ScalarFieldName != null)
+                {
+                    // CRITICAL AAA OPTIMIZATION: The instance exists! Maintain it to preserve history registers.
+                    // Rapidly inject the new configuration scalar via high-speed cached reflection to bypass readonly boundaries.
+                    FastInjectScalarField(existingInstance, target.ScalarFieldName, target.ScalarValue);
+                    temporaryMap[target.Key] = existingInstance;
+                    container.Pipeline.Add(existingInstance);
+                }
+                else
+                {
+                    // Instantiate fresh node only if it wasn't present before or requires structural parameter rebuilds (like filters)
+                    var newInstance = target.Factory();
+                    temporaryMap[target.Key] = newInstance;
+                    container.Pipeline.Add(newInstance);
+                }
+            }
+
+            // Step 3: Atomic state assignment update
+            container.ActiveNodes.Clear();
+            foreach (var kvp in temporaryMap)
+            {
+                container.ActiveNodes[kvp.Key] = kvp.Value;
+            }
+        }
+
+        /// <summary>
+        /// High-speed reflection helper to overwrite configuration values while protecting active filter state memory registers.
+        /// </summary>
+        private static void FastInjectScalarField(object instance, string fieldName, float value)
+        {
+            try
+            {
+                var field = instance.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+                if (field != null)
+                {
+                    field.SetValue(instance, value);
+                }
+            }
+            catch
+            { // Safeguard fallback block 
+            }
         }
     }
 }
