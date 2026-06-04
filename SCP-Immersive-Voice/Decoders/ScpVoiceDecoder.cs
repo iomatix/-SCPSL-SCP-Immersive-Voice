@@ -101,18 +101,8 @@
             pipeline.Process(pcm, pcm.Length);
 
             // 4. OutputGain (preset)
-            var preset = ScpVoiceProfiles.GetPreset(scp);
-            if (preset.OutputGain != 1f)
-            {
-                float gain = Clamp(preset.OutputGain, 0.0f, 3.0f);
-                for (int i = 0; i < pcm.Length; i++)
-                {
-                    float v = pcm[i] * gain;
-                    if (v > 1f) v = 1f;
-                    if (v < -1f) v = -1f;
-                    pcm[i] = v;
-                }
-            }
+            ApplyOutputGain(pcm, ScpVoiceProfiles.GetPreset(scp).OutputGain);
+
 
             // 5. Limiter (anti‑clip)
             ApplyLimiter(pcm, threshold: 0.98f);
@@ -273,6 +263,30 @@
 
             return pcm;
         }
+
+        /// <summary>
+        /// Applies preset OutputGain safely:
+        /// - clamps gain to 0.0–3.0
+        /// - multiplies PCM
+        /// - clamps PCM to -1..1
+        /// </summary>
+        private static void ApplyOutputGain(float[] pcm, float gain)
+        {
+            // Safety clamp for gain
+            gain = Clamp(gain, 0.0f, 3.0f);
+
+            for (int i = 0; i < pcm.Length; i++)
+            {
+                float v = pcm[i] * gain;
+
+                // Clamp to valid PCM range
+                if (v > 1f) v = 1f;
+                else if (v < -1f) v = -1f;
+
+                pcm[i] = v;
+            }
+        }
+
 
 
     }
