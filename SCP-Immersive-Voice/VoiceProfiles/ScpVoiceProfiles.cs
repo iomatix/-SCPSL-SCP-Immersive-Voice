@@ -103,7 +103,7 @@
 
             // --- Distortion on full-energy signal ---
             if (preset.Distortion > 0f)
-                p.Add(new DistortionEffect(preset.Distortion));
+                p.Add(new DistortionEffect(preset.Distortion, currentSampleRate));
 
             // --- Crackle layers ---
             if (preset.DryCrackle > 0f)
