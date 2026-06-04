@@ -27,7 +27,7 @@
                 maxDistance: _config.ProximityDistance,
                 volume: 1f,
                 priority: AudioPriority.High,
-                validPlayersFilter: p => p != null && p.IsReady
+                validPlayersFilter: p => p != null && p.IsReady && p != scp
             );
 
             _sessions[scp] = sessionId;
