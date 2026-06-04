@@ -144,13 +144,13 @@
 
             // --- Digital degradation ---
             if (preset.Bitcrush > 0f)
-                p.Add(new BitcrushEffect(preset.Bitcrush, currentSampleRate));
+                p.Add(new BitcrushEffect(preset.Bitcrush));
 
             if (preset.SampleRateReduce > 0f)
-                p.Add(new SampleRateReducerEffect(preset.SampleRateReduce));
+                p.Add(new SampleRateReducerEffect(preset.SampleRateReduce, currentSampleRate));
 
             if (preset.Glitch > 0f)
-                p.Add(new GlitchBurstEffect(preset.Glitch));
+                p.Add(new GlitchBurstEffect(preset.Glitch, currentSampleRate));
 
             // --- Stone layers ---
             if (preset.StoneCrack > 0f)
