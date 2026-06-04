@@ -11,14 +11,13 @@
     public static class OpusDecoderPatch
     {
         [HarmonyPostfix]
-        [HarmonyPatch(MethodType.Constructor)]
+        [HarmonyPatch(".ctor")]
         public static void Postfix(OpusDecoder __instance)
         {
             try
             {
                 int sr = VoiceChatSettings.SampleRate;
 
-                // internal type przez string – kompilator tego nie widzi
                 var wrapperType = Type.GetType("VoiceChat.Codec.OpusWrapper, Assembly-CSharp");
                 if (wrapperType == null)
                     return;
@@ -41,7 +40,7 @@
             }
             catch
             {
-                // żadnych crashy
+                // bez crasha
             }
         }
     }

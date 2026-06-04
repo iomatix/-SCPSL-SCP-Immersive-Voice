@@ -6,12 +6,14 @@
     using VoiceChat;
     using VoiceChat.Codec;
     using VoiceChat.Codec.Enums;
+
     [HarmonyPatch(typeof(OpusEncoder))]
     public static class OpusEncoderPatch
     {
+        // ctor FROM OpusApplicationType PATCH
         [HarmonyPostfix]
-        [HarmonyPatch(MethodType.Constructor)]
-        public static void Postfix(OpusEncoder __instance)
+        [HarmonyPatch(".ctor", new Type[] { typeof(OpusApplicationType) })]
+        public static void Postfix(OpusEncoder __instance, OpusApplicationType preset)
         {
             try
             {
@@ -28,9 +30,10 @@
                 if (createEncoder == null)
                     return;
 
+                // new handle with correct sample rate
                 var newHandle = (IntPtr)createEncoder.Invoke(
                     null,
-                    new object[] { sr, 1, OpusApplicationType.Voip });
+                    new object[] { sr, 1, preset });
 
                 if (newHandle == IntPtr.Zero)
                     return;
@@ -42,7 +45,6 @@
             }
             catch
             {
-                // bez crasha
             }
         }
     }
