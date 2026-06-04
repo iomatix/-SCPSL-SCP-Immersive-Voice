@@ -2,7 +2,6 @@
 {
     using LabApi.Features.Audio;
     using LabApi.Features.Wrappers;
-    using SCP_Immersive_Voice.AudioProcessing.Processors;
     using SCP_Immersive_Voice.VoiceProfiles;
     using System;
     using VoiceChat.Codec;
@@ -82,16 +81,13 @@
         /// <summary>
         /// Applies the SCP voice DSP pipeline. Fully float-native.
         /// <para>
-        /// Decode → RNNoise → AGC(pre-DSP) → DSP (pitch, formant, reverb…) → OutputGain(preset) → Limiter → return pcm
+        /// Decode → AGC(pre-DSP) → DSP (pitch, formant, reverb…) → OutputGain(preset) → Limiter → return pcm
         /// </para>
         /// </summary>
         public static float[] ApplyEffects(float[] pcm, Player scp)
         {
             if (pcm == null || pcm.Length == 0)
                 return pcm ?? Array.Empty<float>();
-
-            // 1. RNNoise (noise suppression)
-            pcm = RnNoiseProcessor.Process(pcm);
 
             // 2. AGC (pre‑DSP)
             pcm = ApplyAgc(pcm, targetPeak: 0.7f, maxGain: 3f);
