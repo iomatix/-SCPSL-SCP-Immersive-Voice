@@ -7,6 +7,7 @@
     using LabApi.Features.Audio;
     using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
+    using LabApi.Loader.Features.Plugins;
     using PlayerRoles;
     using PlayerRoles.Voice;
     using SCP_Immersive_Voice.Decoders;
@@ -96,6 +97,8 @@
         #region Player Voice Events
         public void OnSendingVoiceMessage(PlayerSendingVoiceMessageEventArgs ev)
         {
+            if (!ImmersiveScpVoicePlugin.IsEnabled) return;
+
             var sender = ev.Player;
 
             // Only process if this class has a preset

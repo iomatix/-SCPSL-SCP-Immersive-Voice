@@ -38,15 +38,19 @@
         #endregion
 
         public static ImmersiveScpVoiceConfig StaticConfig { get; private set; }
+        private static bool _isEnabled = false;
+        public static bool IsEnabled { get { return _isEnabled; } }
 
         public void OnRoundStart()
         {
             Enable();
+            _isEnabled = true;
         }
 
         public void OnRoundEnd(RoundEndedEventArgs ev)
         {
             Disable();
+            _isEnabled = false;
         }
 
         public override void Enable()
