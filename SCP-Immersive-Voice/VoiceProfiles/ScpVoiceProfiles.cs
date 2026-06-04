@@ -76,7 +76,7 @@
 
             // Getting dynamic sample rate from VoiceChat engine
             float currentSampleRate = (float)VoiceChat.VoiceChatSettings.SampleRate;
-            if (currentSampleRate <= 0) currentSampleRate = 48000f; // Fallback ratunkowy
+            if (currentSampleRate <= 0) currentSampleRate = 48000f; // Fallback helper
 
             // --- Input modifiers ---
             if (preset.UseNoiseGate)
