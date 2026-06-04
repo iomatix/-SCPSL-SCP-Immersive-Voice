@@ -1,6 +1,7 @@
 ﻿namespace ScpImmersiveVoice
 {
     using LabApi.Events;
+    using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.ServerEvents;
     using LabApi.Events.Handlers;
     using LabApi.Features;
@@ -56,6 +57,12 @@
 
             ServerEvents.RoundStarted += OnRoundStart;
             ServerEvents.RoundEnded += OnRoundEnd;
+
+            #region Player Events for Cleanup (LOCAL)
+            PlayerEvents.ChangingRole += OnChangingRole;
+            PlayerEvents.Left += OnPlayerLeft;
+            PlayerEvents.Death += OnPlayerDied;
+            #endregion
 
             #region Initialize Updater
             if (_updaterObject == null)
@@ -117,6 +124,12 @@
                 ServerEvents.RoundStarted -= OnRoundStart;
                 ServerEvents.RoundEnded -= OnRoundEnd;
 
+                #region Player Events for Cleanup
+                PlayerEvents.ChangingRole -= OnChangingRole;
+                PlayerEvents.Left -= OnPlayerLeft;
+                PlayerEvents.Death -= OnPlayerDied;
+                #endregion
+
                 #region Disable Updater
                 if (_updaterObject != null)
                 {
@@ -157,10 +170,32 @@
                 Scp3114Events.StrangleAborted -= _eventHandler.On3114StrangleAborted;
                 #endregion
 
+                _voiceManager.StopAllSessions();
                 _eventHandler = null;
+                _voiceManager = null;
 
                 LabApi.Features.Console.Logger.Info("[SCP Voice Chat] - Plugin Disabled");
             }
         }
+
+        #region Local Event Handlers
+        #region Exit/Death Player Events
+        private void OnChangingRole(PlayerChangingRoleEventArgs ev)
+        {
+            _voiceManager.StopSession(ev.Player);
+        }
+
+        private void OnPlayerLeft(PlayerLeftEventArgs ev)
+        {
+            _voiceManager.StopSession(ev.Player);
+        }
+
+        private void OnPlayerDied(PlayerDeathEventArgs ev)
+        {
+            _voiceManager.StopSession(ev.Player);
+        }
+
+        #endregion
+        #endregion
     }
 }

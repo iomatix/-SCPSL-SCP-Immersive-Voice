@@ -102,12 +102,30 @@
             // Decode Opus → float PCM
             float[] pcm = ScpVoiceDecoder.Decode(ev.Message);
 
+            // DEBUG
+            float max = 0f;
+            for (int i = 0; i < pcm.Length; i++)
+            {
+                float a = Math.Abs(pcm[i]);
+                if (a > max) max = a;
+            }
+
+
+
+            // Noise gate BEFORE DSP
             if (pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 0.01f))
                 return;
 
             // Apply DSP for ALL classes (float-native)
             pcm = ScpVoiceDecoder.ApplyEffects(pcm, sender);
 
+            // Noise gate AFTER DSP
+            if (ScpVoiceDecoder.IsSilent(pcm, threshold: 0.01f))
+                return;
+
+            LabApi.Features.Console.Logger.Warn($"[VOICE DEBUG] {sender.Role} pcmLen={pcm.Length}, max={max}");
+
+            ev.IsAllowed = false; // disable all events, allow only speaker sound for debugg
             // --- CASE 1: Forbidden proximity (e.g. 079, humans, etc.) ---
             if (isForbidden)
             {
@@ -115,7 +133,7 @@
                 byte[] encoded = ScpVoiceDecoder.EncodeToOpus(pcm);
 
                 Buffer.BlockCopy(encoded, 0, ev.Message.Data, 0, encoded.Length);
-                ev.IsAllowed = false; // TODO: Bring it back to true after debug
+                //ev.IsAllowed = true; // TODO: Bring it back to true after debug
                 return;
             }
 
@@ -124,6 +142,16 @@
                 ev.IsAllowed = false; // block original SCPChat
 
             // Send float PCM to proximity audio system
+
+            // DEBUG
+            for (int i = 0; i < pcm.Length; i++)
+            {
+                float v = pcm[i] * 4f; // 4x głośniej
+                if (v > 1f) v = 1f;
+                if (v < -1f) v = -1f;
+                pcm[i] = v;
+            }
+            //
             ScpVoiceManager.Instance.AppendPcm(sender, pcm);
         }
         #endregion

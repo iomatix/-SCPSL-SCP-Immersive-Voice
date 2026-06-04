@@ -22,7 +22,7 @@
 
             int sessionId = DefaultAudioManager.Instance.CreateStreamSession(
                 position: scp.Position,
-                isSpatial: true,
+                isSpatial: false, // TODO: Bring back to true
                 minDistance: 0.05f,
                 maxDistance: _config.ProximityDistance,
                 volume: 1f,
