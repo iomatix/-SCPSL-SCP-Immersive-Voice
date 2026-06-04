@@ -2,7 +2,7 @@
 {
     public class ScpVoicePreset
     {
-        public bool Enable { get; set; } = true;
+        public bool Enable { get; set; } = false;
         public ScpVoicePresetMode Mode { get; set; } = ScpVoicePresetMode.Default;
 
         public float OutputGain { get; set; } = 1.0f;

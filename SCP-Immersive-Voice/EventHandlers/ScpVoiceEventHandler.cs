@@ -110,8 +110,6 @@
                 if (a > max) max = a;
             }
 
-
-
             // Noise gate BEFORE DSP
             if (pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 0.01f))
                 return;

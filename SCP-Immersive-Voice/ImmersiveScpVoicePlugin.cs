@@ -173,8 +173,6 @@
                 _voiceManager.StopAllSessions();
                 _eventHandler = null;
                 _voiceManager = null;
-
-                LabApi.Features.Console.Logger.Info("[SCP Voice Chat] - Plugin Disabled");
             }
         }
 
