@@ -203,6 +203,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="AudioProcessing\Effects\README.md" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
