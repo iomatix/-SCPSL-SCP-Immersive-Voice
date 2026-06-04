@@ -94,7 +94,7 @@
                 return;
 
             // Only process voice messages
-            if (ev.Message.Channel == VoiceChatChannel.None)
+            if (ev.Message.Channel == VoiceChatChannel.None || ev.Message.Channel == VoiceChatChannel.Spectator || ev.Message.Channel == VoiceChatChannel.Mimicry || ev.Message.Channel == VoiceChatChannel.PreGameLobby || ev.Message.Channel == VoiceChatChannel.RoundSummary)
                 return;
 
             bool isForbidden = _config.ForbiddenProximity.Contains(sender.Role);
