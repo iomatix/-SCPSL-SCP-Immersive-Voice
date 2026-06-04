@@ -5,60 +5,96 @@
     using System;
 
     /// <summary>
-    /// Natural formant shifting inspired by vocal tract tilt.
-    /// Designed to preserve intelligibility while altering timbre.
+    /// AAA Formant Shifter simulating vocal tract cavity scaling.
+    /// Uses a cascaded 4-band Biquad Resonator Matrix to shift spectral envelopes 
+    /// without altering the fundamental pitch. Zero-allocation and real-time safe.
     /// </summary>
     public class FormantShiftEffect : IAudioEffect
     {
         public string Name => "Formant Shift";
 
-        private readonly float _target;
+        // 4-band formant frequencies for standard vocal tract representation (Hz)
+        private const float F1 = 500f;  // Throat resonance
+        private const float F2 = 1500f; // Mouth cavity resonance
+        private const float F3 = 2500f; // Nasal / Palate resonance
+        private const float F4 = 3500f; // Vocal presence resonance
 
-        private float _low;
-        private float _high;
-        private float _env;
-        private float _phase;
+        private BiquadFilter _filter1;
+        private BiquadFilter _filter2;
+        private BiquadFilter _filter3;
+        private BiquadFilter _filter4;
 
-        public FormantShiftEffect(float formant)
+        /// <summary>
+        /// Initializes the Formant Shifter.
+        /// </summary>
+        /// <param name="formant">Formant scale ratio (0.5 = massive giant, 2.0 = tiny goblin).</param>
+        /// <param name="sampleRate">Engine sample rate from VoiceChatSettings.</param>
+        public FormantShiftEffect(float formant, float sampleRate)
         {
-            // keep formant shift in a natural range
-            _target = Clamp(formant, 0.5f, 2.0f);
+            float scale = Clamp(formant, 0.5f, 2.0f);
+            float sr = sampleRate > 0f ? sampleRate : 48000f;
+
+            // Scale the formant centers to simulate expanding or shrinking the physical throat
+            // Q values and Gains are tailored to emulate distinct biological cavities
+            _filter1.ConfigurePeakingEQ(F1 * scale, sr, q: 1.5f, gainDb: 12f);
+            _filter2.ConfigurePeakingEQ(F2 * scale, sr, q: 2.0f, gainDb: 10f);
+            _filter3.ConfigurePeakingEQ(F3 * scale, sr, q: 2.5f, gainDb: 8f);
+            _filter4.ConfigurePeakingEQ(F4 * scale, sr, q: 3.0f, gainDb: 6f);
         }
 
         public void Process(float[] pcm, int length)
         {
+            if (length < 1) return;
+
             for (int i = 0; i < length; i++)
             {
-                float dry = pcm[i];
+                float input = pcm[i];
 
-                // formant movement reacts to loudness, but smoothly
-                float abs = Math.Abs(dry);
-                _env += 0.01f * (abs - _env);
+                // Process sequentially through the vocal tract matrix
+                float output = _filter1.Process(input);
+                output = _filter2.Process(output);
+                output = _filter3.Process(output);
+                output = _filter4.Process(output);
 
-                // subtle drift to avoid static timbre
-                _phase += 0.0003f;
-                float drift = 0.5f + 0.5f * (float)Math.Sin(_phase * 0.9f);
+                // Blend dry and wet carefully to keep text intelligibility high
+                pcm[i] = input * 0.4f + output * 0.6f;
+            }
+        }
 
-                // dynamic but controlled formant target
-                float shift = Lerp(1f, _target, drift * (0.4f + _env * 0.3f));
+        // High-performance, stack-allocated 2nd order IIR filter structure
+        private struct BiquadFilter
+        {
+            private float _b0, _b1, _b2, _a1, _a2;
+            private float _x1, _x2, _y1, _y2;
 
-                // gentle tilt-EQ to simulate vocal tract shape
-                float lowCut = 0.03f * shift;
-                float highCut = 0.03f * (2f - shift);
+            public void ConfigurePeakingEQ(float frequency, float sampleRate, float q, float gainDb)
+            {
+                // Ensure the scaled frequency does not breach Nyquist limit
+                frequency = Math.Min(frequency, sampleRate * 0.45f);
 
-                _low += lowCut * (dry - _low);
-                _high += highCut * (dry - _high);
+                float a = (float)Math.Pow(10, gainDb / 40.0);
+                float w0 = 2f * (float)Math.PI * frequency / sampleRate;
+                float alpha = (float)Math.Sin(w0) / (2f * q);
+                float cosW0 = (float)Math.Cos(w0);
 
-                float tilted = _low * (2f - shift) + _high * shift;
+                float a0 = 1f + alpha / a;
+                _b0 = (1f + alpha * a) / a0;
+                _b1 = (-2f * cosW0) / a0;
+                _b2 = (1f - alpha * a) / a0;
+                _a1 = (-2f * cosW0) / a0;
+                _a2 = (1f - alpha / a) / a0;
+            }
 
-                // mild nonlinear shaping for organic tone
-                tilted *= 0.95f + 0.05f * tilted;
+            public float Process(float input)
+            {
+                float output = _b0 * input + _b1 * _x1 + _b2 * _x2 - _a1 * _y1 - _a2 * _y2;
 
-                // preserve intelligibility by keeping strong dry component
-                float mixed = dry * 0.65f + tilted * 0.35f;
+                _x2 = _x1;
+                _x1 = input;
+                _y2 = _y1;
+                _y1 = output;
 
-                // prevent harshness without altering tone
-                pcm[i] = (float)Math.Tanh(mixed * 1.01f);
+                return output;
             }
         }
     }

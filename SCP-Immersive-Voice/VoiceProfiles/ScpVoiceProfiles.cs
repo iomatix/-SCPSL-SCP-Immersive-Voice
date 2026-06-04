@@ -89,7 +89,7 @@
                 p.Add(new PitchShiftEffect(preset.Pitch, currentSampleRate, windowSizeMs: 40f));
 
             if (Math.Abs(preset.Formant - 1f) > 0.01f)
-                p.Add(new FormantShiftEffect(preset.Formant));
+                p.Add(new FormantShiftEffect(preset.Formant, currentSampleRate));
 
             if (preset.FormantDrift > 0f)
                 p.Add(new FormantDriftEffect(preset.FormantDrift));
