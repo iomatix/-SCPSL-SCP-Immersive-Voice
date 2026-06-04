@@ -17,12 +17,12 @@
         public static ScpVoiceManager Instance { get; } = new ScpVoiceManager();
         /// <summary>
         /// Audio Session IDs.
-        /// The key of the dictonary is player.PlayerId, The value is _sessionId
+        /// The key of the dictonary is player.UserId, The value is _sessionId
         /// </summary>
-        private readonly Dictionary<int, int> _sessions = new Dictionary<int, int>();
+        private readonly Dictionary<string, int> _sessions = new Dictionary<string, int>();
         public int StartSession(Player scp)
         {
-            if (_sessions.TryGetValue(scp.PlayerId, out int existing))
+            if (_sessions.TryGetValue(scp.UserId, out int existing))
                 return existing;
 
             int sessionId = DefaultAudioManager.Instance.CreateStreamSession(
@@ -35,7 +35,7 @@
                 validPlayersFilter: p => p != null && p.IsReady && p != scp
             );
 
-            _sessions[scp.PlayerId] = sessionId;
+            _sessions[scp.UserId] = sessionId;
 
             Logger.Debug($"[VOICE DEBUG] Audio Streaming Seassion no. {sessionId} Created");
             return sessionId;
@@ -43,13 +43,13 @@
 
         public void StopSession(Player scp)
         {
-            if (!_sessions.TryGetValue(scp.PlayerId, out int sessionId))
+            if (!_sessions.TryGetValue(scp.UserId, out int sessionId))
                 return;
 
             DefaultAudioManager.Instance.DestroySession(sessionId);
 
             Logger.Debug($"[VOICE DEBUG] Audio Streaming Seassion no. {sessionId} Destroyed");
-            _sessions.Remove(scp.PlayerId);
+            _sessions.Remove(scp.UserId);
         }
 
         public void StopAllSessions()
@@ -67,7 +67,7 @@
                 return;
             }
 
-            if (!_sessions.TryGetValue(scp.PlayerId, out int sessionId))
+            if (!_sessions.TryGetValue(scp.UserId, out int sessionId))
             {
                 Logger.Debug($"[SCP-VOICE] AppendPcm: NO SESSION for {scp.Nickname}, creating new one");
                 sessionId = StartSession(scp);
@@ -108,9 +108,9 @@
         {
             foreach (var kvp in _sessions)
             {
-                int playerId = kvp.Key;
+                string userId = kvp.Key;
 
-                Player scp = Player.ReadyList.FirstOrDefault(p => p.PlayerId == playerId);
+                Player scp = Player.ReadyList.FirstOrDefault(p => p.UserId == userId);
                 if (scp == null) continue;
 
                 var sessionId = kvp.Value;
