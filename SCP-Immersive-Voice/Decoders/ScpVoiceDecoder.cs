@@ -88,9 +88,15 @@
             if (pcm == null || pcm.Length == 0)
                 return pcm ?? Array.Empty<float>();
 
+            // Normalize BEFORE DSP - Important !
+            if (NormalizeEnabled)
+                NormalizeInPlace(pcm, targetPeak: 0.9f);
+
+            // Apply effects on healthy signal
             var pipeline = ScpVoiceProfiles.GetPipelineFor(scp);
             pipeline.Process(pcm, pcm.Length);
 
+            // Gain after DSP
             var preset = ScpVoiceProfiles.GetPreset(scp);
             if (preset.OutputGain != 1f)
             {
@@ -104,8 +110,8 @@
                 }
             }
 
-            if (NormalizeEnabled)
-                NormalizeInPlace(pcm);
+            // Clipping fix
+            ApplyLimiter(pcm, threshold: 0.98f);
 
             return pcm;
         }
@@ -132,6 +138,8 @@
         /// <summary>
         /// Normalizes the buffer in-place so that the peak amplitude reaches targetPeak.
         /// </summary>
+        /// <param name="pcm"></param>
+        /// <param name="targetPeak"></param>
         private static void NormalizeInPlace(float[] pcm, float targetPeak = 0.9f)
         {
             float max = 0f;
@@ -155,5 +163,28 @@
                 pcm[i] = v;
             }
         }
+
+        /// <summary>
+        /// Limits the buffer to threshold.
+        /// </summary>
+        /// <param name="pcm"></param>
+        /// <param name="threshold"></param>
+        private static void ApplyLimiter(float[] pcm, float threshold = 0.98f)
+        {
+            float t = Math.Abs(threshold);
+
+            for (int i = 0; i < pcm.Length; i++)
+            {
+                float v = pcm[i];
+
+                if (v > t)
+                    v = t;
+                else if (v < -t)
+                    v = -t;
+
+                pcm[i] = v;
+            }
+        }
+
     }
 }

@@ -115,7 +115,7 @@
                 byte[] encoded = ScpVoiceDecoder.EncodeToOpus(pcm);
 
                 Buffer.BlockCopy(encoded, 0, ev.Message.Data, 0, encoded.Length);
-                ev.IsAllowed = true;
+                ev.IsAllowed = false;
                 return;
             }
 
