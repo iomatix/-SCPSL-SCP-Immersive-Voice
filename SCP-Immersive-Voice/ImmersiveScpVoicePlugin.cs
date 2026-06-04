@@ -56,8 +56,8 @@
         public override void Enable()
         {
             StaticConfig = Config;
-            _eventHandler = new ScpVoiceEventHandler(Config);
             _voiceManager = new ScpVoiceManager();
+            _eventHandler = new ScpVoiceEventHandler(Config, _voiceManager);
 
             ServerEvents.RoundStarted += OnRoundStart;
             ServerEvents.RoundEnded += OnRoundEnd;

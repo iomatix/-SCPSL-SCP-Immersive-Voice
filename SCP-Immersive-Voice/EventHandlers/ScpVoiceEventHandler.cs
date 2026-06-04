@@ -28,11 +28,13 @@
     public class ScpVoiceEventHandler
     {
         private readonly ImmersiveScpVoiceConfig _config;
+        private readonly ScpVoiceManager _voiceManager;
 
         // Constructor
-        public ScpVoiceEventHandler(ImmersiveScpVoiceConfig config)
+        public ScpVoiceEventHandler(ImmersiveScpVoiceConfig config, ScpVoiceManager voiceManager)
         {
             _config = config;
+            _voiceManager = voiceManager;
         }
 
         #region SCP State Tracking Controllers
@@ -163,7 +165,7 @@
                 pcm[i] = v;
             }
             //
-            ScpVoiceManager.Instance.AppendPcm(sender, pcm);
+            _voiceManager.AppendPcm(sender, pcm);
         }
         #endregion
 
