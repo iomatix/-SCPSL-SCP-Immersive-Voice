@@ -75,11 +75,9 @@
             public static void Log(string name, DspStats before, DspStats after)
             {
                 if (after.Snr < 5)
-                    Logger.Warn($"[DSP] {name}: CRITICAL – SNR={after.Snr:F1} dB (noise)");
+                    Logger.Error($"[DSP] {name}: CRITICAL – SNR={after.Snr:F1} dB (noise)");
                 else if (after.Rms < before.Rms * 0.2f)
                     Logger.Warn($"[DSP] {name}: WARNING – RMS drop {before.Rms:F3} → {after.Rms:F3}");
-                else
-                    Logger.Debug($"[DSP] {name}: OK");
             }
         }
     }
