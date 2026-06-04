@@ -114,7 +114,7 @@
 
             // --- Noise layers BEFORE filters ---
             if (preset.WhisperAmount > 0f)
-                p.Add(new WhisperFilterEffect(preset.WhisperAmount));
+                p.Add(new WhisperFilterEffect(preset.WhisperAmount, currentSampleRate));
 
             if (preset.BreathNoise > 0f)
                 p.Add(new BreathNoiseEffect(preset.BreathNoise));
