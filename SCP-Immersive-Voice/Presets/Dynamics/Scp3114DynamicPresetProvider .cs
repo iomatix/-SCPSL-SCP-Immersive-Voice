@@ -9,9 +9,12 @@
 
     public class Scp3114DynamicPresetProvider : IDynamicVoicePresetProvider
     {
-        private readonly Dictionary<Player, Scp3114VoiceStateController> _states;
+        /// <summary>
+        /// The key of this dictionary is PlayerId.
+        /// </summary>
+        private readonly Dictionary<int, Scp3114VoiceStateController> _states;
 
-        public Scp3114DynamicPresetProvider(Dictionary<Player, Scp3114VoiceStateController> states)
+        public Scp3114DynamicPresetProvider(Dictionary<int, Scp3114VoiceStateController> states)
         {
             _states = states;
         }
@@ -23,7 +26,7 @@
             if (player.Role != RoleTypeId.Scp3114)
                 return false;
 
-            if (!_states.TryGetValue(player, out var controller))
+            if (!_states.TryGetValue(player.PlayerId, out var controller))
                 return false;
 
             preset = Scp3114DynamicPresets.GetPresetForState(controller.CurrentState);

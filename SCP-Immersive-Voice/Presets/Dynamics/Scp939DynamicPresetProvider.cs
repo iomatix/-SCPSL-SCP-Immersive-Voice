@@ -7,9 +7,13 @@
     using System.Collections.Generic;
     public class Scp939DynamicPresetProvider : IDynamicVoicePresetProvider
     {
-        private readonly Dictionary<Player, Scp939VoiceStateController> _states;
 
-        public Scp939DynamicPresetProvider(Dictionary<Player, Scp939VoiceStateController> states)
+        /// <summary>
+        /// The key of this dictionary is PlayerId.
+        /// </summary>
+        private readonly Dictionary<int, Scp939VoiceStateController> _states;
+
+        public Scp939DynamicPresetProvider(Dictionary<int, Scp939VoiceStateController> states)
         {
             _states = states;
         }
@@ -21,7 +25,7 @@
             if (player.Role != RoleTypeId.Scp939)
                 return false;
 
-            if (!_states.TryGetValue(player, out var controller))
+            if (!_states.TryGetValue(player.PlayerId, out var controller))
                 return false;
 
             preset = Scp939DynamicPresets.GetPresetForState(controller.CurrentState);

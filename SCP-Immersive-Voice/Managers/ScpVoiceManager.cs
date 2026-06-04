@@ -1,12 +1,13 @@
 ﻿namespace SCP_Immersive_Voice.Managers
 {
-    using ScpImmersiveVoice.Config;
     using AudioManagerAPI.Defaults;
     using AudioManagerAPI.Features.Enums;
-    using LabApi.Features.Wrappers;
-    using System.Collections.Generic;
-    using ScpImmersiveVoice;
     using LabApi.Features.Console;
+    using LabApi.Features.Wrappers;
+    using ScpImmersiveVoice;
+    using ScpImmersiveVoice.Config;
+    using System.Collections.Generic;
+    using System.Linq;
 
     public class ScpVoiceManager
     {
@@ -14,10 +15,14 @@
         private readonly ImmersiveScpVoiceConfig _config = ImmersiveScpVoicePlugin.StaticConfig;
 
         public static ScpVoiceManager Instance { get; } = new ScpVoiceManager();
-        private readonly Dictionary<Player, int> _sessions = new Dictionary<Player, int>();
+        /// <summary>
+        /// Audio Session IDs.
+        /// The key of the dictonary is player.PlayerId, The value is _sessionId
+        /// </summary>
+        private readonly Dictionary<int, int> _sessions = new Dictionary<int, int>();
         public int StartSession(Player scp)
         {
-            if (_sessions.TryGetValue(scp, out int existing))
+            if (_sessions.TryGetValue(scp.PlayerId, out int existing))
                 return existing;
 
             int sessionId = DefaultAudioManager.Instance.CreateStreamSession(
@@ -30,7 +35,7 @@
                 validPlayersFilter: p => p != null && p.IsReady && p != scp
             );
 
-            _sessions[scp] = sessionId;
+            _sessions[scp.PlayerId] = sessionId;
 
             Logger.Debug($"[VOICE DEBUG] Audio Streaming Seassion no. {sessionId} Created");
             return sessionId;
@@ -38,13 +43,13 @@
 
         public void StopSession(Player scp)
         {
-            if (!_sessions.TryGetValue(scp, out int sessionId))
+            if (!_sessions.TryGetValue(scp.PlayerId, out int sessionId))
                 return;
 
             DefaultAudioManager.Instance.DestroySession(sessionId);
 
             Logger.Debug($"[VOICE DEBUG] Audio Streaming Seassion no. {sessionId} Destroyed");
-            _sessions.Remove(scp);
+            _sessions.Remove(scp.PlayerId);
         }
 
         public void StopAllSessions()
@@ -62,7 +67,7 @@
                 return;
             }
 
-            if (!_sessions.TryGetValue(scp, out int sessionId))
+            if (!_sessions.TryGetValue(scp.PlayerId, out int sessionId))
             {
                 Logger.Debug($"[SCP-VOICE] AppendPcm: NO SESSION for {scp.Nickname}, creating new one");
                 sessionId = StartSession(scp);
@@ -103,11 +108,15 @@
         {
             foreach (var kvp in _sessions)
             {
-                var scp = kvp.Key;
-                var sessionId = kvp.Value;
+                int playerId = kvp.Key;
 
+                Player scp = Player.ReadyList.FirstOrDefault(p => p.PlayerId == playerId);
+                if (scp == null) continue;
+
+                var sessionId = kvp.Value;
                 DefaultAudioManager.Instance.SetSessionPosition(sessionId, scp.Position);
             }
         }
+
     }
 }

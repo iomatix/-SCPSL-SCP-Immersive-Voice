@@ -36,46 +36,56 @@
 
         #region SCP State Tracking Controllers
         // SCP-096 Dynamic State Tracking
-        private readonly Dictionary<Player, Scp096VoiceStateController> _scp096State = new Dictionary<Player, Scp096VoiceStateController>();
-        public Dictionary<Player, Scp096VoiceStateController> Scp096States => _scp096State;
+        /// <summary>
+        /// The key of this dictionary is PlayerId.
+        /// </summary>
+        private readonly Dictionary<int, Scp096VoiceStateController> _scp096State = new Dictionary<int, Scp096VoiceStateController>();
+        public Dictionary<int, Scp096VoiceStateController> Scp096States => _scp096State;
         private Scp096VoiceStateController Get096State(Player player)
         {
-            if (!_scp096State.TryGetValue(player, out var controller))
+            if (!_scp096State.TryGetValue(player.PlayerId, out var controller))
             {
                 controller = new Scp096VoiceStateController();
-                _scp096State[player] = controller;
+                _scp096State[player.PlayerId] = controller;
             }
 
             return controller;
         }
 
         // SCP-939 Dynamic State Tracking
-        private readonly Dictionary<Player, Scp939VoiceStateController> _scp939State = new Dictionary<Player, Scp939VoiceStateController>();
+        /// <summary>
+        /// The key of this dictionary is PlayerId.
+        /// </summary>
+        private readonly Dictionary<int, Scp939VoiceStateController> _scp939State = new Dictionary<int, Scp939VoiceStateController>();
 
-        public Dictionary<Player, Scp939VoiceStateController> Scp939States => _scp939State;
+
+        public Dictionary<int, Scp939VoiceStateController> Scp939States => _scp939State;
 
         private Scp939VoiceStateController Get939State(Player player)
         {
-            if (!_scp939State.TryGetValue(player, out var controller))
+            if (!_scp939State.TryGetValue(player.PlayerId, out var controller))
             {
                 controller = new Scp939VoiceStateController();
-                _scp939State[player] = controller;
+                _scp939State[player.PlayerId] = controller;
             }
 
             return controller;
         }
 
         // SCP-3114 Dynamic State Tracking
-        private readonly Dictionary<Player, Scp3114VoiceStateController> _scp3114State = new Dictionary<Player, Scp3114VoiceStateController>();
+        private readonly Dictionary<int, Scp3114VoiceStateController> _scp3114State = new Dictionary<int, Scp3114VoiceStateController>();
 
-        public Dictionary<Player, Scp3114VoiceStateController> Scp3114States => _scp3114State;
+        /// <summary>
+        /// The key of this dictionary is PlayerId.
+        /// </summary>
+        public Dictionary<int, Scp3114VoiceStateController> Scp3114States => _scp3114State;
 
         private Scp3114VoiceStateController Get3114State(Player player)
         {
-            if (!_scp3114State.TryGetValue(player, out var controller))
+            if (!_scp3114State.TryGetValue(player.PlayerId, out var controller))
             {
                 controller = new Scp3114VoiceStateController();
-                _scp3114State[player] = controller;
+                _scp3114State[player.PlayerId] = controller;
             }
 
             return controller;
