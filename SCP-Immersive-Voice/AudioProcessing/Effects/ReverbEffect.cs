@@ -1,8 +1,9 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
-    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
+    using VoiceChat;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
 
     /// <summary>
     /// Nonlinear diffusion reverb with micro-modulation and dimensional smear.
@@ -21,7 +22,7 @@
         public ReverbEffect(float mix)
         {
             _mix = Clamp(mix, 0f, 1.5f);
-            _buffer = new float[9600]; // ~200ms @ 48kHz
+            _buffer = new float[VoiceChatSettings.SampleRate / 5]; // ~200ms @ 48kHz
         }
 
         public void Process(float[] pcm, int length)

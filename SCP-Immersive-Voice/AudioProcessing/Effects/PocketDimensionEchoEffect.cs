@@ -1,8 +1,9 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
-    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
+    using VoiceChat;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
 
     /// <summary>
     /// Nonlinear extradimensional echo with modulated delay, unstable feedback
@@ -21,7 +22,7 @@
         public PocketDimensionEchoEffect(float amount)
         {
             _amount = Clamp(amount, 0f, 1.5f);
-            _buffer = new float[24000]; // ~0.5s @ 48kHz
+            _buffer = new float[VoiceChatSettings.SampleRate / 2]; // ~0.5s @ 48kHz
         }
 
         public void Process(float[] pcm, int length)

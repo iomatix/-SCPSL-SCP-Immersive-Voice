@@ -1,5 +1,6 @@
 ﻿namespace ScpImmersiveVoice
 {
+    using HarmonyLib;
     using LabApi.Events;
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.ServerEvents;
@@ -33,6 +34,10 @@
         private ScpVoiceManager _voiceManager;
         #endregion
 
+        #region Harmony
+        private Harmony _harmony;
+        #endregion
+
         #region Unity Objects
         private GameObject _updaterObject;
         #endregion
@@ -43,18 +48,19 @@
 
         public void OnRoundStart()
         {
-            Enable();
             _isEnabled = true;
         }
 
         public void OnRoundEnd(RoundEndedEventArgs ev)
         {
-            Disable();
             _isEnabled = false;
         }
 
         public override void Enable()
         {
+            _harmony = new Harmony("scp.immersive.voice.opus.patch");
+            _harmony.PatchAll();
+
             StaticConfig = Config;
             _voiceManager = new ScpVoiceManager();
             _eventHandler = new ScpVoiceEventHandler(Config, _voiceManager);
@@ -125,6 +131,8 @@
 
         public override void Disable()
         {
+            _harmony?.UnpatchAll("scp.immersive.voice.opus.patch");
+
             if (_eventHandler != null)
             {
                 ServerEvents.RoundStarted -= OnRoundStart;

@@ -172,6 +172,8 @@
     <Compile Include="Decoders\ScpVoiceDecoder.cs" />
     <Compile Include="Managers\ScpVoiceManager.cs" />
     <Compile Include="Managers\ScpVoiceUpdater.cs" />
+    <Compile Include="Patches\OpusEncoderPatch.cs" />
+    <Compile Include="Patches\Patches.cs" />
     <Compile Include="Presets\Dynamics\Controllers\Scp3114VoiceStateController.cs" />
     <Compile Include="Presets\Dynamics\Controllers\Scp939VoiceStateController.cs" />
     <Compile Include="Presets\Dynamics\Controllers\Scp096VoiceStateController.cs" />

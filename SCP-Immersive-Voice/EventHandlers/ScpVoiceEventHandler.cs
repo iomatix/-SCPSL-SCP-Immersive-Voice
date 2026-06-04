@@ -143,7 +143,8 @@
             if (ev.Message.Channel == VoiceChatChannel.ScpChat)
                 ev.IsAllowed = false; // block original SCPChat
 
-            // --- Automatic Gain Control (AGC) + Normalization ---
+            // --- AGC: tylko wyrównanie, bez pompowania szumu ---
+            // --- AGC: only adjustement, without noise pump -
             float peak = 0f;
             for (int i = 0; i < pcm.Length; i++)
             {
@@ -151,20 +152,18 @@
                 if (a > peak) peak = a;
             }
 
-            // target loudness similar to vanilla Opus
-            const float target = 0.85f;
-
             if (peak > 0.0001f)
             {
+                const float target = 0.7f;
                 float gain = target / peak;
 
-                // safety clamp (avoid insane boosts)
-                if (gain > 5f)
-                    gain = 5f;
+                if (gain > 3f)
+                    gain = 3f;
 
                 for (int i = 0; i < pcm.Length; i++)
                     pcm[i] *= gain;
             }
+
 
             // --- Final limiter (anti‑clipping) ---
             for (int i = 0; i < pcm.Length; i++)
