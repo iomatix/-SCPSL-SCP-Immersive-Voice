@@ -11,6 +11,8 @@
     /// </summary>
     public class DistortionEffect : IAudioEffect
     {
+        public string Name => "Distortion";
+
         private readonly float _drive;
         private readonly float _preGain;
         private readonly float _postGain;

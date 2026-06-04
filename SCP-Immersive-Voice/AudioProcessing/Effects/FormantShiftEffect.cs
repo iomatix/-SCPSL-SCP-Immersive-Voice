@@ -10,6 +10,9 @@
     /// </summary>
     public class FormantShiftEffect : IAudioEffect
     {
+
+        public string Name => "Formant Shift";
+
         private readonly float _target;
 
         private float _low;

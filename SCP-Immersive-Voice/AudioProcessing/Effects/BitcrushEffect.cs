@@ -10,6 +10,8 @@
     /// </summary>
     public class BitcrushEffect : IAudioEffect
     {
+        public string Name => "Bitcrush";
+
         private readonly int _steps;
         private readonly float _invSteps;
         private readonly float _ditherScale;

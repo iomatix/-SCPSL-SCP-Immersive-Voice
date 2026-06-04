@@ -11,6 +11,8 @@
     /// </summary>
     public class StoneGrindEffect : IAudioEffect
     {
+        public string Name => "Stone Grind";
+
         private readonly float _intensity;
 
         private float _bpState;

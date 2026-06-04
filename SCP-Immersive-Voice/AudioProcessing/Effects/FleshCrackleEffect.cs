@@ -10,6 +10,8 @@
     /// </summary>
     public class FleshCrackleEffect : IAudioEffect
     {
+        public string Name => "FleshCrackle";
+
         private readonly float _amount;
 
         private float _smooth;

@@ -11,6 +11,8 @@
     /// </summary>
     public class ChirpEffect : IAudioEffect
     {
+        public string Name => "Chirp";
+
         private readonly float _amount;
 
         private float _phase;

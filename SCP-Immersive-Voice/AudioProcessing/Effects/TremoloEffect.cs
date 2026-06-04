@@ -13,6 +13,8 @@
     /// </summary>
     public class TremoloEffect : IAudioEffect
     {
+        public string Name => "Tremolo";
+
         private readonly float _frequency;
 
         private float _phase;

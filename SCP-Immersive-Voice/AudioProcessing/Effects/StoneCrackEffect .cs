@@ -11,6 +11,8 @@
     /// </summary>
     public class StoneCrackEffect : IAudioEffect
     {
+        public string Name => "StoneCrack";
+
         private readonly float _intensity;
 
         private float _last;

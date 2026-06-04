@@ -11,6 +11,8 @@
     /// </summary>
     public class PocketDimensionEchoEffect : IAudioEffect
     {
+        public string Name => "Pocket Dimension Echo";
+
         private readonly float _amount;
 
         private readonly float[] _buffer;

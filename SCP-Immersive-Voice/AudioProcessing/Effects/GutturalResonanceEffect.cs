@@ -11,6 +11,8 @@
     /// </summary>
     public class GutturalResonanceEffect : IAudioEffect
     {
+        public string Name => "Guttural Resonance";
+
         private readonly float _amount;
 
         private float _res;

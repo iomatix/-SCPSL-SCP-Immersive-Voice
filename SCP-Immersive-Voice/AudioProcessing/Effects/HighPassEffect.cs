@@ -12,6 +12,8 @@
     /// </summary>
     public class HighPassEffect : IAudioEffect
     {
+        public string Name => "High Pass";
+
         private readonly float _cutoff;
         private float _lp;
 

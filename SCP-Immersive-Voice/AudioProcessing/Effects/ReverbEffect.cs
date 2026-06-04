@@ -11,6 +11,8 @@
     /// </summary>
     public class ReverbEffect : IAudioEffect
     {
+        public string Name => "Reverb";
+
         private readonly float _mix;
 
         private readonly float[] _buffer;

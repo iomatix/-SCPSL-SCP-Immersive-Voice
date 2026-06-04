@@ -10,6 +10,8 @@
     /// </summary>
     public class StaticNoiseEffect : IAudioEffect
     {
+        public string Name => "Static Noise";
+
         private readonly float _amount;
 
         private float _smooth;

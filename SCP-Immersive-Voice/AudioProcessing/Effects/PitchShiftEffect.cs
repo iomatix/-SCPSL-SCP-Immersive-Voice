@@ -11,6 +11,8 @@
     /// </summary>
     public class PitchShiftEffect : IAudioEffect
     {
+        public string Name => "Pitch Shift";
+
         private float _pitch;
         private float _smoothPitch;
 

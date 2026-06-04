@@ -11,6 +11,8 @@
     /// </summary>
     public class WhisperFilterEffect : IAudioEffect
     {
+        public string Name => "Whisper";
+
         private readonly float _amount;
 
         private float _smoothLast;

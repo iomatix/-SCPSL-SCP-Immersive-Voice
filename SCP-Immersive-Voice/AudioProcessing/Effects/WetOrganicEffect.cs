@@ -11,6 +11,8 @@
     /// </summary>
     public class WetOrganicEffect : IAudioEffect
     {
+        public string Name => "Wet Organic";
+
         private readonly float _amount;
 
         private float _lp;

@@ -12,6 +12,8 @@
     /// </summary>
     public class WetDecayEffect : IAudioEffect
     {
+        public string Name => "Wet Decay";
+
         private readonly float _amount;
 
         private float _lpState;

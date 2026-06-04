@@ -12,6 +12,8 @@
     /// </summary>
     public class SubharmonicGrowlEffect : IAudioEffect
     {
+        public string Name => "Subharmonic Growl";
+
         private readonly float _amount;
 
         private float _phase;

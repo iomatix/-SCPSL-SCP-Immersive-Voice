@@ -10,6 +10,8 @@
     /// </summary>
     public class FormantDriftEffect : IAudioEffect
     {
+        public string Name => "Formant Drift";
+
         private readonly float _amount;
 
         private float _lp;

@@ -11,6 +11,8 @@
     /// </summary>
     public class BreathNoiseEffect : IAudioEffect
     {
+        public string Name => "Breath Noise";
+
         private readonly float _intensity;
         private static readonly Random _rng = new Random();
 

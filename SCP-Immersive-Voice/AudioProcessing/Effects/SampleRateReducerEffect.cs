@@ -11,6 +11,8 @@
     /// </summary>
     public class SampleRateReducerEffect : IAudioEffect
     {
+        public string Name => "Sample Rate Reducer";
+
         private readonly float _amount;
 
         private float _hold;

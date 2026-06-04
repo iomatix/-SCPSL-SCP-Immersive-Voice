@@ -11,6 +11,9 @@
     /// </summary>
     public class GlitchBurstEffect : IAudioEffect
     {
+
+        public string Name => "Glitch Burst";
+
         private readonly float _amount;
 
         private int _burstSamplesLeft;
