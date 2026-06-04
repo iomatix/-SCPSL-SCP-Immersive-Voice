@@ -4,16 +4,13 @@
     using PlayerRoles;
     using SCP_Immersive_Voice.Presets.Dynamics.Controllers;
     using SCP_Immersive_Voice.Presets.Dynamics.Interfaces;
-    using System.Collections.Generic;
+    using System.Collections.Concurrent;
+
     public class Scp096DynamicPresetProvider : IDynamicVoicePresetProvider
     {
+        private readonly ConcurrentDictionary<int, Scp096VoiceStateController> _states;
 
-        /// <summary>
-        /// The key of this dictionary is PlayerId.
-        /// </summary>
-        private readonly Dictionary<int, Scp096VoiceStateController> _states;
-
-        public Scp096DynamicPresetProvider(Dictionary<int, Scp096VoiceStateController> states)
+        public Scp096DynamicPresetProvider(ConcurrentDictionary<int, Scp096VoiceStateController> states)
         {
             _states = states;
         }
@@ -32,5 +29,4 @@
             return true;
         }
     }
-
 }

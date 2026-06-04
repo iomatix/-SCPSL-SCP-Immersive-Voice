@@ -63,13 +63,13 @@
             _voiceManager.AppendPcm(sender, pcm);
         }
 
-        public void OnPlayerDied(PlayerDiedEventArgs ev)
+        public void OnPlayerDied(PlayerDeathEventArgs ev)
         {
             if (ev.Player == null) return;
             ScpVoiceProfiles.ClearCacheFor(ev.Player);
         }
 
-        public void OnChangingRole(PlayerChangingRoleEventArgs ev)
+        public void OnChangedRole(PlayerChangedRoleEventArgs ev)
         {
             if (ev.Player == null) return;
             ScpVoiceProfiles.ClearCacheFor(ev.Player);

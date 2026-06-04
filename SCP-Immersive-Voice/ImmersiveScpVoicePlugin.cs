@@ -113,7 +113,7 @@
             Scp096Events.TryingNotToCry += _scp096AudioHandler.On096TryingNotToCry;
             Scp096Events.Charging += _scp096AudioHandler.On096Charging;
             Scp096Events.Charged += _scp096AudioHandler.On096Charged;
-            ScpVoiceProfiles.DynamicProviders.Add(new Scp096DynamicPresetProvider(_scp096AudioHandler));
+            ScpVoiceProfiles.DynamicProviders.Add(new Scp096DynamicPresetProvider(_scp096AudioHandler.States));
 
             // --- SCP-939 Pipeline Config ---
             Scp939Events.MimickingEnvironment += _scp939AudioHandler.On939MimickingEnvironment;
@@ -136,14 +136,14 @@
             Scp3114Events.StrangleStarted += _scp3114AudioHandler.On3114StrangleStarted;
             Scp3114Events.StrangleAborting += _scp3114AudioHandler.On3114StrangleAborting;
             Scp3114Events.StrangleAborted += _scp3114AudioHandler.On3114StrangleAborted;
-            ScpVoiceProfiles.DynamicProviders.Add(new Scp3114DynamicPresetProvider(_scp3114AudioHandler));
+            ScpVoiceProfiles.DynamicProviders.Add(new Scp3114DynamicPresetProvider(_scp3114AudioHandler.States));
 
             // --- SCP-106 Pipeline Config ---
             Scp106Events.ChangedStalkMode += _scp106AudioHandler.On106ChangedStalkMode;
             Scp106Events.ChangedVigor += _scp106AudioHandler.On106ChangedVigor;
             Scp106Events.TeleportingPlayer += _scp106AudioHandler.On106TeleportingPlayer;
             Scp106Events.UsingHunterAtlas += _scp106AudioHandler.On106UsingHunterAtlas;
-            ScpVoiceProfiles.DynamicProviders.Add(new Scp106DynamicPresetProvider(_scp106AudioHandler));
+            ScpVoiceProfiles.DynamicProviders.Add(new Scp106DynamicPresetProvider(_scp106AudioHandler.States));
 
             #endregion
 
@@ -240,15 +240,15 @@
         }
 
         #region Local Event Router Methods (Dismantle Sessions)
-        private void OnChaningRole(PlayerChangingRoleEventArgs ev)
+        private void OnChangedRole(PlayerChangedRoleEventArgs ev)
         {
             if (ev.Player == null) return;
             _voiceManager?.StopSession(ev.Player);
             ScpVoiceProfiles.ClearCacheFor(ev.Player);
-            _scp096AudioHandler?.OnChangingRole(ev);
-            _scp939AudioHandler?.OnChangingRole(ev);
-            _scp3114AudioHandler?.OnChangingRole(ev);
-            _scp106AudioHandler?.OnChangingRole(ev);
+            _scp096AudioHandler?.OnChangedRole(ev);
+            _scp939AudioHandler?.OnChangedRole(ev);
+            _scp3114AudioHandler?.OnChangedRole(ev);
+            _scp106AudioHandler?.OnChangedRole(ev);
         }
 
         private void OnPlayerLeft(PlayerLeftEventArgs ev)

@@ -20,13 +20,13 @@
         }
 
         // --- Session Purge Hooks ---
-        public void OnPlayerDied(PlayerDiedEventArgs ev)
+        public void OnPlayerDied(PlayerDeathEventArgs ev)
         {
             if (ev?.Player == null) return;
             _states.TryRemove(ev.Player.PlayerId, out _);
         }
 
-        public void OnChangingRole(PlayerChangingRoleEventArgs ev)
+        public void OnChangedRole(PlayerChangedRoleEventArgs ev)
         {
             if (ev?.Player == null) return;
             _states.TryRemove(ev.Player.PlayerId, out _);
@@ -36,8 +36,20 @@
         public void On939MimickingEnvironment(Scp939MimickingEnvironmentEventArgs ev) => GetState(ev.Player).SetState(Scp939VoiceState.Mimicking);
         public void On939MimickedEnvironment(Scp939MimickedEnvironmentEventArgs ev) => GetState(ev.Player).ResetToIdle();
 
-        public void On939Focused(Scp939FocusedEventArgs ev) => GetState(ev.Player).SetState(Scp939VoiceState.Focused);
-        public void On939Unfocused(Scp939UnfocusedEventArgs ev) => GetState(ev.Player).ResetToIdle(); // Dynamic break from predator focus
+        public void On939Focused(Scp939FocusedEventArgs ev)
+        {
+            var state = GetState(ev.Player);
+            if (state == null) return;
+
+            if (ev.FocusState)
+            {
+                state.SetState(Scp939VoiceState.Focused);
+            }
+            else
+            {
+                state.ResetToIdle();
+            }
+        }
 
         public void On939Attacking(Scp939AttackingEventArgs ev) => GetState(ev.Player).SetState(Scp939VoiceState.Attacking, maxDurationSeconds: 3.0f);
         public void On939Attacked(Scp939AttackedEventArgs ev) => GetState(ev.Player).ResetToIdle();
