@@ -23,7 +23,7 @@
         /// </summary>
         private readonly Dictionary<int, object> _locks = new Dictionary<int, object>();
 
-        private object GetLock(string playerId)
+        private object GetLock(int playerId)
         {
             if (!_locks.TryGetValue(playerId, out var l))
             {
@@ -141,7 +141,7 @@
         {
             foreach (var kvp in _sessions)
             {
-                string playerId = kvp.Key;
+                int playerId = kvp.Key;
 
                 Player scp = Player.ReadyList.FirstOrDefault(p => p.PlayerId == playerId);
                 if (scp == null) continue;
