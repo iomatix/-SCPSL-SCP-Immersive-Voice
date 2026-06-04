@@ -144,7 +144,7 @@
 
             // --- Digital degradation ---
             if (preset.Bitcrush > 0f)
-                p.Add(new BitcrushEffect(preset.Bitcrush));
+                p.Add(new BitcrushEffect(preset.Bitcrush, currentSampleRate));
 
             if (preset.SampleRateReduce > 0f)
                 p.Add(new SampleRateReducerEffect(preset.SampleRateReduce));
