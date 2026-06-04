@@ -127,7 +127,7 @@
                 p.Add(new WetOrganicEffect(preset.WetOrganic));
 
             if (preset.WetDecay > 0f)
-                p.Add(new WetDecayEffect(preset.WetDecay));
+                p.Add(new WetDecayEffect(preset.WetDecay, currentSampleRate));
 
             if (preset.PocketEcho > 0f)
                 p.Add(new PocketDimensionEchoEffect(preset.PocketEcho, currentSampleRate));
