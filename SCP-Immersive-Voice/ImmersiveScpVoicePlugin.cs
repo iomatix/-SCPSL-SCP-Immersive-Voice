@@ -66,7 +66,7 @@
             #endregion
 
             PlayerEvents.SendingVoiceMessage += _eventHandler.OnSendingVoiceMessage;
-            PlayerEvents.ReceivingVoiceMessage += _eventHandler.OnReceivingVoiceMessage;
+            //PlayerEvents.ReceivingVoiceMessage += _eventHandler.OnReceivingVoiceMessage;
             #region SCP Event Handlers
             Scp096Events.Enraging += _eventHandler.On096Enraging;
             Scp096Events.Enraged += _eventHandler.On096Enraged;
@@ -125,7 +125,7 @@
                 #endregion
 
                 PlayerEvents.SendingVoiceMessage -= _eventHandler.OnSendingVoiceMessage;
-                PlayerEvents.ReceivingVoiceMessage -= _eventHandler.OnReceivingVoiceMessage;
+                //PlayerEvents.ReceivingVoiceMessage -= _eventHandler.OnReceivingVoiceMessage;
 
                 #region SCP Event Handlers
                 Scp096Events.Enraging -= _eventHandler.On096Enraging;

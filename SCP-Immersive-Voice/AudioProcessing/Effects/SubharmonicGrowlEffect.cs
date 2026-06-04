@@ -1,80 +1,63 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>
-    /// Generates deep subharmonic growl by adding a half‑frequency oscillator 
-    /// locked to the input amplitude. Ideal for zombie voices, monstrous growls, 
-    /// SCP‑049‑2, SCP‑939, or any creature requiring a deep, guttural undertone.
-    /// Includes amplitude tracking, organic modulation, smoothing, and saturation 
-    /// for a natural, AAA‑quality monster vocal texture.
+    /// Organic subharmonic generator simulating a secondary throat cavity.
+    /// Features amplitude‑locked oscillation, nonlinear modulation, throat
+    /// resonance smoothing and soft‑clipped growl shaping. Ideal for SCP‑049‑2,
+    /// SCP‑939, zombies, demons or any deep monstrous undertone.
     /// </summary>
-    public class SubharmonicGrowlEffect : IAudioEffectShort
+    public class SubharmonicGrowlEffect : IAudioEffect
     {
         private readonly float _amount;
 
-        // Oscillator phase
         private float _phase;
-
-        // Envelope follower for amplitude tracking
         private float _env;
-
-        // Smoothing for natural growl movement
         private float _smooth;
+        private float _modPhase;
 
         public SubharmonicGrowlEffect(float amount)
         {
-            // amount 0 → no growl
-            // amount 1.5 → extremely deep monster growl
             _amount = Clamp(amount, 0f, 1.5f);
         }
 
-        public void Process(short[] pcm, int length)
+        public void Process(float[] pcm, int length)
         {
             for (int i = 0; i < length; i++)
             {
-                // Convert PCM to float -1..1
-                float x = pcm[i] / 32768f;
+                float x = pcm[i];
 
-                // 1. Envelope follower (how loud the voice is)
+                // 1. Envelope follower (voice amplitude → growl intensity)
                 _env += 0.05f * (Math.Abs(x) - _env);
 
-                // 2. Subharmonic oscillator (half frequency)
-                _phase += 0.015f + _env * 0.02f; // louder → stronger growl movement
+                // 2. Subharmonic oscillator (half‑frequency growl)
+                _phase += 0.015f + _env * 0.02f;
                 float osc = (float)Math.Sin(_phase * 0.5f);
 
-                // 3. Organic modulation (creature throat instability)
-                float mod = 0.8f + 0.2f * (float)Math.Sin(_phase * 0.13f);
+                // 3. Organic modulation (secondary throat instability)
+                _modPhase += 0.0018f + _env * 0.0012f;
+                float mod = 0.75f + 0.25f * (float)Math.Sin(_modPhase * 1.1f);
 
                 // 4. Combine oscillator + modulation + amplitude
-                float growl = osc * mod * _env * (_amount * 0.6f);
+                float growl = osc * mod * _env * (_amount * 0.65f);
 
-                // 5. Smooth for natural throat resonance
-                _smooth += 0.2f * (growl - _smooth);
+                // 5. Throat resonance smoothing (heavy, organic movement)
+                _smooth += 0.22f * (growl - _smooth);
 
-                // 6. Soft saturation for guttural character
-                float saturated = (float)Math.Tanh(_smooth * 2.5f);
+                // 6. Nonlinear shaping (flesh/organic hardness)
+                float shaped = _smooth * (0.85f + 0.15f * _smooth);
 
-                // 7. Mix with original signal
+                // 7. Soft saturation (deep guttural tone)
+                float saturated = (float)Math.Tanh(shaped * 2.4f);
+
+                // 8. Mix with original
                 float mixed = x + saturated;
 
-                // Convert back to PCM
-                int sample = (int)(mixed * 32767f);
-
-                // Clamp
-                if (sample > short.MaxValue) sample = short.MaxValue;
-                if (sample < short.MinValue) sample = short.MinValue;
-
-                pcm[i] = (short)sample;
+                pcm[i] = mixed;
             }
-        }
-
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
         }
     }
 }

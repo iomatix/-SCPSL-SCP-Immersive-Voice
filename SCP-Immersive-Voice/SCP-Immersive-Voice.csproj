@@ -165,6 +165,7 @@
     <Compile Include="AudioProcessing\Effects\WetOrganicEffect.cs" />
     <Compile Include="AudioProcessing\Effects\WhisperFilterEffect.cs" />
     <Compile Include="AudioProcessing\Interfaces\IAudioEffectLegacyFloat.cs" />
+    <Compile Include="AudioProcessing\Utils\MathUtils.cs" />
     <Compile Include="Config\Config.cs" />
     <Compile Include="Decoders\ScpVoiceDecoder.cs" />
     <Compile Include="Managers\ScpVoiceManager.cs" />

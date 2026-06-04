@@ -2,73 +2,63 @@
 {
     using LabApi.Features.Audio;
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>
-    /// Applies amplitude modulation (tremolo) using a smooth, organic LFO.
-    /// Ideal for zombie voices, SCP‑049‑2, SCP‑939, radio modulation, or
-    /// unstable dimensional audio. Includes micro‑modulation and smoothing
-    /// to avoid synthetic or harsh digital tremolo artifacts.
+    /// Organic amplitude‑warp tremolo with dual‑phase modulation, micro‑jitter,
+    /// nonlinear shaping and soft‑clipped output. Ideal for SCP‑049‑2, SCP‑939,
+    /// zombie voices, radio modulation or dimensional instability.
+    /// Float‑native, smooth and alias‑free.
     /// </summary>
-    public class TremoloEffect : IAudioEffectShort
+    public class TremoloEffect : IAudioEffect
     {
         private readonly float _frequency;
 
-        // LFO phase
         private float _phase;
-
-        // Micro‑modulation for organic movement
         private float _jitterPhase;
+        private float _smooth;
 
         public TremoloEffect(float frequency)
         {
-            // frequency 0.1–20 Hz recommended
             _frequency = Clamp(frequency, 0.1f, 20f);
         }
 
-        public void Process(short[] pcm, int length)
+        public void Process(float[] pcm, int length)
         {
             float sampleRate = AudioTransmitter.SampleRate;
 
             for (int i = 0; i < length; i++)
             {
-                // Convert PCM to float -1..1
-                float x = pcm[i] / 32768f;
+                float x = pcm[i];
 
-                // 1. Base LFO
+                // 1. Base LFO (primary tremolo movement)
                 _phase += (2f * (float)Math.PI * _frequency) / sampleRate;
                 if (_phase > 10000f) _phase = 0f;
 
                 float lfo = (float)Math.Sin(_phase);
 
-                // 2. Micro‑modulation (prevents synthetic tremolo)
-                _jitterPhase += 0.0007f;
-                float jitter = 0.03f * (float)Math.Sin(_jitterPhase * 13.7f);
+                // 2. Micro‑jitter (organic instability)
+                _jitterPhase += 0.0012f;
+                float jitter = 0.03f * (float)Math.Sin(_jitterPhase * 17.3f);
 
+                // 3. Combine modulation layers
                 float mod = 0.5f * (1f + lfo + jitter);
 
-                // 3. Soft saturation for natural amplitude shaping
-                float shaped = (float)Math.Tanh(mod * 1.4f);
+                // 4. Nonlinear shaping (natural amplitude curve)
+                float shaped = mod * (0.85f + 0.15f * mod);
 
-                // 4. Apply tremolo
-                float outSample = x * shaped;
+                // 5. Smooth amplitude transitions (avoid digital stepping)
+                _smooth += 0.12f * (shaped - _smooth);
 
-                // Convert back to PCM
-                int sample = (int)(outSample * 32767f);
+                // 6. Soft saturation (organic tremolo character)
+                float trem = (float)Math.Tanh(_smooth * 1.6f);
 
-                // Clamp
-                if (sample > short.MaxValue) sample = short.MaxValue;
-                if (sample < short.MinValue) sample = short.MinValue;
+                // 7. Apply tremolo
+                float outSample = x * trem;
 
-                pcm[i] = (short)sample;
+                pcm[i] = outSample;
             }
-        }
-
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
         }
     }
 }

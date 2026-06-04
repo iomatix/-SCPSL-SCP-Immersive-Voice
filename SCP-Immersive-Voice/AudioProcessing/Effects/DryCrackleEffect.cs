@@ -1,64 +1,58 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>
-    /// Produces dry, brittle crackle transients. Useful for dusty, old, or damaged
-    /// audio textures, SCP‑106 ambience, or environmental decay effects.
+    /// Dry, brittle crackle transients with organic smoothing and nonlinear shaping.
+    /// Ideal for dusty, decayed or corrupted textures.
     /// </summary>
-    public class DryCrackleEffect : IAudioEffectShort
+    public class DryCrackleEffect : IAudioEffect
     {
         private readonly float _amount;
+
         private float _smooth;
-        private static readonly Random _rng = new Random();
+
+        // Per-instance RNG for isolated crackle behavior
+        private readonly Random _rng;
 
         public DryCrackleEffect(float amount)
         {
-            // amount 0 → no crackle
-            // amount 1.5 → very strong crackle
             _amount = Clamp(amount, 0f, 1.5f);
+            _rng = new Random(Guid.NewGuid().GetHashCode());
         }
 
-        public void Process(short[] pcm, int length)
+        public void Process(float[] pcm, int length)
         {
             for (int i = 0; i < length; i++)
             {
-                // Convert PCM to float -1..1 for amplitude analysis
-                float x = pcm[i] / 32768f;
+                float dry = pcm[i];
 
-                // Probability of crackle increases with signal amplitude
-                float chance = 0.001f + Math.Abs(x) * 0.02f * _amount;
+                // Probability increases with amplitude
+                float chance = 0.001f + Math.Abs(dry) * 0.018f * _amount;
 
-                // Generate crackle impulse
                 float crack = 0f;
+
                 if (_rng.NextDouble() < chance)
                 {
-                    // Random impulse in range -0.3..0.3
-                    crack = (float)(_rng.NextDouble() * 2.0 - 1.0) * 0.3f;
+                    // Dry brittle impulse
+                    float raw = (float)(_rng.NextDouble() * 2.0 - 1.0);
+                    crack = raw * 0.28f;
+
+                    // Anti-alias shaping
+                    crack *= 0.82f + 0.18f * crack;
                 }
 
-                // Smooth crackle to avoid harsh digital clicks
-                _smooth += 0.25f * (crack - _smooth);
+                // Organic decay
+                _smooth += 0.23f * (crack - _smooth);
 
-                // Mix crackle into original signal
-                float mixed = x + _smooth * 0.4f;
+                // Mix
+                float mixed = dry + _smooth * 0.38f;
 
-                // Convert back to PCM
-                int sample = (int)(mixed * 32767f);
-
-                // Clamp to valid PCM range
-                if (sample > short.MaxValue) sample = short.MaxValue;
-                if (sample < short.MinValue) sample = short.MinValue;
-
-                pcm[i] = (short)sample;
+                // Soft clip
+                pcm[i] = (float)Math.Tanh(mixed * 1.05f);
             }
-        }
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
         }
     }
 }

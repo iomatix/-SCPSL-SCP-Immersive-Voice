@@ -1,71 +1,59 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>
-    /// Slowly modulates vocal formants to create unstable, shifting timbre.
-    /// Suitable for SCP‑939 mimicry, demonic voices, or identity‑distorted speech.
+    /// Organic formant drift with slow modulation, jitter and nonlinear shaping.
+    /// Ideal for SCP-939 mimicry, demonic timbre or identity distortion.
     /// </summary>
-    public class FormantDriftEffect : IAudioEffectShort
+    public class FormantDriftEffect : IAudioEffect
     {
         private readonly float _amount;
 
-        // Filter states (float is required for stability and precision)
-        private float _lpState;
-        private float _hpState;
+        private float _lp;
+        private float _hp;
         private float _phase;
 
-        private static readonly Random _rng = new Random();
+        private readonly Random _rng;
 
         public FormantDriftEffect(float amount)
         {
-            // amount 0 → no drift
-            // amount 1.5 → very unstable formant movement
             _amount = Clamp(amount, 0f, 1.5f);
+            _rng = new Random(Guid.NewGuid().GetHashCode());
         }
 
-        public void Process(short[] pcm, int length)
+        public void Process(float[] pcm, int length)
         {
             for (int i = 0; i < length; i++)
             {
-                // Convert PCM to float -1..1 for filter processing
-                float x = pcm[i] / 32768f;
+                float dry = pcm[i];
 
-                // 1. Noise-modulated LFO controlling formant drift
-                _phase += 0.0007f;
-                float noise = (float)(_rng.NextDouble() * 2.0 - 1.0);
-                float drift = (float)Math.Sin(_phase * 1.3f + noise * 0.5f);
+                // Slow drift with jitter (organic throat movement)
+                _phase += 0.00068f;
+                float jitter = ((float)_rng.NextDouble() * 2f - 1f) * 0.12f;
+                float drift = (float)Math.Sin(_phase * 1.28f + jitter);
 
-                // 2. Dynamic LP/HP cutoff modulation
-                float lpCut = 0.15f + 0.25f * drift; // 0.15–0.40
-                float hpCut = 0.85f + 0.10f * drift; // 0.75–0.95
+                // Dynamic LP/HP morphing
+                float lpCut = 0.15f + 0.25f * drift;
+                float hpCut = 0.85f + 0.10f * drift;
 
-                // Low-pass filter (smooth formant body)
-                _lpState += lpCut * (x - _lpState);
+                // Low-pass body
+                _lp += lpCut * (dry - _lp);
 
-                // High-pass filter (formant edge)
-                _hpState = x - _lpState * hpCut;
+                // High-pass edge
+                _hp = dry - _lp * hpCut;
 
-                // 3. Mix original and shifted signal
-                float shifted = _hpState;
-                float mixed = x * (1f - _amount * 0.5f) + shifted * (_amount * 0.5f);
+                // Nonlinear shaping
+                float shifted = _hp * (0.89f + 0.11f * _hp);
 
-                // Convert back to PCM
-                int sample = (int)(mixed * 32767f);
+                // Wet/dry mix
+                float mixed = dry * (1f - _amount * 0.5f) + shifted * (_amount * 0.5f);
 
-                // Clamp to valid PCM range
-                if (sample > short.MaxValue) sample = short.MaxValue;
-                if (sample < short.MinValue) sample = short.MinValue;
-
-                pcm[i] = (short)sample;
+                // Soft clip
+                pcm[i] = (float)Math.Tanh(mixed * 1.02f);
             }
-        }
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
         }
     }
 }

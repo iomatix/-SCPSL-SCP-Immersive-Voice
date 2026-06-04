@@ -11,8 +11,8 @@
 
     /// <summary>
     /// Handles Opus decoding/encoding and applies the SCP voice DSP pipeline
-    /// on 16-bit PCM audio. Designed for real-time voice processing with
-    /// short-native DSP, zero-copy where possible, and minimal allocations.
+    /// on float PCM audio. Fully float-native, zero-copy where possible,
+    /// minimal allocations, real-time safe.
     /// </summary>
     public static class ScpVoiceDecoder
     {
@@ -25,60 +25,48 @@
         // Max Opus frame size in samples (48 kHz, mono, 120 ms)
         private const int MaxOpusSamples = 5760;
 
-        // Float buffer for Opus decode (shared, reused)
+        // Shared decode buffer
         private static readonly float[] _floatBuffer = new float[MaxOpusSamples];
 
-        // Optional: enable/disable post-DSP normalization
         private const bool NormalizeEnabled = true;
 
         /// <summary>
-        /// Decodes an incoming VoiceMessage from Opus to 16-bit PCM (short[]).
+        /// Decodes an incoming VoiceMessage from Opus to float[] PCM (-1..1).
         /// Returns an empty array on invalid or empty data.
         /// </summary>
-        public static short[] Decode(VoiceMessage msg)
+        public static float[] Decode(VoiceMessage msg)
         {
             try
             {
                 if (msg.Data == null || msg.DataLength <= 0)
-                    return Array.Empty<short>();
+                    return Array.Empty<float>();
             }
             catch
             {
-                return Array.Empty<short>();
+                return Array.Empty<float>();
             }
 
             int samples = _decoder.Decode(msg.Data, msg.DataLength, _floatBuffer);
 
             if (samples <= 0 || samples > MaxOpusSamples)
-                return Array.Empty<short>();
+                return Array.Empty<float>();
 
-            short[] pcm = new short[samples];
-
-            for (int i = 0; i < samples; i++)
-            {
-                float f = _floatBuffer[i];
-
-                if (f > 1f) f = 1f;
-                if (f < -1f) f = -1f;
-
-                pcm[i] = (short)(f * short.MaxValue);
-            }
-
-            return pcm;
+            // Copy only valid samples (decoder uses shared buffer)
+            float[] output = new float[samples];
+            Array.Copy(_floatBuffer, output, samples);
+            return output;
         }
 
         /// <summary>
-        /// Encodes 16-bit PCM (short[]) to Opus using a shared encoder.
+        /// Encodes float PCM (-1..1) to Opus using a shared encoder.
         /// </summary>
-        public static byte[] EncodeToOpus(short[] pcm)
+        public static byte[] EncodeToOpus(float[] pcm)
         {
             if (pcm == null || pcm.Length == 0)
                 return Array.Empty<byte>();
 
-            float[] f = ToFloat(pcm);
-
             byte[] encoded = new byte[AudioTransmitter.MaxEncodedSize];
-            int len = _encoder.Encode(f, encoded, f.Length);
+            int len = _encoder.Encode(pcm, encoded, pcm.Length);
 
             if (len <= 0)
                 return Array.Empty<byte>();
@@ -92,13 +80,13 @@
         }
 
         /// <summary>
-        /// Applies the SCP voice DSP pipeline, output gain, and optional
-        /// normalization to the given PCM buffer in-place.
+        /// Applies the SCP voice DSP pipeline, output gain, and optional normalization.
+        /// Fully float-native.
         /// </summary>
-        public static short[] ApplyEffects(short[] pcm, Player scp)
+        public static float[] ApplyEffects(float[] pcm, Player scp)
         {
             if (pcm == null || pcm.Length == 0)
-                return pcm ?? Array.Empty<short>();
+                return pcm ?? Array.Empty<float>();
 
             var pipeline = ScpVoiceProfiles.GetPipelineFor(scp);
             pipeline.Process(pcm, pcm.Length);
@@ -109,31 +97,32 @@
                 float gain = preset.OutputGain;
                 for (int i = 0; i < pcm.Length; i++)
                 {
-                    int v = (int)(pcm[i] * gain);
-                    if (v > short.MaxValue) v = short.MaxValue;
-                    if (v < short.MinValue) v = short.MinValue;
-                    pcm[i] = (short)v;
+                    float v = pcm[i] * gain;
+                    if (v > 1f) v = 1f;
+                    if (v < -1f) v = -1f;
+                    pcm[i] = v;
                 }
             }
 
             if (NormalizeEnabled)
-                pcm = Normalize(pcm);
+                NormalizeInPlace(pcm);
 
             return pcm;
         }
 
         /// <summary>
-        /// Returns true if the frame is considered silent based on a simple
-        /// amplitude threshold.
+        /// Returns true if the frame is considered silent based on amplitude threshold.
         /// </summary>
-        public static bool IsSilent(short[] pcm, int threshold = 200)
+        public static bool IsSilent(float[] pcm, float threshold = 0.01f)
         {
             if (pcm == null || pcm.Length == 0)
                 return true;
 
+            float absThr = Math.Abs(threshold);
+
             for (int i = 0; i < pcm.Length; i++)
             {
-                if (Math.Abs(pcm[i]) > threshold)
+                if (Math.Abs(pcm[i]) > absThr)
                     return false;
             }
 
@@ -141,51 +130,30 @@
         }
 
         /// <summary>
-        /// Normalizes the buffer in-place so that the peak amplitude reaches
-        /// targetPeak of full-scale (0–1 range). Skips if signal is effectively
-        /// silent.
+        /// Normalizes the buffer in-place so that the peak amplitude reaches targetPeak.
         /// </summary>
-        public static short[] Normalize(short[] pcm, float targetPeak = 0.9f)
+        private static void NormalizeInPlace(float[] pcm, float targetPeak = 0.9f)
         {
-            if (pcm == null || pcm.Length == 0)
-                return pcm ?? Array.Empty<short>();
-
-            short max = 0;
+            float max = 0f;
 
             for (int i = 0; i < pcm.Length; i++)
             {
-                short abs = (short)Math.Abs(pcm[i]);
+                float abs = Math.Abs(pcm[i]);
                 if (abs > max) max = abs;
             }
 
-            if (max < 1)
-                return pcm;
+            if (max < 0.0001f)
+                return;
 
-            float gain = (targetPeak * 32767f) / max;
+            float gain = targetPeak / max;
 
             for (int i = 0; i < pcm.Length; i++)
             {
-                int v = (int)(pcm[i] * gain);
-                if (v > short.MaxValue) v = short.MaxValue;
-                if (v < short.MinValue) v = short.MinValue;
-                pcm[i] = (short)v;
+                float v = pcm[i] * gain;
+                if (v > 1f) v = 1f;
+                if (v < -1f) v = -1f;
+                pcm[i] = v;
             }
-
-            return pcm;
-        }
-
-        /// <summary>
-        /// Converts 16-bit PCM to float PCM in the -1..1 range.
-        /// </summary>
-        private static float[] ToFloat(short[] pcm)
-        {
-            float[] f = new float[pcm.Length];
-            const float inv = 1f / 32768f;
-
-            for (int i = 0; i < pcm.Length; i++)
-                f[i] = pcm[i] * inv;
-
-            return f;
         }
     }
 }

@@ -1,73 +1,77 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>
-    /// Injects short, randomized chirp bursts with smooth fade‑out. Creates
-    /// glitchy, unstable tonal artifacts suitable for SCP‑079 and... Flamingos,
-    /// dimensional interference, or corrupted audio streams.
+    /// Organic chirp bursts with FM wobble, jitter, fade-out shaping and
+    /// nonlinear saturation. Ideal for SCP-079 interference, dimensional
+    /// chirps, corrupted comms or creepy creature/flamingo vocalizations.
     /// </summary>
-    public class ChirpEffect : IAudioEffectShort
+    public class ChirpEffect : IAudioEffect
     {
         private readonly float _amount;
-        private float _phase;
-        private static readonly Random _rng = new Random();
 
-        // Envelope state for smooth fade-out
-        private float _envelope;
+        private float _phase;
+        private float _env;
+        private float _freqMod;
+
+        private readonly Random _rng;
 
         public ChirpEffect(float amount)
         {
             _amount = Clamp(amount, 0f, 1f);
+            _rng = new Random(Guid.NewGuid().GetHashCode());
         }
 
-        public void Process(short[] pcm, int length)
+        public void Process(float[] pcm, int length)
         {
             for (int i = 0; i < length; i++)
             {
-                // 1. Random chance to trigger a chirp
-                if (_rng.NextDouble() < _amount * 0.0008)
+                float dry = pcm[i];
+
+                // Random chance to trigger chirp
+                if (_rng.NextDouble() < _amount * 0.00085f)
                 {
-                    _phase = 0f;   // reset chirp phase
-                    _envelope = 1f; // start at full level
+                    _phase = 0f;
+                    _env = 1f;
+
+                    // Random FM wobble (creature-like)
+                    _freqMod = 0.9f + (float)_rng.NextDouble() * 0.4f;
                 }
 
-                // 2. If chirp is active (phase still within 0..2π and envelope > 0)
-                if (_phase < Math.PI * 2 && _envelope > 0.001f)
+                if (_env > 0.001f)
                 {
-                    // Generate chirp tone (scaled sinus)
-                    float chirp = (float)Math.Sin(_phase * 20f) * 0.15f * _amount;
+                    // FM wobble + jitter (creepy flamingo gdakanie)
+                    float jitter = ((float)_rng.NextDouble() * 2f - 1f) * 0.03f;
+                    float freq = 18f * _freqMod + jitter * 12f;
 
-                    // Apply envelope for smooth fade-out
-                    chirp *= _envelope;
+                    // Base chirp tone
+                    float tone = (float)Math.Sin(_phase * freq);
 
-                    // Convert chirp to PCM amplitude range
-                    int chirpPcm = (int)(chirp * 32767f);
+                    // Anti-alias tilt
+                    tone *= 0.82f + 0.18f * (float)Math.Sin(_phase * 0.45f);
 
-                    // Mix with original sample
-                    int mixed = pcm[i] + chirpPcm;
+                    // Envelope shaping (smooth fade-out)
+                    float shapedEnv = _env * _env; // quadratic fade
+                    tone *= shapedEnv * _amount * 0.32f;
 
-                    // Clamp to valid PCM range
-                    if (mixed > short.MaxValue) mixed = short.MaxValue;
-                    if (mixed < short.MinValue) mixed = short.MinValue;
+                    // Mix
+                    float mixed = dry + tone;
 
-                    pcm[i] = (short)mixed;
+                    // Soft clip
+                    mixed = (float)Math.Tanh(mixed * 1.05f);
 
-                    // Advance chirp phase
-                    _phase += 0.15f;
+                    pcm[i] = mixed;
 
-                    // Exponential envelope decay for organic tail
-                    _envelope *= 0.97f;
+                    // Advance phase
+                    _phase += 0.16f;
+
+                    // Organic exponential decay
+                    _env *= 0.962f;
                 }
             }
-        }
-
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
         }
     }
 }

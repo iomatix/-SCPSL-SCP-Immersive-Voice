@@ -1,59 +1,64 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>
-    /// Reduces bit depth to create gritty, digital degradation. Includes dithering
-    /// for smoother quantization and reduced harsh artifacts. Ideal for SCP‑079,
-    /// corrupted radio, or retro digital distortion.
+    /// Float-native bitcrusher with TPDF dithering, DC blocking, smooth
+    /// quantization and analog-style soft clipping. Warm, gritty and stable.
     /// </summary>
-
-    public class BitcrushEffect : IAudioEffectShort
+    public class BitcrushEffect : IAudioEffect
     {
         private readonly int _steps;
-        private static readonly Random _rng = new Random();
+        private readonly float _invSteps;
+        private readonly float _ditherScale;
+
+        private float _dc; // DC blocker state
+
+        // Per-instance RNG
+        private readonly Random _rng;
 
         public BitcrushEffect(float amount)
         {
-            // amount 0 → full quality
-            // amount 1 → lowest bit amount
             amount = Clamp(amount, 0f, 1f);
 
-            // 256 levels = 8-bit
-            // 32 levels = 5-bit
             _steps = (int)(256 * (1f - amount));
             if (_steps < 2) _steps = 2;
+
+            _invSteps = 1f / _steps;
+
+            // Slightly reduced dithering for warmer tone
+            _ditherScale = _invSteps * 0.42f;
+
+            _rng = new Random(Guid.NewGuid().GetHashCode());
         }
 
-        public void Process(short[] pcm, int length)
+        public void Process(float[] pcm, int length)
         {
             for (int i = 0; i < length; i++)
             {
-                // Convert to int for processing
-                int sample = pcm[i];
+                float dry = pcm[i];
 
-                // Add small TPDF dither to reduce quantization artifacts
-                // Range is very small compared to full PCM scale
-                float dither = (float)(_rng.NextDouble() - _rng.NextDouble()) * (_steps * 0.25f);
-                float withDither = sample + dither;
+                // TPDF dithering (two independent RNGs)
+                float dither =
+                    ((float)_rng.NextDouble() - (float)_rng.NextDouble()) * _ditherScale;
+
+                float v = dry + dither;
 
                 // Quantization
-                int crushed = (int)Math.Round(withDither / _steps) * _steps;
+                v = (float)Math.Round(v * _steps) * _invSteps;
 
-                // Clamp to valid PCM range
-                if (crushed > short.MaxValue) crushed = short.MaxValue;
-                if (crushed < short.MinValue) crushed = short.MinValue;
+                // DC blocker (ultra-light)
+                // y[n] = x[n] - x[n-1] + 0.995 * y[n-1]
+                float dcRemoved = v - _dc;
+                _dc = v + dcRemoved * 0.995f;
 
-                pcm[i] = (short)crushed;
+                // Analog-style soft clip
+                float shaped = (float)Math.Tanh(dcRemoved * 1.85f) * 0.54f;
+
+                pcm[i] = shaped;
             }
-        }
-
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
         }
     }
 }

@@ -1,79 +1,70 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>
-    /// Generates continuous stone‑grinding friction noise. 
-    /// Ideal for SCP‑173 movement, stone creatures, or heavy surface scraping.
-    /// Uses band‑pass shaping, micro‑modulation, smoothing, and saturation 
-    /// to create an organic stone‑on‑stone grinding texture.
+    /// Continuous stone-grinding engine with granular texture, nonlinear resonance
+    /// and heavy material damping. Ideal for SCP-173 movement or massive stone friction.
+    /// Produces dense, organic, physical scraping.
     /// </summary>
-    public class StoneGrindEffect : IAudioEffectShort
+    public class StoneGrindEffect : IAudioEffect
     {
         private readonly float _intensity;
 
-        // Band‑pass memory
         private float _bpState;
-
-        // Smoothing for natural decay
         private float _smooth;
+        private float _grainPhase;
+        private float _resonance;
 
-        // Random generator
-        private static readonly Random _rng = new Random();
+        // Per-instance RNG for stable granular texture
+        private readonly Random _rng;
 
         public StoneGrindEffect(float intensity = 1.0f)
         {
-            // intensity 0 → no grind
-            // intensity 2 → very aggressive stone friction
             _intensity = Clamp(intensity, 0f, 2f);
+            _rng = new Random(Guid.NewGuid().GetHashCode());
         }
 
-        public void Process(short[] pcm, int length)
+        public void Process(float[] pcm, int length)
         {
             for (int i = 0; i < length; i++)
             {
-                // Convert PCM to float -1..1
-                float x = pcm[i] / 32768f;
+                float dry = pcm[i];
 
-                // 1. Base noise (raw friction energy)
-                float noise = (float)(_rng.NextDouble() * 2.0 - 1.0);
+                // Granular noise (stone texture)
+                float grain = (float)(_rng.NextDouble() * 2.0 - 1.0);
 
-                // 2. Band‑pass shaping (stone friction lives in 200–800 Hz)
-                float bp = noise - _bpState * 0.82f;
+                // Irregular friction movement
+                _grainPhase += 0.0021f + _intensity * 0.0011f;
+                float grainMod = 0.70f + 0.30f * (float)Math.Sin(_grainPhase * 1.28f);
+
+                float textured = grain * grainMod;
+
+                // Band-pass shaping (stone friction band)
+                float bp = textured - _bpState * 0.83f;
                 _bpState = bp;
 
-                // 3. Micro‑modulation (irregular friction movement)
-                float mod = 0.7f + 0.3f * (float)Math.Sin(i * 0.002f);
+                // Stone body resonance
+                _resonance += 0.115f * (bp - _resonance);
+                float ring = (float)Math.Sin(_resonance * 13.8f) * 0.16f;
 
-                // 4. Combine and scale
-                float grind = bp * mod * _intensity * 0.45f;
+                // Combine friction + resonance
+                float grind = bp * 0.84f + ring * 0.16f;
 
-                // 5. Smooth to avoid harsh digital edges
-                _smooth += 0.18f * (grind - _smooth);
+                // Material damping (heavy friction smoothing)
+                _smooth += 0.175f * (grind - _smooth);
 
-                // 6. Soft saturation for natural stone hardness
-                float saturated = (float)Math.Tanh(_smooth * 2.2f);
+                // Nonlinear hardness shaping
+                float shaped = _smooth * (0.86f + 0.14f * _smooth);
 
-                // 7. Mix with original signal
-                float mixed = x + saturated;
+                // Stone hardness saturation
+                float saturated = (float)Math.Tanh(shaped * 2.45f);
 
-                // Convert back to PCM
-                int sample = (int)(mixed * 32767f);
-
-                // Clamp
-                if (sample > short.MaxValue) sample = short.MaxValue;
-                if (sample < short.MinValue) sample = short.MinValue;
-
-                pcm[i] = (short)sample;
+                // Mix with original
+                pcm[i] = dry + saturated * _intensity;
             }
-        }
-
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
         }
     }
 }

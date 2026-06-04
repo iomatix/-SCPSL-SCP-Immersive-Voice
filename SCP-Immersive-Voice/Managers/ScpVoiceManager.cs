@@ -49,10 +49,9 @@
 
             _sessions.Clear();
         }
-
-        public void AppendPcm(Player scp, short[] pcm)
+        public void AppendPcm(Player scp, float[] samples)
         {
-            if (pcm == null || pcm.Length == 0)
+            if (samples == null || samples.Length == 0)
             {
                 Logger.Warn($"[SCP-VOICE] AppendPcm: EMPTY PCM from {scp.Nickname}");
                 return;
@@ -64,9 +63,8 @@
                 sessionId = StartSession(scp);
             }
 
-            DefaultAudioManager.Instance.AppendPcmData(sessionId, pcm);
+            DefaultAudioManager.Instance.AppendPcmData(sessionId, samples);
 
-            // EXTRA: sprawdzamy czy speaker istnieje
             var state = DefaultAudioManager.Instance.GetSessionState(sessionId);
             if (state == null)
             {
@@ -78,7 +76,21 @@
             {
                 Logger.Warn($"[SCP-VOICE] AppendPcm: NO PHYSICAL SPEAKER for session {sessionId}");
             }
+        }
 
+        // Wrapper for Opus decoder
+        public void AppendPcm(Player scp, short[] pcm)
+        {
+            if (pcm == null || pcm.Length == 0)
+                return;
+
+            float[] samples = new float[pcm.Length];
+            const float inv = 1f / 32768f;
+
+            for (int i = 0; i < pcm.Length; i++)
+                samples[i] = pcm[i] * inv;
+
+            AppendPcm(scp, samples);
         }
 
 

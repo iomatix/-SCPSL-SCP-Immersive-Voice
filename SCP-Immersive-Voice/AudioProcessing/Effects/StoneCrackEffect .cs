@@ -1,75 +1,86 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>
-    /// Generates sharp, stone‑like crack transients with subtle resonance.
-    /// Ideal for SCP‑173, stone creatures, or any hard-surface impact texture.
-    /// Produces randomized micro‑bursts with smoothing and saturation to avoid
-    /// digital harshness and create an organic stone‑fracture character.
+    /// Clustered stone-fracture generator with micro-resonance and nonlinear shaping.
+    /// Ideal for SCP-173 or any hard-surface entity. Produces organic, physical
+    /// stone cracking with controlled timing and material stress behavior.
     /// </summary>
-    public class StoneCrackEffect : IAudioEffectShort
+    public class StoneCrackEffect : IAudioEffect
     {
         private readonly float _intensity;
 
-        // Previous crack value for smoothing
         private float _last;
+        private float _resonance;
+        private int _clusterSamples;
+        private float _clusterEnergy;
 
-        // Random generator
-        private static readonly Random _rng = new Random();
+        // Per-instance RNG for stable, isolated crack behavior
+        private readonly Random _rng;
 
         public StoneCrackEffect(float intensity = 1.0f)
         {
-            // intensity 0 → no cracks
-            // intensity 2 → very aggressive stone cracking
             _intensity = Clamp(intensity, 0f, 2f);
+            _rng = new Random(Guid.NewGuid().GetHashCode());
         }
 
-        public void Process(short[] pcm, int length)
+        public void Process(float[] pcm, int length)
         {
             for (int i = 0; i < length; i++)
             {
-                // Convert PCM to float -1..1
-                float x = pcm[i] / 32768f;
-
-                // 1. Random burst trigger (stone crack impulse)
+                float x = pcm[i];
                 float burst = 0f;
-                if (_rng.NextDouble() < 0.015 * _intensity)
+
+                // Start a new crack cluster
+                if (_clusterSamples <= 0)
                 {
-                    // Sharp impulse with slight asymmetry
-                    burst = (float)(_rng.NextDouble() * 2.0 - 1.0) * 0.9f;
+                    float trigger = 0.01f * _intensity;
+                    if (_rng.NextDouble() < trigger)
+                    {
+                        _clusterSamples = _rng.Next(6, 42); // slightly wider range
+                        _clusterEnergy = (float)(_rng.NextDouble() * 0.75 + 0.25);
+                    }
                 }
 
-                // 2. Add micro‑resonance (stone ringing)
-                float resonance = (float)Math.Sin(burst * 12f) * 0.2f;
+                // Inside cluster: micro-cracks
+                if (_clusterSamples > 0)
+                {
+                    float rnd = (float)(_rng.NextDouble() * 2.0 - 1.0);
+                    burst = rnd * _clusterEnergy;
 
-                // 3. Smooth transient to avoid digital clicks
-                float crack = burst * 0.75f + resonance * 0.25f;
-                _last += 0.25f * (crack - _last);
+                    // Physical decay of stress energy
+                    _clusterEnergy *= 0.915f;
+                    _clusterSamples--;
+                }
+                else
+                {
+                    // Occasional isolated cracks
+                    if (_rng.NextDouble() < 0.0038f * _intensity)
+                        burst = (float)(_rng.NextDouble() * 2.0 - 1.0) * 0.38f;
+                }
 
-                // 4. Soft saturation for natural stone hardness
-                float saturated = (float)Math.Tanh(_last * 2.5f);
+                // Micro-resonance (stone ringing)
+                _resonance += 0.24f * (burst - _resonance);
+                float ring = (float)Math.Sin(_resonance * 17.5f) * 0.24f;
 
-                // 5. Mix with original signal
-                float mixed = x + saturated * (0.6f * _intensity);
+                // Combine burst + resonance
+                float crack = burst * 0.76f + ring * 0.24f;
 
-                // Convert back to PCM
-                int sample = (int)(mixed * 32767f);
+                // Material damping
+                _last += 0.21f * (crack - _last);
 
-                // Clamp
-                if (sample > short.MaxValue) sample = short.MaxValue;
-                if (sample < short.MinValue) sample = short.MinValue;
+                // Nonlinear hardness shaping
+                float shaped = _last * (0.86f + 0.14f * _last);
 
-                pcm[i] = (short)sample;
+                // Stone impact saturation
+                float saturated = (float)Math.Tanh(shaped * 3.1f);
+
+                // Mix with original
+                pcm[i] = x + saturated * (0.55f * _intensity);
             }
-        }
-
-        private static float Clamp(float v, float min, float max)
-        {
-            if (v < min) return min;
-            if (v > max) return max;
-            return v;
         }
     }
 }
