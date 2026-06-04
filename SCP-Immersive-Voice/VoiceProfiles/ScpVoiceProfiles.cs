@@ -96,10 +96,10 @@
 
             // --- Harmonic generators BEFORE distortion ---
             if (preset.Subharmonic > 0f)
-                p.Add(new SubharmonicGrowlEffect(preset.Subharmonic));
+                p.Add(new SubharmonicGrowlEffect(preset.Subharmonic, currentSampleRate));
 
             if (preset.Guttural > 0f)
-                p.Add(new GutturalResonanceEffect(preset.Guttural));
+                p.Add(new GutturalResonanceEffect(preset.Guttural, currentSampleRate));
 
             // --- Distortion on full-energy signal ---
             if (preset.Distortion > 0f)
