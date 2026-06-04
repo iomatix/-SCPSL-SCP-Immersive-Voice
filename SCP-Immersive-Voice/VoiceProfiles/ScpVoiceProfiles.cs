@@ -107,7 +107,7 @@
 
             // --- Crackle layers ---
             if (preset.DryCrackle > 0f)
-                p.Add(new DryCrackleEffect(preset.DryCrackle));
+                p.Add(new DryCrackleEffect(preset.DryCrackle, currentSampleRate));
 
             if (preset.FleshCrackle > 0f)
                 p.Add(new FleshCrackleEffect(preset.FleshCrackle, currentSampleRate));
