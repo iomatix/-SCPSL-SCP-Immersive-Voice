@@ -1,18 +1,20 @@
 ﻿namespace ScpImmersiveVoice.Patches
 {
-
     using System;
     using System.Reflection;
     using HarmonyLib;
-    using VoiceChat;
     using VoiceChat.Codec;
+    using VoiceChat;
 
-    [HarmonyPatch(typeof(OpusDecoder))]
+    [HarmonyPatch]
     public static class OpusDecoderPatch
     {
-        [HarmonyPostfix]
-        [HarmonyPatch(".ctor")]
-        public static void Postfix(OpusDecoder __instance)
+        static MethodBase TargetMethod()
+        {
+            return typeof(OpusDecoder).GetConstructor(Type.EmptyTypes);
+        }
+
+        static void Postfix(OpusDecoder __instance)
         {
             try
             {
@@ -22,8 +24,7 @@
                 if (wrapperType == null)
                     return;
 
-                var createDecoder = wrapperType.GetMethod(
-                    "CreateDecoder",
+                var createDecoder = wrapperType.GetMethod("CreateDecoder",
                     BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
                 if (createDecoder == null)
@@ -38,10 +39,7 @@
 
                 handleField?.SetValue(__instance, newHandle);
             }
-            catch
-            {
-                // bez crasha
-            }
+            catch { }
         }
     }
 }

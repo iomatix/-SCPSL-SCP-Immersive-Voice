@@ -3,17 +3,19 @@
     using System;
     using System.Reflection;
     using HarmonyLib;
-    using VoiceChat;
     using VoiceChat.Codec;
     using VoiceChat.Codec.Enums;
+    using VoiceChat;
 
-    [HarmonyPatch(typeof(OpusEncoder))]
+    [HarmonyPatch]
     public static class OpusEncoderPatch
     {
-        // ctor FROM OpusApplicationType PATCH
-        [HarmonyPostfix]
-        [HarmonyPatch(".ctor", new Type[] { typeof(OpusApplicationType) })]
-        public static void Postfix(OpusEncoder __instance, OpusApplicationType preset)
+        static MethodBase TargetMethod()
+        {
+            return typeof(OpusEncoder).GetConstructor(new Type[] { typeof(OpusApplicationType) });
+        }
+
+        static void Postfix(OpusEncoder __instance, OpusApplicationType preset)
         {
             try
             {
@@ -23,18 +25,13 @@
                 if (wrapperType == null)
                     return;
 
-                var createEncoder = wrapperType.GetMethod(
-                    "CreateEncoder",
+                var createEncoder = wrapperType.GetMethod("CreateEncoder",
                     BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
                 if (createEncoder == null)
                     return;
 
-                // new handle with correct sample rate
-                var newHandle = (IntPtr)createEncoder.Invoke(
-                    null,
-                    new object[] { sr, 1, preset });
-
+                var newHandle = (IntPtr)createEncoder.Invoke(null, new object[] { sr, 1, preset });
                 if (newHandle == IntPtr.Zero)
                     return;
 
@@ -43,9 +40,7 @@
 
                 handleField?.SetValue(__instance, newHandle);
             }
-            catch
-            {
-            }
+            catch { }
         }
     }
 }

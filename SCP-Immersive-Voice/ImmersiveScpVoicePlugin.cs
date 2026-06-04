@@ -14,7 +14,9 @@
     using SCP_Immersive_Voice.VoiceProfiles;
     using ScpImmersiveVoice.Config;
     using ScpImmersiveVoice.EventHandlers;
+    using ScpImmersiveVoice.Patches;
     using System;
+    using System.Reflection;
     using UnityEngine;
 
     public class ImmersiveScpVoicePlugin : Plugin<ImmersiveScpVoiceConfig>
@@ -59,7 +61,9 @@
         public override void Enable()
         {
             _harmony = new Harmony("scp.immersive.voice.opus.patch");
-            _harmony.PatchAll();
+
+            _harmony.CreateClassProcessor(typeof(OpusEncoderPatch)).Patch();
+            _harmony.CreateClassProcessor(typeof(OpusDecoderPatch)).Patch();
 
             StaticConfig = Config;
             _voiceManager = new ScpVoiceManager();
