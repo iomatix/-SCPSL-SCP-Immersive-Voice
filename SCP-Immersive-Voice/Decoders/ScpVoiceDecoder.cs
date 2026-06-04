@@ -88,10 +88,6 @@
             if (pcm == null || pcm.Length == 0)
                 return pcm ?? Array.Empty<float>();
 
-            // Normalize BEFORE DSP - Important !
-            if (NormalizeEnabled)
-                NormalizeInPlace(pcm, targetPeak: 0.9f);
-
             // Apply effects on healthy signal
             var pipeline = ScpVoiceProfiles.GetPipelineFor(scp);
             pipeline.Process(pcm, pcm.Length);
