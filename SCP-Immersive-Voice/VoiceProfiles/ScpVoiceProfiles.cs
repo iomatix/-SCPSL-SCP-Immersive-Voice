@@ -79,8 +79,10 @@
             if (currentSampleRate <= 0) currentSampleRate = 48000f; // Fallback helper
 
             // --- Input modifiers ---
-            if (preset.UseNoiseGate)
-                p.Add(new NoiseGateEffect(preset.NoiseGateThreshold));
+            // AAA Standard Guard: Always maintain a noise gate to sanitize AGC breathing artifacts.
+            // If the preset explicitly disables it or has an unconfigured threshold, fallback to standard -45 dB.
+            float gateThreshold = preset.UseNoiseGate ? preset.NoiseGateThreshold : -45f;
+            p.Add(new NoiseGateEffect(gateThreshold, currentSampleRate));
 
             // --- Core voice modifiers ---
             if (Math.Abs(preset.Pitch - 1f) > 0.01f)
