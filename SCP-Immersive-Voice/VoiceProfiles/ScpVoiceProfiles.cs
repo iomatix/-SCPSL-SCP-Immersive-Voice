@@ -133,7 +133,7 @@
                 p.Add(new PocketDimensionEchoEffect(preset.PocketEcho));
 
             if (preset.Reverb > 0f)
-                p.Add(new ReverbEffect(preset.Reverb));
+                p.Add(new ReverbEffect(preset.Reverb, currentSampleRate));
 
             // --- Filters LAST ---
             if (preset.LowPass > 0f)
