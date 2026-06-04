@@ -11,14 +11,28 @@
 
     public class ScpVoiceManager
     {
-
         private readonly ImmersiveScpVoiceConfig _config = ImmersiveScpVoicePlugin.StaticConfig;
 
         /// <summary>
-        /// Audio Session IDs.
-        /// The key of the dictonary is player.UserId, The value is _sessionId
+        /// Audio sessions: key = UserId, value = sessionId
         /// </summary>
         private readonly Dictionary<string, int> _sessions = new Dictionary<string, int>();
+
+        /// <summary>
+        /// Per-player locks to prevent duplicate StartSession
+        /// </summary>
+        private readonly Dictionary<string, object> _locks = new Dictionary<string, object>();
+
+        private object GetLock(string userId)
+        {
+            if (!_locks.TryGetValue(userId, out var l))
+            {
+                l = new object();
+                _locks[userId] = l;
+            }
+            return l;
+        }
+
         public int StartSession(Player scp)
         {
             if (_sessions.TryGetValue(scp.UserId, out int existing))
@@ -35,10 +49,11 @@
             );
 
             _sessions[scp.UserId] = sessionId;
+
             Logger.Debug($"[VOICE DEBUG] Session ADDED to dictionary. PlayerId: {scp.PlayerId}, SessionId: {sessionId}");
             Logger.Debug($"[VOICE DEBUG] Total sessions in dictionary: {_sessions.Count}");
-
             Logger.Debug($"[VOICE DEBUG] Session created for player: {scp.Nickname}, SessionId: {sessionId}");
+
             return sessionId;
         }
 
@@ -47,25 +62,33 @@
             Logger.Debug($"[VOICE DEBUG] StopSession called for player: {scp.Nickname}, UserId: {scp.UserId}");
             Logger.Debug($"[VOICE DEBUG] Current sessions: {string.Join(", ", _sessions.Keys)}");
 
-            if (!_sessions.TryGetValue(scp.UserId, out int sessionId))
+            var key = scp.UserId;
+
+            lock (GetLock(key))
+            {
+                if (!_sessions.TryGetValue(key, out int sessionId))
                 {
                     Logger.Debug($"[VOICE DEBUG] Session NOT found for player: {scp.Nickname}");
                     return;
                 }
 
-            DefaultAudioManager.Instance.DestroySession(sessionId);
+                DefaultAudioManager.Instance.DestroySession(sessionId);
 
-            Logger.Debug($"[VOICE DEBUG] Audio Streaming Seassion no. {sessionId} Destroyed");
-            _sessions.Remove(scp.UserId);
+                Logger.Debug($"[VOICE DEBUG] Audio Streaming Seassion no. {sessionId} Destroyed");
+                _sessions.Remove(key);
+            }
         }
 
         public void StopAllSessions()
         {
-            foreach (var kvp in _sessions) DefaultAudioManager.Instance.DestroySession(kvp.Value);
+            foreach (var kvp in _sessions)
+                DefaultAudioManager.Instance.DestroySession(kvp.Value);
 
             Logger.Debug("[VOICE DEBUG] All Audio Streaming Seassions Destroyed");
             _sessions.Clear();
+            _locks.Clear();
         }
+
         public void AppendPcm(Player scp, float[] samples)
         {
             if (samples == null || samples.Length == 0)
@@ -74,28 +97,32 @@
                 return;
             }
 
-            if (!_sessions.TryGetValue(scp.UserId, out int sessionId))
-            {
-                Logger.Debug($"[SCP-VOICE] AppendPcm: NO SESSION for {scp.Nickname}, creating new one");
-                sessionId = StartSession(scp);
-            }
+            var key = scp.UserId;
 
-            DefaultAudioManager.Instance.AppendPcmData(sessionId, samples);
-
-            var state = DefaultAudioManager.Instance.GetSessionState(sessionId);
-            if (state == null)
+            lock (GetLock(key))
             {
-                Logger.Error($"[SCP-VOICE] AppendPcm: state NULL for session {sessionId}");
-                return;
-            }
+                if (!_sessions.TryGetValue(key, out int sessionId))
+                {
+                    Logger.Debug($"[SCP-VOICE] AppendPcm: NO SESSION for {scp.Nickname}, creating new one");
+                    sessionId = StartSession(scp);
+                }
 
-            if (!state.HasPhysicalSpeaker || state.PhysicalSpeaker == null)
-            {
-                Logger.Warn($"[SCP-VOICE] AppendPcm: NO PHYSICAL SPEAKER for session {sessionId}");
+                DefaultAudioManager.Instance.AppendPcmData(sessionId, samples);
+
+                var state = DefaultAudioManager.Instance.GetSessionState(sessionId);
+                if (state == null)
+                {
+                    Logger.Error($"[SCP-VOICE] AppendPcm: state NULL for session {sessionId}");
+                    return;
+                }
+
+                if (!state.HasPhysicalSpeaker || state.PhysicalSpeaker == null)
+                {
+                    Logger.Warn($"[SCP-VOICE] AppendPcm: NO PHYSICAL SPEAKER for session {sessionId}");
+                }
             }
         }
 
-        // Wrapper for Opus decoder
         public void AppendPcm(Player scp, short[] pcm)
         {
             if (pcm == null || pcm.Length == 0)
@@ -110,7 +137,6 @@
             AppendPcm(scp, samples);
         }
 
-
         public void UpdatePositions()
         {
             foreach (var kvp in _sessions)
@@ -124,6 +150,5 @@
                 DefaultAudioManager.Instance.SetSessionPosition(sessionId, scp.Position);
             }
         }
-
     }
 }
