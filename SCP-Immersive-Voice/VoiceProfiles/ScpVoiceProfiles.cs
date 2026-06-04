@@ -161,7 +161,7 @@
 
             // --- Creature chirps ---
             if (preset.Chirp > 0f)
-                p.Add(new ChirpEffect(preset.Chirp));
+                p.Add(new ChirpEffect(preset.Chirp, currentSampleRate));
 
             return p;
         }
