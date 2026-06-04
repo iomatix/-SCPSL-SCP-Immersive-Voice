@@ -3,82 +3,81 @@
     using SCP_Immersive_Voice.Presets;
     using SCP_Immersive_Voice.Presets.Dynamics.Enums;
 
+    /// <summary>
+    /// Dynamic emotional states for SCP‑939, tuned for whisper mimicry, predatory intent
+    /// and organic wetness. Designed to preserve intelligibility while remaining uncanny.
+    /// </summary>
     public static class Scp939DynamicPresets
     {
-        // 1. Idle Whisper — signature SCP-939 sound
-        // Soft, breathy, wet, unsettling. Almost ASMR but wrong.
+        // Signature whisper: soft, breathy, unsettling presence
         public static readonly ScpVoicePreset IdleWhisperPreset = new ScpVoicePreset
         {
-            Pitch = 0.52f,
-            Formant = 0.62f,
+            Pitch = 0.58f,
+            Formant = 0.70f,
             LowPass = 2400f,
-            HighPass = 280f,
-            WhisperAmount = 0.90f,
-            BreathNoise = 0.75f,
-            WetOrganic = 0.45f,
-            FormantDrift = 0.25f
+            HighPass = 260f,
+            WhisperAmount = 0.92f,
+            BreathNoise = 0.70f,
+            WetOrganic = 0.42f,
+            FormantDrift = 0.22f
         };
 
-        // 2. Mimicking — pretending to be human
-        // Must sound almost normal, but with subtle uncanny artifacts.
+        // Human mimicry: almost normal, but subtly wrong
         public static readonly ScpVoicePreset MimickingPreset = new ScpVoicePreset
         {
             Pitch = 0.98f,
             Formant = 1.00f,
             LowPass = 4800f,
             HighPass = 0f,
-            WhisperAmount = 0.10f,
-            BreathNoise = 0.08f,
-            WetOrganic = 0.05f,
-            FormantDrift = 0.05f,
-            Reverb = 0.04f
+            WhisperAmount = 0.12f,
+            BreathNoise = 0.10f,
+            WetOrganic = 0.06f,
+            FormantDrift = 0.04f,
+            Reverb = 0.03f
         };
 
-        // 3. Focused Hunting — predator mode
-        // Whisper becomes sharp, cold, predatory.
+        // Predator focus: cold, controlled, sharpened whisper
         public static readonly ScpVoicePreset FocusedPreset = new ScpVoicePreset
         {
-            Pitch = 0.60f,
-            Formant = 0.72f,
-            HighPass = 1100f,
+            Pitch = 0.62f,
+            Formant = 0.74f,
+            HighPass = 1050f,
             LowPass = 2600f,
-            WhisperAmount = 0.85f,
-            BreathNoise = 0.70f,
-            WetOrganic = 0.55f,
-            Distortion = 0.12f,
-            FormantDrift = 0.30f
+            WhisperAmount = 0.88f,
+            BreathNoise = 0.72f,
+            WetOrganic = 0.52f,
+            Distortion = 0.10f,
+            FormantDrift = 0.28f
         };
 
-        // 4. Attacking / Lunging — full aggression
-        // Wet, tearing, breathy, violent whisper-scream.
+        // Lunge attack: violent whisper‑scream, tearing breath
         public static readonly ScpVoicePreset AttackingPreset = new ScpVoicePreset
         {
             Pitch = 0.72f,
-            Formant = 0.70f,
+            Formant = 0.68f,
             HighPass = 1500f,
             WhisperAmount = 1.00f,
-            BreathNoise = 1.25f,
-            WetOrganic = 0.75f,
-            WetDecay = 0.45f,
-            Distortion = 1.35f,
-            Guttural = 0.25f,
-            FormantDrift = 0.45f
+            BreathNoise = 1.20f,
+            WetOrganic = 0.72f,
+            WetDecay = 0.42f,
+            Distortion = 1.20f,
+            Guttural = 0.22f,
+            FormantDrift = 0.40f
         };
 
-        // 5. Amnestic Cloud — foggy, dreamlike, distant
-        // Voice becomes smeared, soft, unreal.
+        // Amnestic fog: distant, dreamlike, smeared presence
         public static readonly ScpVoicePreset AmnesticCloudPreset = new ScpVoicePreset
         {
             Pitch = 0.90f,
             Formant = 0.95f,
             LowPass = 1500f,
             HighPass = 0f,
-            Reverb = 0.40f,
-            WhisperAmount = 0.55f,
-            BreathNoise = 0.30f,
-            WetOrganic = 0.35f,
-            FormantDrift = 0.20f,
-            Distortion = 0.08f
+            Reverb = 0.38f,
+            WhisperAmount = 0.52f,
+            BreathNoise = 0.28f,
+            WetOrganic = 0.32f,
+            FormantDrift = 0.18f,
+            Distortion = 0.06f
         };
 
         public static ScpVoicePreset GetPresetForState(Scp939VoiceState state)

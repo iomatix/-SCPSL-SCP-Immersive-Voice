@@ -3,83 +3,82 @@
     using SCP_Immersive_Voice.Presets;
     using SCP_Immersive_Voice.Presets.Dynamics.Enums;
 
+    /// <summary>
+    /// Dynamic identity states for SCP‑3114, tuned for organic instability,
+    /// flesh resonance and uncanny transitions between human and non‑human form.
+    /// </summary>
     public static class Scp3114DynamicPresets
     {
-        // 3114 — Undisguised (true form)
-        // High, unstable, wet, twitchy, organic.
+        // True form: twitchy, wet, unstable, high‑tension organic mass
         public static readonly ScpVoicePreset UndisguisedPreset = new ScpVoicePreset
         {
-            Pitch = 1.75f,
-            Formant = 1.18f,
-            Distortion = 0.55f,
-            HighPass = 220f,
-            Reverb = 0.15f,
-            FormantDrift = 0.45f,
-            FleshCrackle = 0.65f,
-            WetOrganic = 0.75f,
-            WetDecay = 0.25f
+            Pitch = 1.60f,
+            Formant = 1.12f,
+            Distortion = 0.45f,
+            HighPass = 200f,
+            Reverb = 0.12f,
+            FormantDrift = 0.40f,
+            FleshCrackle = 0.60f,
+            WetOrganic = 0.70f,
+            WetDecay = 0.22f
         };
 
-        // 3114 — Disguising (transition into human form)
-        // Meaty, wet, unstable, but lowering pitch and formant.
+        // Transition into human shape: meaty, wet, collapsing structure
         public static readonly ScpVoicePreset DisguisingPreset = new ScpVoicePreset
         {
-            Pitch = 1.35f,
-            Formant = 0.92f,
-            Distortion = 0.45f,
+            Pitch = 1.28f,
+            Formant = 0.90f,
+            Distortion = 0.40f,
             LowPass = 2400f,
-            Reverb = 0.22f,
-            FormantDrift = 0.35f,
-            FleshCrackle = 0.75f,
-            WetOrganic = 0.85f,
-            WetDecay = 0.35f
+            Reverb = 0.18f,
+            FormantDrift = 0.32f,
+            FleshCrackle = 0.70f,
+            WetOrganic = 0.80f,
+            WetDecay = 0.30f
         };
 
-        // 3114 — Disguised (pretending to be human)
-        // Must sound almost normal, but with subtle uncanny artifacts.
+        // Human mimicry: almost normal, but subtly wrong and too smooth
         public static readonly ScpVoicePreset DisguisedPreset = new ScpVoicePreset
         {
             Pitch = 1.02f,
             Formant = 1.00f,
-            Distortion = 0.0f,
+            Distortion = 0.00f,
             LowPass = 0f,
             HighPass = 0f,
             Reverb = 0f,
             FormantDrift = 0.02f,
-            FleshCrackle = 0.03f,
-            WetOrganic = 0.05f,
+            FleshCrackle = 0.02f,
+            WetOrganic = 0.04f,
             WetDecay = 0f
         };
 
-        // 3114 — Revealing (transition out of disguise)
-        // Organic tearing, rising pitch, unstable formants.
+        // Transition out of disguise: tearing, rising pitch, unstable resonance
         public static readonly ScpVoicePreset RevealingPreset = new ScpVoicePreset
         {
-            Pitch = 1.55f,
+            Pitch = 1.48f,
             Formant = 1.05f,
-            Distortion = 0.65f,
+            Distortion = 0.55f,
             LowPass = 2200f,
-            Reverb = 0.25f,
-            FormantDrift = 0.45f,
-            FleshCrackle = 0.85f,
-            WetOrganic = 0.90f,
-            WetDecay = 0.45f
+            Reverb = 0.22f,
+            FormantDrift = 0.42f,
+            FleshCrackle = 0.80f,
+            WetOrganic = 0.85f,
+            WetDecay = 0.40f
         };
 
-        // 3114 — Strangling (attack mode)
-        // High, aggressive, wet, tearing flesh, unstable.
+        // Attack mode: high, aggressive, tearing flesh, unstable identity collapse
         public static readonly ScpVoicePreset StranglingPreset = new ScpVoicePreset
         {
-            Pitch = 1.95f,
-            Formant = 1.28f,
-            Distortion = 1.1f,
-            HighPass = 380f,
-            Reverb = 0.18f,
-            FormantDrift = 0.65f,
-            FleshCrackle = 1.0f,
-            WetOrganic = 1.0f,
-            WetDecay = 0.65f,
-            Guttural = 0.35f
+            Pitch = 1.85f,
+            Formant = 1.22f,
+            Distortion = 0.95f,
+            HighPass = 360f,
+            Reverb = 0.15f,
+            FormantDrift = 0.60f,
+            FleshCrackle = 1.00f,
+            WetOrganic = 1.00f,
+            WetDecay = 0.60f,
+            Guttural = 0.30f
         };
 
         public static ScpVoicePreset GetPresetForState(Scp3114VoiceState state)
