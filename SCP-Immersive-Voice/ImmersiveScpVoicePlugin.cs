@@ -4,6 +4,7 @@
     using LabApi.Events.Arguments.ServerEvents;
     using LabApi.Events.Handlers;
     using LabApi.Features;
+    using LabApi.Features.Console;
     using LabApi.Loader.Features.Plugins;
     using LabApi.Loader.Features.Plugins.Enums;
     using SCP_Immersive_Voice.Managers;
@@ -105,7 +106,7 @@
             );
             #endregion
 
-
+            LabApi.Features.Console.Logger.Info("[SCP Voice Chat] - Plugin Enabled");
 
         }
 
@@ -157,6 +158,8 @@
                 #endregion
 
                 _eventHandler = null;
+
+                LabApi.Features.Console.Logger.Info("[SCP Voice Chat] - Plugin Disabled");
             }
         }
     }
