@@ -59,7 +59,7 @@
             ServerEvents.RoundEnded += OnRoundEnd;
 
             #region Player Events for Cleanup (LOCAL)
-            PlayerEvents.ChangingRole += OnChangingRole;
+            PlayerEvents.ChangedRole += OnChangedRole;
             PlayerEvents.Left += OnPlayerLeft;
             PlayerEvents.Death += OnPlayerDied;
             #endregion
@@ -125,7 +125,7 @@
                 ServerEvents.RoundEnded -= OnRoundEnd;
 
                 #region Player Events for Cleanup
-                PlayerEvents.ChangingRole -= OnChangingRole;
+                PlayerEvents.ChangedRole -= OnChangedRole;
                 PlayerEvents.Left -= OnPlayerLeft;
                 PlayerEvents.Death -= OnPlayerDied;
                 #endregion
@@ -178,7 +178,7 @@
 
         #region Local Event Handlers
         #region Exit/Death Player Events
-        private void OnChangingRole(PlayerChangingRoleEventArgs ev)
+        private void OnChangedRole(PlayerChangedRoleEventArgs ev)
         {
             _voiceManager.StopSession(ev.Player);
         }
