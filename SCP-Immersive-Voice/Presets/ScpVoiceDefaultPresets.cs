@@ -17,6 +17,7 @@
                 [RoleTypeId.Scp049] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 2.8f,
                     Pitch = 0.78f,          // intent: deeper, controlled tone
                     Formant = 0.88f,        // intent: masked resonance
                     LowPass = 2600f,        // intent: cloth + beak muffling
@@ -29,6 +30,7 @@
                 [RoleTypeId.Scp096] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 2.0f,
                     Pitch = 0.92f,          // intent: fragile but human
                     Formant = 1.00f,        // intent: neutral timbre baseline
                     Distortion = 0.18f,     // intent: emotional strain
@@ -41,6 +43,7 @@
                 [RoleTypeId.Scp939] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 1.8f,
                     Pitch = 0.60f,          // intent: predatory depth
                     Formant = 0.72f,        // intent: widened throat cavity
                     WhisperAmount = 0.85f,  // intent: signature whisper
@@ -53,6 +56,7 @@
                 [RoleTypeId.Scp173] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 1.05f,
                     Pitch = 0.95f,          // intent: neutral pitch (stone has no voice)
                     Formant = 0.90f,        // intent: heavy, material resonance
                     StoneCrack = 0.85f,     // intent: brittle texture
@@ -65,6 +69,7 @@
                 [RoleTypeId.Scp106] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 2.2f,
                     Pitch = 0.58f,          // intent: ancient, decayed depth
                     Formant = 0.55f,        // intent: collapsed vocal cavity
                     Distortion = 0.55f,     // intent: corroded texture
@@ -79,6 +84,7 @@
                 [RoleTypeId.Scp3114] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 2.4f,
                     Pitch = 1.45f,          // intent: frantic, high‑tension tone
                     Formant = 1.12f,        // intent: tightened, strained throat
                     WetOrganic = 0.75f,     // intent: wet, fleshy texture
@@ -91,6 +97,7 @@
                 [RoleTypeId.Scp079] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 1.1f,
                     Pitch = 1.00f,          // intent: neutral synthetic pitch
                     Formant = 1.00f,        // intent: no organic shaping
                     Bitcrush = 0.70f,       // intent: digital degradation
@@ -105,6 +112,7 @@
                 [RoleTypeId.Scp0492] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 1.37f,
                     Pitch = 0.65f,          // intent: guttural depth
                     Formant = 0.80f,        // intent: decayed throat
                     Distortion = 0.30f,     // intent: rough texture
@@ -120,6 +128,7 @@
                 [RoleTypeId.Flamingo] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 2.22f,
                     Pitch = 1.55f,          // intent: comedic brightness
                     Formant = 1.20f,        // intent: small vocal cavity
                     Chirp = 0.45f,          // intent: bird‑like tone
@@ -128,6 +137,7 @@
                 [RoleTypeId.AlphaFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 2.22f,
                     Pitch = 1.45f,
                     Formant = 1.15f,
                     Chirp = 0.40f,
@@ -136,6 +146,7 @@
                 [RoleTypeId.ZombieFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 2.22f,
                     Pitch = 1.20f,
                     Formant = 0.95f,
                     Chirp = 0.25f,
@@ -145,6 +156,7 @@
                 [RoleTypeId.NtfFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 2.22f,
                     Pitch = 1.35f,
                     Formant = 1.10f,
                     Chirp = 0.35f,
@@ -153,6 +165,7 @@
                 [RoleTypeId.ChaosFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
+                    OutputGain = 2.22f,
                     Pitch = 1.25f,
                     Formant = 1.05f,
                     Chirp = 0.30f,

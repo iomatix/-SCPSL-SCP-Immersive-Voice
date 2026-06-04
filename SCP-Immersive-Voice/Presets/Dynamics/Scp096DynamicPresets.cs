@@ -13,6 +13,7 @@
         public static readonly ScpVoicePreset CalmPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.01f,
             Pitch = 0.92f,
             Formant = 1.00f,
             Distortion = 0.12f,
@@ -26,6 +27,7 @@
         public static readonly ScpVoicePreset CryingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 1.85f,
             Pitch = 0.88f,
             Formant = 0.95f,
             Distortion = 0.22f,
@@ -40,6 +42,7 @@
         public static readonly ScpVoicePreset TryingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.15f,
             Pitch = 0.84f,
             Formant = 0.92f,
             Distortion = 0.30f,
@@ -54,6 +57,7 @@
         public static readonly ScpVoicePreset EnragingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.35f,
             Pitch = 1.12f,
             Formant = 1.05f,
             Distortion = 1.10f,
@@ -68,6 +72,7 @@
         public static readonly ScpVoicePreset RagePreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.45f,
             Pitch = 1.32f,
             Formant = 1.12f,
             Distortion = 2.40f,
@@ -84,6 +89,7 @@
         public static readonly ScpVoicePreset ChargingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.25f,
             Pitch = 1.24f,
             Formant = 1.08f,
             Distortion = 1.90f,
@@ -98,6 +104,7 @@
         public static readonly ScpVoicePreset ChargedPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.35f,
             Pitch = 1.18f,
             Formant = 1.06f,
             Distortion = 1.70f,
@@ -112,6 +119,7 @@
         public static readonly ScpVoicePreset PryingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.45f,
             Pitch = 1.02f,
             Formant = 0.95f,
             Distortion = 2.10f,

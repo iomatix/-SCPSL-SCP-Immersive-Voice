@@ -13,6 +13,7 @@
         public static readonly ScpVoicePreset IdleWhisperPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 1.85f,
             Pitch = 0.58f,
             Formant = 0.70f,
             LowPass = 2400f,
@@ -27,6 +28,7 @@
         public static readonly ScpVoicePreset MimickingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 1.95f,
             Pitch = 0.98f,
             Formant = 1.00f,
             LowPass = 4800f,
@@ -42,6 +44,7 @@
         public static readonly ScpVoicePreset FocusedPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.05f,
             Pitch = 0.62f,
             Formant = 0.74f,
             HighPass = 1050f,
@@ -57,6 +60,7 @@
         public static readonly ScpVoicePreset AttackingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.25f,
             Pitch = 0.72f,
             Formant = 0.68f,
             HighPass = 1500f,
@@ -73,6 +77,7 @@
         public static readonly ScpVoicePreset AmnesticCloudPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 1.87f,
             Pitch = 0.90f,
             Formant = 0.95f,
             LowPass = 1500f,

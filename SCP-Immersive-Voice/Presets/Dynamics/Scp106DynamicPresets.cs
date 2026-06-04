@@ -14,6 +14,7 @@
         public static readonly ScpVoicePreset IdlePreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.2f,
             Pitch = 0.58f,
             Formant = 0.55f,
             Distortion = 0.55f,
@@ -29,6 +30,7 @@
         public static readonly ScpVoicePreset StalkingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 1.95f,
             Pitch = 0.50f,
             Formant = 0.48f,
             LowPass = 650f,
@@ -44,6 +46,7 @@
         public static readonly ScpVoicePreset EmergingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.25f,
             Pitch = 0.62f,
             Formant = 0.60f,
             LowPass = 1100f,
@@ -58,6 +61,7 @@
         public static readonly ScpVoicePreset PocketDimensionPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.15f,
             Pitch = 0.52f,
             Formant = 0.50f,
             LowPass = 700f,
@@ -74,6 +78,7 @@
         public static readonly ScpVoicePreset AtlasDimensionalPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.15f,
             Pitch = 0.56f,
             Formant = 0.58f,
             LowPass = 1000f,
@@ -89,6 +94,7 @@
         public static readonly ScpVoicePreset LowVigorPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 1.85f,
             Pitch = 0.48f,
             Formant = 0.50f,
             LowPass = 800f,
@@ -103,6 +109,7 @@
         public static readonly ScpVoicePreset AttackPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.25f,
             Pitch = 0.70f,
             Formant = 0.62f,
             HighPass = 300f,

@@ -13,6 +13,7 @@
         public static readonly ScpVoicePreset UndisguisedPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.4f,
             Pitch = 1.60f,
             Formant = 1.12f,
             Distortion = 0.45f,
@@ -28,6 +29,7 @@
         public static readonly ScpVoicePreset DisguisingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.5f,
             Pitch = 1.28f,
             Formant = 0.90f,
             Distortion = 0.40f,
@@ -43,6 +45,7 @@
         public static readonly ScpVoicePreset DisguisedPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.0f,
             Pitch = 1.02f,
             Formant = 1.00f,
             Distortion = 0.00f,
@@ -59,6 +62,7 @@
         public static readonly ScpVoicePreset RevealingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.5f,
             Pitch = 1.48f,
             Formant = 1.05f,
             Distortion = 0.55f,
@@ -74,6 +78,7 @@
         public static readonly ScpVoicePreset StranglingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
+            OutputGain = 2.65f,
             Pitch = 1.85f,
             Formant = 1.22f,
             Distortion = 0.95f,
