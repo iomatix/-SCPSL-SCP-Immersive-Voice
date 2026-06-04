@@ -130,7 +130,7 @@
                 p.Add(new WetDecayEffect(preset.WetDecay));
 
             if (preset.PocketEcho > 0f)
-                p.Add(new PocketDimensionEchoEffect(preset.PocketEcho));
+                p.Add(new PocketDimensionEchoEffect(preset.PocketEcho, currentSampleRate));
 
             if (preset.Reverb > 0f)
                 p.Add(new ReverbEffect(preset.Reverb, currentSampleRate));
