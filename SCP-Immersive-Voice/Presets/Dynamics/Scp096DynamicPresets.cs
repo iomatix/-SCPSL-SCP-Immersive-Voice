@@ -12,6 +12,7 @@
         // Baseline trembling, fragile but controlled
         public static readonly ScpVoicePreset CalmPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 0.92f,
             Formant = 1.00f,
             Distortion = 0.12f,
@@ -24,6 +25,7 @@
         // Emotional collapse, breathy instability, soft crying resonance
         public static readonly ScpVoicePreset CryingPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 0.88f,
             Formant = 0.95f,
             Distortion = 0.22f,
@@ -37,6 +39,7 @@
         // Voice cracking, unstable throat tension, rising panic
         public static readonly ScpVoicePreset TryingPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 0.84f,
             Formant = 0.92f,
             Distortion = 0.30f,
@@ -50,6 +53,7 @@
         // Aggression rising, throat tearing, unstable resonance
         public static readonly ScpVoicePreset EnragingPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 1.12f,
             Formant = 1.05f,
             Distortion = 1.10f,
@@ -63,6 +67,7 @@
         // Full scream, tearing vocal folds, dimensional resonance
         public static readonly ScpVoicePreset RagePreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 1.32f,
             Formant = 1.12f,
             Distortion = 2.40f,
@@ -78,6 +83,7 @@
         // Violent motion, breath tearing, chaotic throat pressure
         public static readonly ScpVoicePreset ChargingPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 1.24f,
             Formant = 1.08f,
             Distortion = 1.90f,
@@ -91,6 +97,7 @@
         // Focused aggression, less chaotic but still tearing
         public static readonly ScpVoicePreset ChargedPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 1.18f,
             Formant = 1.06f,
             Distortion = 1.70f,
@@ -104,6 +111,7 @@
         // Straining against metal, throat pressure + material resonance
         public static readonly ScpVoicePreset PryingPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 1.02f,
             Formant = 0.95f,
             Distortion = 2.10f,

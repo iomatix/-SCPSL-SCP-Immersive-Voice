@@ -2,6 +2,7 @@
 {
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.Scp096Events;
+    using LabApi.Events.Arguments.Scp106Events;
     using LabApi.Events.Arguments.Scp3114Events;
     using LabApi.Events.Arguments.Scp939Events;
     using LabApi.Features.Wrappers;
@@ -84,6 +85,25 @@
             return controller;
         }
 
+
+        // SCP-106 Dynamic State Tracking
+        private readonly Dictionary<int, Scp106VoiceStateController> _scp106State = new Dictionary<int, Scp106VoiceStateController>();
+
+        /// <summary>
+        /// The key of this dictionary is PlayerId.
+        /// </summary>
+        public Dictionary<int, Scp106VoiceStateController> Scp106States => _scp106State;
+
+        private Scp106VoiceStateController Get106State(Player player)
+        {
+            if (!_scp106State.TryGetValue(player.PlayerId, out var controller))
+            {
+                controller = new Scp106VoiceStateController();
+                _scp106State[player.PlayerId] = controller;
+            }
+
+            return controller;
+        }
         #endregion
 
         #region Player Voice Events
@@ -265,6 +285,69 @@
         {
             Get3114State(ev.Player).CurrentState = Scp3114VoiceState.Undisguised;
         }
+
+
+        // ----------------------
+        // SCP-106 dynamic states
+        // ----------------------
+        public void On106ChangedStalkMode(Scp106ChangedStalkModeEventArgs ev)
+        {
+            var state = Get106State(ev.Player);
+
+            if (ev.IsStalkActive)
+            {
+                // Intent: submerged, muffled, distant presence
+                state.SetState(Scp106VoiceState.Stalking);
+            }
+            else
+            {
+                // Intent: rising from the ground with wet burst
+                state.SetTemporaryState(
+                    Scp106VoiceState.Emerging,
+                    fallback: Scp106VoiceState.Idle
+                );
+            }
+        }
+
+        public void On106ChangedVigor(Scp106ChangedVigorEventArgs ev)
+        {
+            var state = Get106State(ev.Player);
+
+            // Intent: heavy, collapsing resonance when exhausted
+            if (ev.Value < 20f)
+                state.TrySetLowPriorityState(Scp106VoiceState.LowVigor);
+            else
+                state.ClearLowVigor();
+        }
+
+        public void On106TeleportingPlayer(Scp106TeleportingPlayerEvent ev)
+        {
+            var state = Get106State(ev.Player);
+
+            // Intent: dimensional echo during pocket transition
+            state.SetTemporaryState(
+                Scp106VoiceState.PocketDimension,
+                fallback: Scp106VoiceState.Idle
+            );
+        }
+
+        public void On106UsingHunterAtlas(Scp106UsingHunterAtlasEventArgs ev)
+        {
+            var state = Get106State(ev.Player);
+
+            if (ev.IsAllowed)
+            {
+                // Intent: subtle dimensional smear while sensing rooms
+                state.TrySetMediumPriorityState(Scp106VoiceState.AtlasDimensional);
+            }
+            else
+            {
+                // Intent: return to baseline when Atlas closes
+                if (state.CurrentState == Scp106VoiceState.AtlasDimensional)
+                    state.SetState(Scp106VoiceState.Idle);
+            }
+        }
+
         #endregion
     }
 }

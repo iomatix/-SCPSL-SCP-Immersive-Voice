@@ -12,6 +12,7 @@
         // True form: twitchy, wet, unstable, high‑tension organic mass
         public static readonly ScpVoicePreset UndisguisedPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 1.60f,
             Formant = 1.12f,
             Distortion = 0.45f,
@@ -26,6 +27,7 @@
         // Transition into human shape: meaty, wet, collapsing structure
         public static readonly ScpVoicePreset DisguisingPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 1.28f,
             Formant = 0.90f,
             Distortion = 0.40f,
@@ -40,6 +42,7 @@
         // Human mimicry: almost normal, but subtly wrong and too smooth
         public static readonly ScpVoicePreset DisguisedPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 1.02f,
             Formant = 1.00f,
             Distortion = 0.00f,
@@ -55,6 +58,7 @@
         // Transition out of disguise: tearing, rising pitch, unstable resonance
         public static readonly ScpVoicePreset RevealingPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 1.48f,
             Formant = 1.05f,
             Distortion = 0.55f,
@@ -69,6 +73,7 @@
         // Attack mode: high, aggressive, tearing flesh, unstable identity collapse
         public static readonly ScpVoicePreset StranglingPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 1.85f,
             Formant = 1.22f,
             Distortion = 0.95f,

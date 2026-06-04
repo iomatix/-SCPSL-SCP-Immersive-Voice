@@ -12,6 +12,7 @@
         // Signature whisper: soft, breathy, unsettling presence
         public static readonly ScpVoicePreset IdleWhisperPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 0.58f,
             Formant = 0.70f,
             LowPass = 2400f,
@@ -25,6 +26,7 @@
         // Human mimicry: almost normal, but subtly wrong
         public static readonly ScpVoicePreset MimickingPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 0.98f,
             Formant = 1.00f,
             LowPass = 4800f,
@@ -39,6 +41,7 @@
         // Predator focus: cold, controlled, sharpened whisper
         public static readonly ScpVoicePreset FocusedPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 0.62f,
             Formant = 0.74f,
             HighPass = 1050f,
@@ -53,6 +56,7 @@
         // Lunge attack: violent whisper‑scream, tearing breath
         public static readonly ScpVoicePreset AttackingPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 0.72f,
             Formant = 0.68f,
             HighPass = 1500f,
@@ -68,6 +72,7 @@
         // Amnestic fog: distant, dreamlike, smeared presence
         public static readonly ScpVoicePreset AmnesticCloudPreset = new ScpVoicePreset
         {
+            Mode = ScpVoicePresetMode.Dynamic,
             Pitch = 0.90f,
             Formant = 0.95f,
             LowPass = 1500f,

@@ -124,6 +124,15 @@
             ScpVoiceProfiles.DynamicProviders.Add(
                 new Scp3114DynamicPresetProvider(_eventHandler.Scp3114States)
             );
+
+            Scp106Events.ChangedStalkMode += _eventHandler.On106ChangedStalkMode;
+            Scp106Events.ChangedVigor += _eventHandler.On106ChangedVigor;
+            Scp106Events.TeleportingPlayer += _eventHandler.On106TeleportingPlayer;
+            Scp106Events.UsingHunterAtlas += _eventHandler.On106UsingHunterAtlas;
+            ScpVoiceProfiles.DynamicProviders.Add(
+                new Scp106DynamicPresetProvider(_eventHandler.Scp106States)
+            );
+
             #endregion
 
             LabApi.Features.Console.Logger.Info("[SCP Voice Chat] - Plugin Enabled");
@@ -183,8 +192,14 @@
                 Scp3114Events.StrangleStarted -= _eventHandler.On3114StrangleStarted;
                 Scp3114Events.StrangleAborting -= _eventHandler.On3114StrangleAborting;
                 Scp3114Events.StrangleAborted -= _eventHandler.On3114StrangleAborted;
+
+                Scp106Events.ChangedStalkMode -= _eventHandler.On106ChangedStalkMode;
+                Scp106Events.ChangedVigor -= _eventHandler.On106ChangedVigor;
+                Scp106Events.TeleportingPlayer -= _eventHandler.On106TeleportingPlayer;
+                Scp106Events.UsingHunterAtlas -= _eventHandler.On106UsingHunterAtlas;
                 #endregion
 
+                ScpVoiceProfiles.DynamicProviders.Clear();
                 _voiceManager.StopAllSessions();
                 _eventHandler = null;
                 _voiceManager = null;
