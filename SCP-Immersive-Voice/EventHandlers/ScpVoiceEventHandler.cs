@@ -121,7 +121,7 @@
             if (ScpVoiceDecoder.IsSilent(pcm, threshold: 0.01f))
                 return;
 
-            LabApi.Features.Console.Logger.Warn($"[VOICE DEBUG] {sender.Role} pcmLen={pcm.Length}, max={max}");
+            LabApi.Features.Console.Logger.Debug($"[VOICE DEBUG] {sender.Role} pcmLen={pcm.Length}, max={max}");
 
             ev.IsAllowed = false; // disable all events, allow only speaker sound for debugg
             // --- CASE 1: Forbidden proximity (e.g. 079, humans, etc.) ---

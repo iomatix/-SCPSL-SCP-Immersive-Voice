@@ -31,6 +31,8 @@
             );
 
             _sessions[scp] = sessionId;
+
+            Logger.Debug($"[VOICE DEBUG] Audio Streaming Seassion no. {sessionId} Created");
             return sessionId;
         }
 
@@ -40,6 +42,8 @@
                 return;
 
             DefaultAudioManager.Instance.DestroySession(sessionId);
+
+            Logger.Debug($"[VOICE DEBUG] Audio Streaming Seassion no. {sessionId} Destroyed");
             _sessions.Remove(scp);
         }
 
@@ -47,6 +51,7 @@
         {
             foreach (var kvp in _sessions) DefaultAudioManager.Instance.DestroySession(kvp.Value);
 
+            Logger.Debug("[VOICE DEBUG] All Audio Streaming Seassions Destroyed");
             _sessions.Clear();
         }
         public void AppendPcm(Player scp, float[] samples)
@@ -59,7 +64,7 @@
 
             if (!_sessions.TryGetValue(scp, out int sessionId))
             {
-                Logger.Warn($"[SCP-VOICE] AppendPcm: NO SESSION for {scp.Nickname}, creating new one");
+                Logger.Debug($"[SCP-VOICE] AppendPcm: NO SESSION for {scp.Nickname}, creating new one");
                 sessionId = StartSession(scp);
             }
 
