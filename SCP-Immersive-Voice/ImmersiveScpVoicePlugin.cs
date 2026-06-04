@@ -211,6 +211,7 @@
         private void OnChangedRole(PlayerChangedRoleEventArgs ev)
         {
             _voiceManager.StopSession(ev.Player);
+            ScpVoiceProfiles.ClearCacheFor(ev.Player);
         }
 
         private void OnPlayerLeft(PlayerLeftEventArgs ev)
@@ -218,11 +219,13 @@
             if (ev.Player == null) return;
 
             _voiceManager.StopSession(ev.Player);
+            ScpVoiceProfiles.ClearCacheFor(ev.Player);
         }
 
         private void OnPlayerDied(PlayerDeathEventArgs ev)
         {
             _voiceManager.StopSession(ev.Player);
+            ScpVoiceProfiles.ClearCacheFor(ev.Player);
         }
 
         #endregion

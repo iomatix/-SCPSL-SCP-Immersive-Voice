@@ -9,6 +9,7 @@
     using ScpImmersiveVoice;
     using ScpImmersiveVoice.Config;
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
 
     public static class ScpVoiceProfiles
@@ -16,24 +17,37 @@
         public static List<IDynamicVoicePresetProvider> DynamicProviders { get; } = new List<IDynamicVoicePresetProvider>();
 
         private readonly static ImmersiveScpVoiceConfig _config = ImmersiveScpVoicePlugin.StaticConfig;
-
+       
+        /// <summary>
+        /// Cache of player pipelines to avoid allocations and reset of DSP
+        /// </summary>
+        private readonly static ConcurrentDictionary<int, AudioEffectPipeline> _pipelineCache = new ConcurrentDictionary<int, AudioEffectPipeline>();
 
         public static AudioEffectPipeline GetPipelineFor(Player player)
-        {
-            var role = player.Role;
-
-            // 1. Dynamic presets
-            foreach (var provider in DynamicProviders)
+        { 
+            // Getting stream from cache or building a new one
+            return _pipelineCache.GetOrAdd(player.PlayerId, id =>
             {
-                if (provider.TryGetDynamicPreset(player, out var dynamicPreset))
-                    return BuildPipelineFromPreset(dynamicPreset);
-            }
+                var role = player.Role;
 
-            // 2. Static presets
-            if (!_config.Presets.TryGetValue(role, out var preset) || !preset.Enable)
-                return new AudioEffectPipeline();
+                // 1. Dynamic presets
+                foreach (var provider in DynamicProviders)
+                {
+                    if (provider.TryGetDynamicPreset(player, out var dynamicPreset))
+                        return BuildPipelineFromPreset(dynamicPreset);
+                }
 
-            return BuildPipelineFromPreset(preset);
+                // 2. Static presets
+                if (!_config.Presets.TryGetValue(role, out var preset) || !preset.Enable)
+                    return new AudioEffectPipeline();
+
+                return BuildPipelineFromPreset(preset);
+            });
+        }
+
+        public static void ClearCacheFor(Player player)
+        {
+            _pipelineCache.TryRemove(player.PlayerId, out _);
         }
 
         public static ScpVoicePreset GetPreset(Player player)
@@ -60,13 +74,17 @@
         {
             var p = new AudioEffectPipeline();
 
+            // Getting dynamic sample rate from VoiceChat engine
+            float currentSampleRate = (float)VoiceChat.VoiceChatSettings.SampleRate;
+            if (currentSampleRate <= 0) currentSampleRate = 48000f; // Fallback ratunkowy
+
             // --- Input modifiers ---
             if (preset.UseNoiseGate)
                 p.Add(new NoiseGateEffect(preset.NoiseGateThreshold));
 
             // --- Core voice modifiers ---
             if (Math.Abs(preset.Pitch - 1f) > 0.01f)
-                p.Add(new PitchShiftEffect(preset.Pitch));
+                p.Add(new PitchShiftEffect(preset.Pitch, currentSampleRate, windowSizeMs: 40f));
 
             if (Math.Abs(preset.Formant - 1f) > 0.01f)
                 p.Add(new FormantShiftEffect(preset.Formant));

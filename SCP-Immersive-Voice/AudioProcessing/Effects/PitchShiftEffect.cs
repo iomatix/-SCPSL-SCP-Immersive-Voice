@@ -33,16 +33,17 @@
         /// Initializes the Pitch Shifter.
         /// </summary>
         /// <param name="pitch">Initial pitch ratio (1.0 is normal).</param>
-        /// <param name="sampleRate">Engine sample rate (e.g., 48000 or 44100).</param>
+        /// <param name="sampleRate">Engine sample rate from VoiceChatSettings.</param>
         /// <param name="windowSizeMs">Crossfade window size. 40-50ms is standard for creature/human voices.</param>
-        public PitchShiftEffect(float pitch, float sampleRate = 48000f, float windowSizeMs = 40f)
+        public PitchShiftEffect(float pitch, float sampleRate, float windowSizeMs = 40f)
         {
-            _sampleRate = sampleRate;
+            _sampleRate = sampleRate > 0f ? sampleRate : 48000f;
             _targetPitch = Clamp(pitch, 0.25f, 4f);
             _smoothPitch = _targetPitch;
 
             // Calculate window size in samples
             _windowSize = (int)(_sampleRate * (windowSizeMs / 1000f));
+            if (_windowSize < 64) _windowSize = 64;
 
             // Force ring buffer size to the next power of 2 for ultra-fast wrapping (Bitwise AND)
             int size = 1;
@@ -62,14 +63,13 @@
 
             for (int i = 0; i < length; i++)
             {
-                // 1. Slower, smoother pitch transition (avoids zipper noise)
-                _smoothPitch += 0.001f * (_targetPitch - _smoothPitch);
+                // 1. Smooth pitch transitions to avoid zipper noise
+                _smoothPitch += 0.005f * (_targetPitch - _smoothPitch);
 
                 // 2. Write input to the ring buffer
                 _ringBuffer[_writeIndex] = pcm[i];
 
                 // 3. Calculate phase increment based on pitch ratio.
-                // d(Delay)/dt = 1 - Pitch
                 float phaseInc = (1f - _smoothPitch) / _windowSize;
                 _phase += phaseInc;
 
@@ -77,7 +77,7 @@
                 while (_phase >= 1f) _phase -= 1f;
                 while (_phase < 0f) _phase += 1f;
 
-                // 4. Calculate delay times (in samples) for the two read heads (180 degrees out of phase)
+                // 4. Calculate delay times (in samples) for the two read heads
                 float delayA = _phase * _windowSize;
                 float phaseB = (_phase + 0.5f) % 1f;
                 float delayB = phaseB * _windowSize;
@@ -90,8 +90,17 @@
                 float weightA = 0.5f - 0.5f * (float)Math.Cos(_phase * Pi2);
                 float weightB = 0.5f - 0.5f * (float)Math.Cos(phaseB * Pi2);
 
-                // 7. Sum the output and write directly to PCM array
-                pcm[i] = (tapA * weightA) + (tapB * weightB);
+                // 7. Sum the output and validate float stability
+                float mixed = (tapA * weightA) + (tapB * weightB);
+
+                if (float.IsNaN(mixed) || float.IsInfinity(mixed))
+                {
+                    pcm[i] = 0f;
+                }
+                else
+                {
+                    pcm[i] = mixed;
+                }
 
                 // 8. Advance the write head using bitwise mask for zero-cost wrapping
                 _writeIndex = (_writeIndex + 1) & _bufferMask;
@@ -115,8 +124,8 @@
             // Calculate absolute read position
             float readPos = _writeIndex - delay;
 
-            // Handle negative wrap-around
-            if (readPos < 0f)
+            // Handle negative wrap-around robustly
+            while (readPos < 0f)
                 readPos += _ringBuffer.Length;
 
             int i0 = (int)readPos;
