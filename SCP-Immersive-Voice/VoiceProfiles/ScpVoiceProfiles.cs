@@ -37,19 +37,19 @@
         {
             if (player == null) return null;
 
-            // 1. Fetch or initialize the permanent context container container for the player
+            // 1. Fetch or initialize the permanent context container for the player
             var container = _stableCache.GetOrAdd(player.PlayerId, id => new PipelineContainer());
 
             // 2. Resolve what preset should be processed at this exact microsecond
             var targetPreset = GetPreset(player);
 
-            // 3. Thread-safe runtime check to see if the state actually mutated
-            if (container.LastAppliedPreset == null || !ReferenceEquals(container.LastAppliedPreset, targetPreset))
+            // 3. AAA FIX: Structural deep-property match instead of unstable high-level memory address check
+            if (container.LastAppliedPreset == null || !ArePresetsAcousticallyIdentical(container.LastAppliedPreset, targetPreset))
             {
                 lock (container.SyncLock)
                 {
-                    // Re-verify after locking to avoid multi-thread state collisions
-                    if (!ReferenceEquals(container.LastAppliedPreset, targetPreset))
+                    // Re-verify under safe thread isolation block
+                    if (container.LastAppliedPreset == null || !ArePresetsAcousticallyIdentical(container.LastAppliedPreset, targetPreset))
                     {
                         SynchronizePipelineGraph(container, targetPreset);
                         container.LastAppliedPreset = targetPreset;
@@ -58,6 +58,31 @@
             }
 
             return container.Pipeline;
+        }
+
+        /// <summary>
+        /// Real-time structural fingerprint comparator. Compares values instead of memory pointers 
+        /// to fully avoid multi-threaded reference locking bugs.
+        /// </summary>
+        private static bool ArePresetsAcousticallyIdentical(ScpVoicePreset a, ScpVoicePreset b)
+        {
+            if (ReferenceEquals(a, b)) return true; // Quick win if memory points to exact same register
+            if (a == null || b == null) return false;
+
+            // Deep value verification of properties that structurally alter our DSP graph chains
+            return Math.Abs(a.Pitch - b.Pitch) < 0.001f &&
+                   Math.Abs(a.Formant - b.Formant) < 0.001f &&
+                   Math.Abs(a.LowPass - b.LowPass) < 0.001f &&
+                   Math.Abs(a.HighPass - b.HighPass) < 0.001f &&
+                   Math.Abs(a.Distortion - b.Distortion) < 0.001f &&
+                   Math.Abs(a.WhisperAmount - b.WhisperAmount) < 0.001f &&
+                   Math.Abs(a.FormantDrift - b.FormantDrift) < 0.001f &&
+                   Math.Abs(a.Subharmonic - b.Subharmonic) < 0.001f &&
+                   Math.Abs(a.Guttural - b.Guttural) < 0.001f &&
+                   Math.Abs(a.DryCrackle - b.DryCrackle) < 0.001f &&
+                   Math.Abs(a.FleshCrackle - b.FleshCrackle) < 0.001f &&
+                   a.Enable == b.Enable &&
+                   a.Mode == b.Mode;
         }
 
         public static void ClearCacheFor(Player player)
