@@ -137,10 +137,10 @@
 
             // --- Filters LAST ---
             if (preset.LowPass > 0f)
-                p.Add(new LowPassEffect(preset.LowPass));
+                p.Add(new LowPassEffect(preset.LowPass, currentSampleRate));
 
             if (preset.HighPass > 0f)
-                p.Add(new HighPassEffect(preset.HighPass));
+                p.Add(new HighPassEffect(preset.HighPass, currentSampleRate));
 
             // --- Digital degradation ---
             if (preset.Bitcrush > 0f)
