@@ -9,11 +9,11 @@
     {
 
         /// <summary>
-        /// The key of this dictionary is UserId.
+        /// The key of this dictionary is PlayerId.
         /// </summary>
-        private readonly Dictionary<string, Scp939VoiceStateController> _states;
+        private readonly Dictionary<int, Scp939VoiceStateController> _states;
 
-        public Scp939DynamicPresetProvider(Dictionary<string, Scp939VoiceStateController> states)
+        public Scp939DynamicPresetProvider(Dictionary<int, Scp939VoiceStateController> states)
         {
             _states = states;
         }
@@ -25,7 +25,7 @@
             if (player.Role != RoleTypeId.Scp939)
                 return false;
 
-            if (!_states.TryGetValue(player.UserId, out var controller))
+            if (!_states.TryGetValue(player.PlayerId, out var controller))
                 return false;
 
             preset = Scp939DynamicPresets.GetPresetForState(controller.CurrentState);

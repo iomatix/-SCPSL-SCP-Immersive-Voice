@@ -14,41 +14,41 @@
         private readonly ImmersiveScpVoiceConfig _config = ImmersiveScpVoicePlugin.StaticConfig;
 
         /// <summary>
-        /// Audio sessions: key = UserId, value = sessionId
+        /// Audio sessions: key = PlayerId, value = sessionId
         /// </summary>
-        private readonly Dictionary<string, int> _sessions = new Dictionary<string, int>();
+        private readonly Dictionary<int, int> _sessions = new Dictionary<int, int>();
 
         /// <summary>
         /// Per-player locks to prevent duplicate StartSession
         /// </summary>
-        private readonly Dictionary<string, object> _locks = new Dictionary<string, object>();
+        private readonly Dictionary<int, object> _locks = new Dictionary<int, object>();
 
-        private object GetLock(string userId)
+        private object GetLock(string playerId)
         {
-            if (!_locks.TryGetValue(userId, out var l))
+            if (!_locks.TryGetValue(playerId, out var l))
             {
                 l = new object();
-                _locks[userId] = l;
+                _locks[playerId] = l;
             }
             return l;
         }
 
         public int StartSession(Player scp)
         {
-            if (_sessions.TryGetValue(scp.UserId, out int existing))
+            if (_sessions.TryGetValue(scp.PlayerId, out int existing))
                 return existing;
 
             int sessionId = DefaultAudioManager.Instance.CreateStreamSession(
                 position: scp.Position,
-                isSpatial: false, // TODO: Bring back to true
-                minDistance: 0.05f,
+                isSpatial: true,
+                minDistance: 0.01f,
                 maxDistance: _config.ProximityDistance,
                 volume: 1f,
                 priority: AudioPriority.High,
                 validPlayersFilter: p => p != null && p.IsReady && p != scp
             );
 
-            _sessions[scp.UserId] = sessionId;
+            _sessions[scp.PlayerId] = sessionId;
 
             Logger.Debug($"[VOICE DEBUG] Session ADDED to dictionary. PlayerId: {scp.PlayerId}, SessionId: {sessionId}");
             Logger.Debug($"[VOICE DEBUG] Total sessions in dictionary: {_sessions.Count}");
@@ -59,10 +59,10 @@
 
         public void StopSession(Player scp)
         {
-            Logger.Debug($"[VOICE DEBUG] StopSession called for player: {scp.Nickname}, UserId: {scp.UserId}");
+            Logger.Debug($"[VOICE DEBUG] StopSession called for player: {scp.Nickname}, PlayerId: {scp.PlayerId}");
             Logger.Debug($"[VOICE DEBUG] Current sessions: {string.Join(", ", _sessions.Keys)}");
 
-            var key = scp.UserId;
+            var key = scp.PlayerId;
 
             lock (GetLock(key))
             {
@@ -97,7 +97,7 @@
                 return;
             }
 
-            var key = scp.UserId;
+            var key = scp.PlayerId;
 
             lock (GetLock(key))
             {
@@ -141,12 +141,13 @@
         {
             foreach (var kvp in _sessions)
             {
-                string userId = kvp.Key;
+                string playerId = kvp.Key;
 
-                Player scp = Player.ReadyList.FirstOrDefault(p => p.UserId == userId);
+                Player scp = Player.ReadyList.FirstOrDefault(p => p.PlayerId == playerId);
                 if (scp == null) continue;
 
                 var sessionId = kvp.Value;
+                Logger.Debug($"[VOICE DEBUG] Updating {playerId} session {sessionId} to position {scp.Position}");
                 DefaultAudioManager.Instance.SetSessionPosition(sessionId, scp.Position);
             }
         }
