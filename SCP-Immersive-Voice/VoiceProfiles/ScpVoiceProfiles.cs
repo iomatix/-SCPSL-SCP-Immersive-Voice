@@ -60,6 +60,13 @@
         {
             var p = new AudioEffectPipeline();
 
+            // --- Input modifiers ---
+            p.Add(new InputGainEffect(1.5f));
+
+            if (preset.UseNoiseGate)
+                p.Add(new NoiseGateEffect(preset.NoiseGateThreshold));
+
+
             // --- Core voice modifiers ---
             if (Math.Abs(preset.Pitch - 1f) > 0.01f)
                 p.Add(new PitchShiftEffect(preset.Pitch));
@@ -139,6 +146,9 @@
             if (preset.Chirp > 0f)
                 p.Add(new ChirpEffect(preset.Chirp));
 
+            // --- Output modifiers ---
+            p.Add(new OutputGainEffect(preset.OutputGain));
+            p.Add(new LimiterEffect(threshold: 0.9f, releaseMs: 50));
             return p;
         }
     }
