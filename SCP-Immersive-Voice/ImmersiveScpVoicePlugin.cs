@@ -23,7 +23,7 @@
         public override string Name => "SCP Voice Chat";
         public override string Description => "Enables proximity voice chat for SCPs and adds audio effects";
         public override string Author => "iomatix";
-        public override Version Version => new Version(1, 0, 0); // Promowany do stabilnej wersji produkcyjnej
+        public override Version Version => new Version(0, 9, 0);
         public override Version RequiredApiVersion { get; } = new Version(LabApiProperties.CompiledVersion);
         #endregion
 
@@ -147,7 +147,7 @@
 
             #endregion
 
-            LabApi.Features.Console.Logger.Info("[SCP Voice Chat] - Modular AAA Engine Successfully Online.");
+            LabApi.Features.Console.Logger.Info($"[SCP Voice Chat] - Modular AAA Engine Successfully Online - {Version} by {Author}");
         }
 
         public override void Disable()
