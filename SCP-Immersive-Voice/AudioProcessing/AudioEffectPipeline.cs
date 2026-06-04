@@ -15,23 +15,16 @@
         {
             foreach (var effect in _effects)
             {
-                // 1. Statystyki przed efektem
+                // Log stats before/after processing each effect
                 var before = Analyze(pcm);
-
-                // 2. Przetwarzanie efektu
                 effect.Process(pcm, samples);
-
-                // 3. Statystyki po efekcie
                 var after = Analyze(pcm);
 
-                // 4. Log diagnostyczny
                 DspProfiler.Log(effect.Name, before, after);
             }
         }
 
-        // -----------------------------
-        // DSP ANALYZER
-        // -----------------------------
+
         public struct DspStats
         {
             public float Rms;
@@ -40,6 +33,11 @@
             public float Snr;
         }
 
+        /// <summary>
+        /// Calculates RMS, peak, noise floor and SNR
+        /// </summary>
+        /// <param name="pcm">PCM data</param>
+        /// <returns>DSP stats</returns>
         public static DspStats Analyze(float[] pcm)
         {
             float sum = 0f;
@@ -56,7 +54,7 @@
             }
 
             float rms = (float)Math.Sqrt(sum / pcm.Length);
-            float noise = rms * 0.1f; // przybliżenie
+            float noise = rms * 0.1f; // not exactly
             float snr = 20f * (float)Math.Log10((rms + 1e-6f) / (noise + 1e-6f));
 
             return new DspStats
@@ -68,9 +66,10 @@
             };
         }
 
-        // -----------------------------
-        // DSP PROFILER
-        // -----------------------------
+        
+        /// <summary>
+        /// Class for logging DSP stats in console
+        /// </summary>
         public static class DspProfiler
         {
             public static void Log(string name, DspStats before, DspStats after)
