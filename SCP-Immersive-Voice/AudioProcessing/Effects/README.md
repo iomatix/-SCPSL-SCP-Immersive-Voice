@@ -36,10 +36,10 @@ These effects alter the fundamental biological or structural properties of the c
 * **Acoustic Objective:** Introduces organic, dynamic instability to the creature’s throat resonance, preventing a static digital timbre and emulating a loss of muscular or psychological vocal control.
 
 #### `LaryngealAsymmetryEffect`
-* **Unit/Scale**: Uncanny asymmetry intensity (`0.0f` to `1.0f`).
-* **Technical Implementation**: Splits the vocal stream into two parallel asymmetrical vocal tract paths, introducing a dynamic, sub-millisecond phase and delay drift ($0.15\text{ ms} - 1.45\text{ ms}$) modulated by an organic slow-frequency tissue LFO ($5.8\text{ Hz}$).
-* **Acoustic Objective**: Simulates biological asymmetry in throat muscles, laryngeal walls, and glottis geometry. This breaks natural vocal symmetry, creating a subtle but highly unsettling "Uncanny Valley" comb-filtering effect—essential for deceptive human mimicry (SCP-939).
- 
+- **Unit / Scale:** Uncanny asymmetry intensity (`0.0f` to `1.0f`).
+- **Technical Implementation:** Splits the vocal stream into two parallel, asymmetrical vocal‑tract paths. Introduces a dynamic sub‑millisecond phase and delay drift (0.15 ms – 1.45 ms), modulated by an organic slow‑frequency tissue LFO (5.8 Hz).
+- **Acoustic Objective:** Simulates biological asymmetry in throat muscles, laryngeal walls, and glottis geometry. This intentionally breaks natural vocal symmetry, producing a subtle but deeply unsettling “uncanny valley” comb‑filtering effect — essential for deceptive human mimicry (SCP‑939).
+
 #### `DemonicOctaverEffect`
 * **Unit/Scale:** Wet mix intensity (`0.0f` to `1.0f`).
 * **Technical Implementation:** Dual-head time-domain crossfading delay network using a power-of-two allocation scheme with fast bitwise wrapping. Features a sub-sample phase interpolator configured to drive a constant-power sub-octave layer (-12 semitones) without execution overhead.
