@@ -1,11 +1,11 @@
 # SCP Immersive Voice
-[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge)](https://github.com/iomatix/-SCPSL-SCP-Immersive-Voice/releases/latest)
-[![GitHub Downloads](https://img.shields.io/github/downloads/iomatix/-SCPSL-SCP-Immersive-Voice/latest/total?sort=date&style=for-the-badge)](https://github.com/iomatix/-SCPSL-SCP-575-NPC/releases/latest)
-
 
 **SCP Immersive Voice** is an enterprise-grade real-time Digital Signal Processing (DSP) and proximity voice chat framework for **SCP: Secret Laboratory** powered by **[LabAPI](https://github.com/northwood-studios/LabAPI)** and **[AudioManagerAPI](https://github.com/iomatix/-SCPSL-AudioManagerAPI/tree/main/AudioManagerAPI)**.
 
 The core real-time, float-native Digital Signal Processing (DSP) effects for the `SCP_Immersive_Voice` subsystem are implemented **within** this repository.
+
+[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge)](https://github.com/iomatix/-SCPSL-SCP-Immersive-Voice/releases/latest)
+[![GitHub Downloads](https://img.shields.io/github/downloads/iomatix/-SCPSL-SCP-Immersive-Voice/latest/total?sort=date&style=for-the-badge)](https://github.com/iomatix/-SCPSL-SCP-575-NPC/releases/latest)
 
 ## Architectural Principles
 
