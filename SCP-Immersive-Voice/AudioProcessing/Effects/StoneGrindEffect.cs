@@ -5,9 +5,9 @@
     using System;
 
     /// <summary>
-    /// AAA Physical Modeling Stone Grinding and Friction Engine for SCP-173.
-    /// Employs a local thread-isolated LCG, sample-rate independent dual-band 
-    /// biquad resonators (Rumble/Grit), and dynamic vocal envelope coupling. Zero allocations.
+    /// AAA Physical Modeling Stick-Slip Stone Grinding and Friction Engine for SCP-173.
+    /// Replaces continuous thermal white noise with a discrete interlocking crystal grid shear matrix.
+    /// Uses asymmetric ring modulation to turn human speech into jagged rock grit.
     /// </summary>
     public class StoneGrindEffect : IAudioEffect
     {
@@ -16,11 +16,9 @@
         private readonly float _intensity;
         private readonly float _sampleRate;
 
-        // Dual-band biquad filters to model stone mass and surface grain properties
         private BiquadFilter _stoneRumbleFilter;
         private BiquadFilter _stoneGritFilter;
 
-        // Stateful tracking parameters
         private uint _lcgState;
         private float _envelope = 0f;
         private float _frictionLfoPhase = 0f;
@@ -28,86 +26,87 @@
         private readonly float _envAttackCoef;
         private readonly float _envReleaseCoef;
         private readonly float _lfoIncrement;
+        private const float TwoPi = (float)(Math.PI * 2.0);
 
         /// <summary>
-        /// Initializes the Stone Grind effect.
+        /// Initializes the tectonic Stone Grind engine.
         /// </summary>
-        /// <param name="intensity">Weight and roughness of the stone-on-concrete sliding friction (0.0f to 2.0f).</param>
-        /// <param name="sampleRate">Engine sample rate from VoiceChatSettings.</param>
         public StoneGrindEffect(float intensity, float sampleRate)
         {
             _intensity = Clamp(intensity, 0f, 2f);
             _sampleRate = sampleRate > 0f ? sampleRate : 48000f;
-
             _lcgState = (uint)Guid.NewGuid().GetHashCode();
 
-            // Band 1: Deep sub-harmonic rumble of heavy internal concrete mass (220Hz)
-            _stoneRumbleFilter.ConfigureBandPass(220f, _sampleRate, q: 2.2f);
+            // AAA FIX: Sub-bass tectonic structural displacement rumble (110Hz)
+            _stoneRumbleFilter.ConfigureBandPass(110f, _sampleRate, q: 5.0f);
 
-            // Band 2: Brittle, high-frequency granular scraping of crushed aggregate particles (2400Hz)
-            _stoneGritFilter.ConfigureBandPass(2400f, _sampleRate, q: 0.8f);
+            // AAA FIX: Dense, crushing aggregate rock-grain abrasive scratch (750Hz)
+            _stoneGritFilter.ConfigureBandPass(750f, _sampleRate, q: 1.8f);
 
-            // Sample-rate independent tracking lag (Slightly slower reaction to simulate mass inertia)
-            _envAttackCoef = (float)Math.Exp(-1000.0 / (15f * _sampleRate));  // 15ms attack
-            _envReleaseCoef = (float)Math.Exp(-1000.0 / (110f * _sampleRate)); // 110ms release
+            _envAttackCoef = (float)Math.Exp(-1000.0 / (15f * _sampleRate));
+            _envReleaseCoef = (float)Math.Exp(-1000.0 / (110f * _sampleRate));
 
-            // Continuous surface unevenness simulation LFO (~3.8 Hz micro-fluctuation rate)
-            _lfoIncrement = 3.8f / _sampleRate;
+            _lfoIncrement = 4.2f / _sampleRate; // 4.2 Hz surface macro-fault rate
         }
 
         public void Process(float[] pcm, int length)
         {
             if (length < 1 || _intensity < 0.01f) return;
 
-            // Global gain staging scaler
-            float frictionGainFactor = _intensity * 0.45f;
+            float frictionGainFactor = _intensity * 0.65f;
 
             for (int i = 0; i < length; i++)
             {
                 float dryInput = pcm[i];
 
-                // 1. Voice envelope follower (Vocal energy dictates the mechanical friction pressure)
                 float absInput = Math.Abs(dryInput);
                 if (absInput > _envelope)
                     _envelope = _envAttackCoef * _envelope + (1f - _envAttackCoef) * absInput;
                 else
                     _envelope = _envReleaseCoef * _envelope + (1f - _envReleaseCoef) * absInput;
 
-                // 2. Advance structural surface unevenness LFO via fast polynomial triangle-to-parabola
                 _frictionLfoPhase += _lfoIncrement;
                 if (_frictionLfoPhase > 1f) _frictionLfoPhase -= 1f;
 
                 float tri = _frictionLfoPhase * 2f;
                 if (tri > 1f) tri = 2f - tri;
-                float surfaceWobble = 4f * tri * (1f - tri); // 0..1 smooth modulator
+                float surfaceWobble = 4f * tri * (1f - tri);
 
-                // 3. Generate high-speed thread-safe local LCG white noise impulse stream
                 _lcgState = _lcgState * 1103515245 + 12345;
-                float rawFrictionNoise = ((float)(_lcgState & 0xFFFF) / 65535f) * 2f - 1f;
 
-                // 4. Process the raw friction source through independent structural resonance bands
-                float massRumble = _stoneRumbleFilter.Process(rawFrictionNoise);
-                float surfaceGrit = _stoneGritFilter.Process(rawFrictionNoise);
+                // AAA FIX (Stick-Slip Macro Modeling):
+                // Instead of streaming continuous white noise (which sounds like sand/sandpaper),
+                // we model interlocking crystal ridges. Sound is only generated when micro-fault thresholds crash.
+                float stickSlipSource = 0f;
+                uint slipThreshold = (uint)(0.22f * uint.MaxValue); // Sparse shear threshold
+                if (_lcgState < slipThreshold)
+                {
+                    stickSlipSource = ((float)(_lcgState & 0xFFFF) / 65535f) * 2f - 1f;
+                }
 
-                // Dynamic cross-modulation: surface grit is modulated by the unevenness wobble LFO
-                float dynamicallyModulatedGrit = surfaceGrit * (0.4f + surfaceWobble * 0.6f);
+                float massRumble = _stoneRumbleFilter.Process(stickSlipSource);
+                float surfaceGrit = _stoneGritFilter.Process(stickSlipSource);
 
-                // Accumulate acoustic layers: 65% deep internal mass weight + 35% granular aggregate scrape
-                float compositeGrind = (massRumble * 0.65f) + (dynamicallyModulatedGrit * 0.35f);
+                float dynamicallyModulatedGrit = surfaceGrit * (0.3f + surfaceWobble * 0.7f);
 
-                // 5. Envelope coupling: grind intensity tracks player voice effort linearly
+                // Heavy 75% internal weight density blend staging
+                float compositeGrind = (massRumble * 0.75f) + (dynamicallyModulatedGrit * 0.25f);
                 float activeGrindLayer = compositeGrind * _envelope * frictionGainFactor;
 
-                // 6. Polynomial soft-clipping saturation to give the concrete scratch a dense, solid boundary
-                float drivenGrind = activeGrindLayer * 2.2f;
+                float drivenGrind = activeGrindLayer * 3.0f;
                 float saturatedGrind = drivenGrind / (1f + Math.Abs(drivenGrind));
 
-                // 7. Sum the completed litosferyczne tarcie node directly back into the live PCM stream
-                pcm[i] = dryInput + saturatedGrind;
+                // AAA FIX (Asymmetric Tectonic Ring-Modulation):
+                // We use a high-frequency stone lattice modulation wave driven directly by the surface wobble LFO
+                // to completely disrupt human pitch components, turning vocals into mineral grinding textures.
+                float mineralModulationWave = (float)Math.Sin(_frictionLfoPhase * TwoPi * 28f); // Harsh intermodulation
+                float lithosphericVoice = dryInput * (1f - (_envelope * _intensity * 0.6f)) +
+                                         (dryInput * mineralModulationWave * _envelope * _intensity * 0.5f);
+
+                pcm[i] = lithosphericVoice + saturatedGrind;
             }
         }
 
-        // High-performance, stack-allocated 2nd order IIR filter structure
         private struct BiquadFilter
         {
             private float _b0, _b1, _b2, _a1, _a2;
@@ -130,12 +129,7 @@
             public float Process(float input)
             {
                 float output = _b0 * input + _b1 * _x1 + _b2 * _x2 - _a1 * _y1 - _a2 * _y2;
-
-                _x2 = _x1;
-                _x1 = input;
-                _y2 = _y1;
-                _y1 = output;
-
+                _x2 = _x1; _x1 = input; _y2 = _y1; _y1 = output;
                 return output;
             }
         }

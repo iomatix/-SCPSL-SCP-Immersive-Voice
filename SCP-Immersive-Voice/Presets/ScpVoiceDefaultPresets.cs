@@ -62,18 +62,20 @@
                 },
 
                 // =================================================================
-                // SCP‑173 (The Sculpture) — Litospheric, zero humanity, crushing mass
+                // SCP‑173 (The Sculpture) — Lithospheric monolithic block, crushing mass
                 // =================================================================
                 [RoleTypeId.Scp173] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 1.15f,
-                    Pitch = 1.00f,          // Intent: neutral baseline (mineral has no human pitch)
-                    Formant = 0.82f,        // Intent: rigid, heavy concrete block internal resonance
-                    StoneCrack = 0.95f,     // Intent: brittle, high-energy discrete Dirac crystal snaps
-                    StoneGrind = 1.15f,     // Intent: deep sub-harmonic mass rumble and tectonic block friction
-                    Distortion = 0.45f,     // Intent: extreme material hardness waveshaping clipping
-                    LowPass = 2000f         // Intent: heavy acoustic dampening through solid concrete layers
+                    Mode = ScpVoicePresetMode.Default,
+                    OutputGain = 2.60f,      // Boosted to compensate for heavy physical dampening
+                    Pitch = 0.85f,           // Intent: heavy, structural mass slowdown
+                    Formant = 0.50f,         // AAA FIX: Extreme throat cavity collapse to destroy human vowels
+                    StoneCrack = 1.35f,      // Intent: brutal, explosive discrete lattice structural ruptures
+                    StoneGrind = 1.20f,      // Intent: tectonic stick-slip friction scraping layer
+                    Distortion = 0.65f,      // Intent: physical material hardness clipping
+                    LowPass = 1100f,         // AAA FIX: Drastic acoustic muffling inside thick solid cured concrete
+                    HighPass = 80f           // Remove absolute sub-bass mud
                 },
 
                 // =================================================================
