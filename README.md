@@ -1,148 +1,173 @@
 # SCP Immersive Voice
-[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge)](https://github.com/iomatix/-SCPSL-SCP-Immersive-Voice/releases/latest)
+
+**SCP Immersive Voice** is an enterprise‑grade real‑time Digital Signal Processing (DSP) and proximity voice chat framework for **SCP: Secret Laboratory**, powered by [LabAPI](https://github.com/northwood-studios/LabAPI) and [AudioManagerAPI](https://github.com/iomatix/-SCPSL-AudioManagerAPI/tree/main/AudioManagerAPI).
+
+All core real‑time, float‑native DSP effects for the `SCP_Immersive_Voice` subsystem are implemented directly within this repository.
+
+[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge)](https://github.com/iomatix/-SCPSL-SCP-Immersive-Voice/releases/latest)  
 [![GitHub Downloads](https://img.shields.io/github/downloads/iomatix/-SCPSL-SCP-Immersive-Voice/latest/total?sort=date&style=for-the-badge)](https://github.com/iomatix/-SCPSL-SCP-575-NPC/releases/latest)
 
+---
 
-**SCP Immersive Voice** is an enterprise-grade real-time Digital Signal Processing (DSP) and proximity voice chat framework for **SCP: Secret Laboratory** powered by **[LabAPI](https://github.com/northwood-studios/LabAPI)** and **[AudioManagerAPI](https://github.com/iomatix/-SCPSL-AudioManagerAPI/tree/main/AudioManagerAPI)**.
+## Architectural principles
 
-The core real-time, float-native Digital Signal Processing (DSP) effects for the `SCP_Immersive_Voice` subsystem are implemented **within** this repository.
+Every effect in the pipeline follows strict **AAA game audio standards**:
 
-## Architectural Principles
+- **In‑place processing** — Each effect implements `IAudioEffect` and operates directly on the native float PCM buffer (`void Process(float[] pcm, int length)`), avoiding redundant memory copies.
+- **Zero allocations** — No heap allocations (`new`) are performed inside critical audio loops. All state, filters, and buffers are created once and reused.
+- **Persistent statefulness (cached DSP)** — Time‑domain and history‑based effects (delays, filters, envelopes) maintain per‑player state in a persistent cache, preventing phase fractures, zipper noise, and clicks.
 
-Every effect implemented in this pipeline adheres to strict **AAA Game Audio Standards**:
-* **In-Place Processing:** Every effect implements `IAudioEffect` and operates directly on the native float PCM buffer (`void Process(float[] pcm, int length)`) to avoid redundant memory copies.
-* **Zero Allocations:** No heap allocations (`new`) are permitted inside the critical audio processing loops. All state variables, filters, and rings are persistent and stack/heap-allocated only during instantiation.
-* **Persistent Statefulness (Cached-DSP):** Effects that rely on time-domain or history data (delays, filters, envelopes) maintain their state context *per player* inside a persistent cache. They are never instantiated per-frame, eliminating phase fractures, zipper noise, and click artifacts.
-
-By bypassing high-overhead frame-by-frame reinstantiations, this framework runs a stateful, thread-safe, and completely zero-allocation processing pipeline. Every SCP is equipped with an organic, character-accurate acoustic model that dynamically reacts to their physical abilities, health states, and environmental conditions in real time.
-
-## **Effects Documentation** - [README.md](SCP-Immersive-Voice/AudioProcessing/Effects/README.md)
-
-
-## 📝 Changelog — Version 1.0.0 (The Foundation Update)
-
-This is the most significant milestone in the project's history. Version 1.0.0 is not just a collection of new effects; it is a total reconstruction of the `SCP Immersive Voice` engine. Every SCP has been re-calibrated, and the audio processing architecture has been rewritten from the ground up to provide studio-grade fidelity with minimal CPU overhead.
-
-### 🏗️ Architecture & Performance
-- **Full Modularity:** The monolithic handler has been decomposed into independent, lightweight modules (`Scp096AudioHandler`, `Scp939AudioHandler`, etc.). Each SCP now manages its state in total isolation.
-- **Zero-Allocation Pipeline:** The entire DSP pipeline now operates in "zero-heap-allocation" mode. By eliminating redundant memory allocations, we guarantee zero jitter and perfect audio continuity, even under heavy server load.
-- **Thread-Safety 2.0:** Pipeline synchronization has been migrated to the `PipelineContainer` level. Atomic operations and `ConcurrentDictionary` usage eliminate race conditions, ending the era of "audio gurgling" or state-lock issues common in older versions.
-
-### 🔊 Comprehensive Roster Rework
-- **Unified Acoustic Matrix:** All SCP roles have been re-tuned based on our internal "Audio Engineer’s Bible." Every preset—from 049 to 3114—now utilizes improved organic resonance algorithms rather than static filters.
-- **State Transition Smoothing:** We implemented advanced transition smoothing across all states. Digital "clicks" and abrupt volume jumps during emotional transitions or attack triggers have been eliminated.
-- **State Watchdogs:** Every SCP state is now guarded by a high-precision temporal watchdog. If the game engine fails to fire a completion event (e.g., during tick rate spikes), the system automatically and seamlessly reverts to the baseline state.
-
-### 🧪 DSP Innovations
-- **Uncanny Valley Generator (`LaryngealAsymmetryEffect`):** Introduced for SCP-939; generates unnatural, biology-inspired asymmetry, perfect for deceptive mimicry.
-- **Airy Whisper Engine:** A complete whisper synthesis overhaul. Replacing radio-like noise with filtered aerodynamic airflow, achieving crystal-clear speech intelligibility.
-- **Real-time Diagnostics:** Integrated an internal floating-point trace engine that detects `NaN` (Not a Number) spikes in real-time, instantly resetting affected modules to protect the global audio stream.
-
-### 🔧 Stability & Reliability
-- Resolved all persistent issues regarding SCPs becoming "stuck" in combat states.
-- Optimized CPU usage via condition-gated gating (DSP nodes are only computed if the player is actively transmitting).
-- Fixed all event-leak vulnerabilities that occurred during hot-reloads.
+This design yields a stateful, thread‑safe, zero‑allocation processing pipeline. Each SCP is modeled with an organic, character‑accurate acoustic profile that reacts in real time to abilities, health, and environment.
 
 ---
 
-## 🚀 The Road Ahead
-Version 1.0.0 serves as the solid, professional-grade foundation I have been working toward. While this build covers the entire roster with absolute precision, the architecture is now flexible enough to support even more complex acoustic phenomena. I am looking forward to exploring further physical modeling and even deeper integration with the game's environmental audio in future updates.
+## Effects documentation
 
-*This project has been a solo journey of technical obsession—thank you for following along and for your interest in the high-fidelity future of SCP: Secret Laboratory voice chat.*
+Detailed documentation for all effects is available in:
 
----
-
-## 🚀 Key Innovations in Version 0.9.0
-
-### 🧵 Thread-Safe Pipeline Isolation
-VoIP packets in SCP:SL are processed asynchronously across worker threads, while game logic fires on the Unity main thread. Version 0.9.0 introduces an isolated `PipelineContainer` synchronization block utilizing high-speed cached reflection field injections. This fully eliminates `CollectionWasModifiedException` crashes and guarantees that changing roles or states will never cause audio drops or gurgling artifacts.
-
-### ⏱️ Asynchronous Watchdog Lifespans
-Transient combat states (such as SCP-939 lunging or SCP-096 prying a gate) are protected by internal high-precision structural watchdogs. Even under extreme server tick rate degradation or dropped network event frames, the system automatically falls back to baseline states (like `IdleWhisper` or `Calm`), preventing frozen or corrupted voices.
-
-### 🎛️ In-Place Phase Continuity
-Instead of destroying and rebuilding audio filters during state shifts (which causes massive DC offset steps and destructive bursts of digital white noise), the 0.9.0 synchronization loop mutates coefficient scalars *in-place*. Buffers, Biquad delay lines, and Feedback Network registers (`Reverb`, `WetDecay`, `Echo`) maintain perfect mathematical phase continuity.
+- [`SCP-Immersive-Voice/AudioProcessing/Effects/README.md`](SCP-Immersive-Voice/AudioProcessing/Effects/README.md)
 
 ---
 
-## ✨ System Features
+## Changelog — Version 1.0.0 (The Foundation Update)
 
-### 🎤 Native Proximity Proxy Routing
-Disables standard global sub-channels to force custom positional 3D audio proxying, with automated safeguards for radio-based entities (SCP-079).
+Version 1.0.0 is a complete reconstruction of the **SCP Immersive Voice** engine. All SCPs have been recalibrated and the audio architecture has been redesigned for studio‑grade fidelity with minimal CPU overhead.
 
-### 🧠 Dynamic Modular Maszyny Stanów
-Fully decoupled event handlers manage individual SCP gameplay triggers independently, eliminating monolithic architectural bloat.
+### Architecture & performance
 
-### 🧬 Real-Time Production Profiling
-Includes a band-limited condition-gated diagnostics engine to monitor Signal-to-Noise Ratio (SNR), RMS energy shifts, and digital clipping thresholds without draining CPU cycles during live gameplay.
+- **Full modularity** — The former monolithic handler has been split into independent modules (`Scp096AudioHandler`, `Scp939AudioHandler`, etc.), each managing its own state.
+- **Zero‑allocation pipeline** — The DSP pipeline now runs in a fully zero‑heap‑allocation mode, ensuring stable performance even under heavy load.
+- **Thread‑safety 2.0** — Synchronization has been moved to the `PipelineContainer` level. Atomic operations and `ConcurrentDictionary` usage eliminate race conditions and audio “gurgling” or state‑lock issues.
 
----
+### Comprehensive roster rework
 
-## 🎚️ Production-Grade DSP Effects Matrix
+- **Unified acoustic matrix** — All SCP roles have been retuned using improved organic resonance algorithms instead of static filters.
+- **State transition smoothing** — Advanced smoothing removes digital clicks and abrupt volume jumps during emotional or combat transitions.
+- **State watchdogs** — High‑precision temporal watchdogs automatically revert SCPs to baseline states if completion events are missed.
 
-All modular components are explicitly engineered for float-native operations directly inside the raw PCM stream:
+### DSP innovations
 
-* **NoiseGateEffect** — Studio-grade follower with independent Attack/Hold/Release exponential RC filters.
-* **PitchShiftEffect** — Crossfading time-domain circular buffer with Hann window modulation.
-* **FormantShiftEffect & Drift** — Cascaded 4-Band Biquad Resonator Matrix with dynamic LFO center-frequency smearing.
-* **SubharmonicGrowlEffect** — Phase-locked sub-octave frequency divider producing heavy chest-rattling low-end.
-* **GutturalResonanceEffect** — Feedback comb-filtering coupled with an asymmetric waveshaper replicating laryngeal rasp.
-* **WhisperFilterEffect** — Amplitude-modulated pink noise matrix combined with spectral bandpass tracking.
-* **FleshCrackle / DryCrackle** — Stochastic impulse generators driving rapid high-frequency granular transients.
-* **StoneCrack / StoneGrind** — Peak-amplitude triggered physical-modeling fracture models.
-* **PocketDimensionEchoEffect** — Chaotic non-Euclidean phase-inversion feedback matrix.
-* **WetDecay & Reverb** — 4x4 Feedback Delay Networks utilizing Householder unitary matrix diffusion.
-* **Bitcrush & SampleRateReducer** — Mid-tread quantization and clock-divider aliasing modules.
-* **GlitchBurst & StaticNoise** — Micro-buffer capture looping arrays mimicking hardware underruns and RF interference.
+- **Uncanny Valley Generator (`LaryngealAsymmetryEffect`)** — New asymmetry engine for SCP‑939, producing unsettling, biology‑inspired vocal behavior ideal for mimicry.
+- **Airy Whisper Engine** — Whisper synthesis overhaul replacing radio‑like noise with filtered aerodynamic airflow for clear intelligibility.
+- **Real‑time diagnostics** — Internal floating‑point trace engine detects `NaN` spikes and resets affected modules to protect the global audio stream.
+
+### Stability & reliability
+
+- Resolved all known issues with SCPs becoming stuck in combat states.
+- Optimized CPU usage via condition‑gated DSP (nodes are processed only while the player is transmitting).
+- Fixed event‑leak problems occurring during hot‑reloads.
 
 ---
 
-## 🧠 Dynamic State Architecture
+## The road ahead
 
-### 🩸 SCP‑096 — Hysterical Despair System
-Tracks stress parameters to scale acoustic instability:
-- **Calm / Crying** — Deep FormantDrift laryngeal tremolo layered with high-intensity unvoiced sobbing.
-- **Trying Not to Cry** — Extreme vocal chord constriction using rigid saturation.
-- **Enraging / Enraged** — Shifting fundamental frequencies into an ear-piercing scream backed by sub-harmonic low-end blocks.
-
-### 🐾 SCP‑939 — Biomorphic Camouflage System
-Balances predatory intent with eerie mimicry:
-- **Idle Whisper / Focused** — Pristine bandpass-filtered whisper matrices.
-- **Mimicking** — High human fundamental replication leaking micro-LFO drift and slimy throat articulation.
-- **Attacking / Lunging** — Complete unmasking into visceral laryngeal gravel and sub-octave roars.
-
-### 🫀 SCP‑3114 — Skeletal Anatomy System
-Manages mechanical bone friction layered with organic tissues:
-- **Undisguised** — High-tension calcium snapping and ligaments cracking.
-- **Disguised** — Psychoacoustic human mimicry leaking trace structural full-flesh crawls.
-- **Strangling** — Peak larynx friction waveshaping saturation to maximize voice presence.
+Version 1.0.0 provides a solid, production‑grade foundation for future work, including more advanced physical modeling and deeper integration with environmental audio systems.
 
 ---
 
-## 🔧 Configuration
+## Key innovations in Version 0.9.0
 
-All SCP presets are fully configurable via the plugin config file:
+### Thread‑safe pipeline isolation
 
-- Enable/disable proximity voice 
-- Per‑role voice presets 
-- Per‑effect intensity 
-- Forbidden proximity roles 
-- Dynamic preset providers 
+VoIP packets are processed asynchronously on worker threads, while game logic runs on the Unity main thread. Version 0.9.0 introduces an isolated `PipelineContainer` synchronization block using high‑speed cached reflection field injection, eliminating `CollectionWasModifiedException` crashes and preventing audio drops during role or state changes.
 
----
+### Asynchronous watchdog lifespans
 
-## 📝 Changelog — Version 0.9.0
+Transient combat states (e.g., SCP‑939 lunges, SCP‑096 prying gates) are guarded by high‑precision watchdogs. Even under severe tick‑rate degradation or dropped events, the system automatically falls back to safe baseline states such as `IdleWhisper` or `Calm`.
 
-- **Architecture Overhaul:** Disassembled monolithic handlers into clean, decoupled, single-responsibility modules.
-- **Thread Safety:** Implemented `ConcurrentDictionary` and explicit pipeline lock synchronization.
-- **Phase Continuity:** Upgraded reconciliation logic using cached reflection injections.
-- **Watchdog Implementation:** Added high-precision time limits to combat states.
-- **Audio Tuning:** Rewrote 100% of default and dynamic presets for SCP-096, SCP-106, SCP-939, and SCP-3114.
-- **Profiler Optimization:** Replaced active performance loops with boolean-gated conditional switches.
+### In‑place phase continuity
+
+Instead of destroying and recreating filters during state changes, the synchronization loop mutates coefficients in place. Buffers, Biquad delay lines, and feedback registers (`Reverb`, `WetDecay`, `Echo`) maintain phase continuity and avoid DC jumps and white‑noise bursts.
 
 ---
 
-## 🔗 Download & Support
+## System features
 
-* **Download:** [GitHub Releases](https://github.com/iomatix/-SCPSL-SCP-Immersive-Voice/releases/latest)
-* **Support:** [Buy Me A Coffee](https://buymeacoffee.com/iomatix)
+### Native proximity proxy routing
+
+Standard global sub‑channels are disabled to enforce custom positional 3D audio proxying, with automatic safeguards for radio‑based entities such as SCP‑079.
+
+### Dynamic modular state machines
+
+Decoupled event handlers manage each SCP’s gameplay triggers independently, removing monolithic architectural bloat.
+
+### Real‑time production profiling
+
+A band‑limited, condition‑gated diagnostics engine monitors SNR, RMS energy shifts, and clipping thresholds without impacting runtime performance.
+
+---
+
+## Production‑grade DSP effects matrix
+
+All components are engineered for float‑native operation directly on the PCM stream:
+
+- **NoiseGateEffect** — Studio‑grade follower with independent Attack/Hold/Release RC filters  
+- **PitchShiftEffect** — Time‑domain circular buffer with Hann‑windowed crossfading  
+- **FormantShiftEffect & Drift** — 4‑band Biquad resonator matrix with LFO‑driven center‑frequency smearing  
+- **SubharmonicGrowlEffect** — Phase‑locked sub‑octave generator for heavy low‑end  
+- **GutturalResonanceEffect** — Feedback comb filtering with asymmetric waveshaping for laryngeal rasp  
+- **WhisperFilterEffect** — Amplitude‑modulated pink‑noise matrix with spectral bandpass tracking  
+- **FleshCrackle / DryCrackle** — Stochastic impulse generators for granular high‑frequency transients  
+- **StoneCrack / StoneGrind** — Peak‑triggered physical‑model fracture and grinding models  
+- **PocketDimensionEchoEffect** — Chaotic non‑Euclidean phase‑inversion feedback matrix  
+- **WetDecay & Reverb** — 4×4 Feedback Delay Networks with Householder diffusion  
+- **Bitcrush & SampleRateReducer** — Mid‑tread quantization and clock‑divider aliasing  
+- **GlitchBurst & StaticNoise** — Micro‑buffer capture and looping for hardware‑style underruns and RF interference  
+
+---
+
+## Dynamic state architecture
+
+### SCP‑096 — Hysterical Despair System
+
+Tracks stress to scale acoustic instability:
+
+- **Calm / Crying** — Deep formant drift and laryngeal tremolo layered with intense unvoiced sobbing  
+- **Trying Not to Cry** — Strong vocal‑cord constriction with rigid saturation  
+- **Enraging / Enraged** — Rising fundamentals into piercing screams backed by subharmonic low‑end  
+
+### SCP‑939 — Biomorphic Camouflage System
+
+Balances predatory intent with uncanny mimicry:
+
+- **Idle Whisper / Focused** — Clean, band‑limited whisper matrices  
+- **Mimicking** — Human‑like fundamentals with micro‑LFO drift and wet throat articulation  
+- **Attacking / Lunging** — Fully exposed gravel, growls, and sub‑octave roars  
+
+### SCP‑3114 — Skeletal Anatomy System
+
+Combines mechanical bone friction with organic tissue layers:
+
+- **Undisguised** — High‑tension calcium snapping and ligament cracking  
+- **Disguised** — Human mimicry with subtle full‑flesh structural noise  
+- **Strangling** — Peak larynx friction and saturation for maximum presence  
+
+---
+
+## Configuration
+
+All SCP presets are configurable via the plugin configuration file:
+
+- Enable/disable proximity voice  
+- Per‑role voice presets  
+- Per‑effect intensity  
+- Forbidden proximity roles  
+- Dynamic preset providers  
+
+---
+
+## Changelog — Version 0.9.0
+
+- Architecture overhaul into clean, decoupled, single‑responsibility modules  
+- Thread‑safe pipeline synchronization using `ConcurrentDictionary` and explicit locks  
+- Phase‑continuity improvements via cached reflection‑based reconciliation  
+- High‑precision watchdogs for combat states  
+- Complete preset retuning for SCP‑096, SCP‑106, SCP‑939, and SCP‑3114  
+- Profiler optimization with boolean‑gated diagnostic switches  
+
+---
+
+## Download & support
+
+- **Download:** [GitHub Releases](https://github.com/iomatix/-SCPSL-SCP-Immersive-Voice/releases/latest)  
+- **Support:** [Buy Me A Coffee](https://buymeacoffee.com/iomatix)
