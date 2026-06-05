@@ -80,6 +80,11 @@ These modules generate synthetic acoustic layers layered directly over the speec
 * **Technical Implementation:** Stochastic impulse generator driven exponentially by the vocal energy level, generating rapid, high-frequency granular transients.
 * **Acoustic Objective:** Emulates the horrific, wet sound of shifting tissues, flexing wet muscles, and squelching biology (e.g., shifting skin or flesh-monsters).
 
+#### `DeathRattleEffect`
+* **Unit/Scale:** Viscous choking intensity (`0.0f` to `1.0f`).
+* **Technical Implementation:** A voice-envelope driven stochastic LCG bubbling oscillator (operating in the sub-audio 14 Hz - 40 Hz band) modulating both the amplitude of the signal and the delay path of a 256-sample feedback comb-filter (0.5 ms - 2.2 ms delay bounds).
+* **Acoustic Objective:** Models the acoustic profile of sound waves scattering through pooled liquids and necrotic fluids inside a reanimated trachea. Replaces majestic low-end doubling with a visceral, choking, fluid-filled gasping struggle for breath—essential for reanimated corpses.
+
 #### `DryCrackleEffect`
 * **Unit/Scale:** Granular density (`0.0f` to `1.0f`).
 * **Technical Implementation:** High-Q sparse impulse generator producing erratic, sharp, low-energy transient crackles.
