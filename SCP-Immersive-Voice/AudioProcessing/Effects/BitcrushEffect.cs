@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA High-performance Cybernetic Bitcrusher.
+    ///  High-performance Cybernetic Bitcrusher.
     /// Bypasses analog-style dithering smoothers to enforce raw, cold, non-linear mid-tread 
     /// digital step truncation, producing authentic crystalline digital quantization artifacts.
     /// </summary>
@@ -42,7 +42,7 @@
             {
                 float v = pcm[i];
 
-                // AAA FIX: Removed TPDF Dither completely. 
+                //  FIX: Removed TPDF Dither completely. 
                 // Leaving the quantization un-dithered forces harsh, sterile, pixelated digital step boundaries 
                 // native to corrupted computer mainframes and cold synthetic AI processors.
                 if (v > 1f) v = 1f;

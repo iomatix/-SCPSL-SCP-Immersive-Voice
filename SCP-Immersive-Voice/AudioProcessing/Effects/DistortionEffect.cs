@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Analog-modeled asymmetric tube distortion.
+    ///  Analog-modeled asymmetric tube distortion.
     /// Generates warm even harmonics for biological vocal strain using an optimized 
     /// polynomial waveshaper, an integrated DC-blocker, and high-frequency roll-off.
     /// </summary>

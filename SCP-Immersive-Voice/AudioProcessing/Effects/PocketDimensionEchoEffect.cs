@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Non-Euclidean Extra-dimensional Echo Matrix tailored for SCP-106.
+    ///  Non-Euclidean Extra-dimensional Echo Matrix tailored for SCP-106.
     /// Employs a sample-rate independent power-of-two ring buffer, fractional linear interpolation,
     /// fast polynomial LFOs and an internal feedback All-Pass phase-smear filter. Zero allocations.
     /// </summary>

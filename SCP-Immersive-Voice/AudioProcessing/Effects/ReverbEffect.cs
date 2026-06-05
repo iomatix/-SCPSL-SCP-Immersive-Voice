@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Studio-grade Schroeder-Moorer Reverb Engine.
+    ///  Studio-grade Schroeder-Moorer Reverb Engine.
     /// Employs 4 parallel low-pass feedback comb filters for structural echo density
     /// and 2 cascaded all-pass filters for smooth spectral diffusion. Zero allocations in loop.
     /// </summary>

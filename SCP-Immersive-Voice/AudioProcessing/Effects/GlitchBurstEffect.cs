@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Digital Glitch-Burst and Buffer Fracture Engine tailored for SCP-079.
+    ///  Digital Glitch-Burst and Buffer Fracture Engine tailored for SCP-079.
     /// Employs sample-rate independent millisecond timing, a thread-safe local LCG, 
     /// sample-and-hold stutter quantization, and an optimized digital foldback waveshaper.
     /// </summary>

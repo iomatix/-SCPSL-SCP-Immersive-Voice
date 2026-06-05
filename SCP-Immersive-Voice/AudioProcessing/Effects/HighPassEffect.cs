@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Stateful 2nd-order Butterworth High-Pass filter (12 dB/octave).
+    ///  Stateful 2nd-order Butterworth High-Pass filter (12 dB/octave).
     /// Safely strips out low-end mud, rumble or proximity bass spikes. 
     /// Ideal for radio intercom transmission style or small loudspeaker emulation.
     /// </summary>

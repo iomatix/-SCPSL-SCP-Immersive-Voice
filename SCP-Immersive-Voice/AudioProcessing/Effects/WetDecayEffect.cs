@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Organic wet-decay engine simulating viscous fluid reflections and moist tissue.
+    ///  Organic wet-decay engine simulating viscous fluid reflections and moist tissue.
     /// Employs a sample-rate independent micro-diffuser delay line, a stateful low-frequency 
     /// fluid bubble resonator, and an ultra-fast LCG randomizer. Zero-allocation.
     /// </summary>

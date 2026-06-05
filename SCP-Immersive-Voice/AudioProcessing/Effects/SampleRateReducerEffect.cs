@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Digital clock-divider sample rate reducer (downsampler).
+    ///  Digital clock-divider sample rate reducer (downsampler).
     /// Employs a persistent frame-independent phase accumulator, a high-speed LCG clock jitter 
     /// emulator, and a low-quality reconstruction DAC filter to generate authentic aliasing.
     /// </summary>

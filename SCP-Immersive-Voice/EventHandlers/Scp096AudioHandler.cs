@@ -3,12 +3,15 @@
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.Scp096Events;
     using PlayerRoles;
+    using PlayerRoles.PlayableScps.Scp096;
     using SCP_Immersive_Voice.Presets.Dynamics;
     using SCP_Immersive_Voice.Presets.Dynamics.Core;
     using SCP_Immersive_Voice.Presets.Dynamics.Enums;
+    using System;
 
     /// <summary>
     /// Handles discrete game state transitions for SCP-096 and routes them to the generic dynamic voice state manager.
+    /// Utilizing the unified core state engine to prevent race conditions.
     /// </summary>
     public class Scp096AudioHandler
     {
@@ -29,64 +32,76 @@
             );
         }
 
-        /// <summary>
-        /// Session cleanup hook triggered upon player death.
-        /// </summary>
         public void OnPlayerDied(PlayerDeathEventArgs ev)
         {
-            if (ev != null && ev.Player != null)
-            {
-                Manager.RemovePlayer(ev.Player);
-            }
+            if (ev != null && ev.Player != null) Manager.RemovePlayer(ev.Player);
         }
 
-        /// <summary>
-        /// Session cleanup hook triggered when a player changes their role class.
-        /// </summary>
         public void OnChangedRole(PlayerChangedRoleEventArgs ev)
         {
-            if (ev != null && ev.Player != null)
+            if (ev != null && ev.Player != null) Manager.RemovePlayer(ev.Player);
+        }
+
+        // ==========================================
+        // MASTER STATE ENGINE RECEPTOR (FIX)
+        // ==========================================
+        public void On096ChangedState(Scp096ChangedStateEventArgs ev)
+        {
+            if (ev == null || ev.Player == null) return;
+
+            switch (ev.State)
             {
-                Manager.RemovePlayer(ev.Player);
+                case Scp096RageState.Docile:
+                    // Fully calmed down and normalized, return straight to trembling Calm baseline
+                    Manager.ResetToDefault(ev.Player);
+                    break;
+
+                case Scp096RageState.Distressed:
+                    // Triggered! Instantly shifts into the pathetic, heavy sobbing layout
+                    Manager.SetState(ev.Player, Scp096VoiceState.Crying);
+                    break;
+
+                case Scp096RageState.Enraged:
+                    // Active screaming rampage mode, triggers the devastating demonic dual-tone engine
+                    Manager.SetState(ev.Player, Scp096VoiceState.Enraged);
+                    break;
+
+                case Scp096RageState.Calming:
+                    // Rage timeout cooldown. Force the choked throat "TryingNotToCry" layout for 5.5 seconds
+                    Manager.SetState(ev.Player, Scp096VoiceState.TryingNotToCry, 5.5f);
+                    break;
             }
         }
 
-        public void On096StartingCrying(Scp096StartCryingEventArgs ev)
-        {
-            if (ev != null) Manager.SetState(ev.Player, Scp096VoiceState.Crying);
-        }
-
-        public void On096StartedCrying(Scp096StartedCryingEventArgs ev)
-        {
-            if (ev != null) Manager.SetState(ev.Player, Scp096VoiceState.Crying);
-        }
-
-        public void On096Enraging(Scp096EnragingEventArgs ev)
-        {
-            // Protects the pipeline with a 6-second transient safety watchdog window
-            if (ev != null) Manager.SetState(ev.Player, Scp096VoiceState.Enraging, 6.0f);
-        }
-
-        public void On096Enraged(Scp096EnragedEventArgs ev)
-        {
-            if (ev != null) Manager.SetState(ev.Player, Scp096VoiceState.Enraged);
-        }
-
-        public void On096TryingNotToCry(Scp096TryingNotToCryEventArgs ev)
-        {
-            if (ev != null) Manager.SetState(ev.Player, Scp096VoiceState.TryingNotToCry);
-        }
-
+        // ==========================================
+        // TACTICAL GAMEPLAY OVERLAYS
+        // ==========================================
         public void On096Charging(Scp096ChargingEventArgs ev)
         {
-            // Protects the pipeline with a 4-second structural lunge duration window
-            if (ev != null) Manager.SetState(ev.Player, Scp096VoiceState.Charging, 4.0f);
+            // Inject bull-rush sprint pressure overlay (automatically expires after 4 seconds)
+            if (ev != null && ev.Player != null)
+                Manager.SetState(ev.Player, Scp096VoiceState.Charging, 4.0f);
         }
 
         public void On096Charged(Scp096ChargedEventArgs ev)
         {
-            // Seamlessly loops the audio profile back into the calm tracking baseline
-            if (ev != null) Manager.ResetToDefault(ev.Player);
+            // When the sprint lunge finishes, drop back to the active master rage state
+            if (ev != null && ev.Player != null)
+                Manager.SetState(ev.Player, Scp096VoiceState.Enraged);
+        }
+
+        public void On096PryingGate(Scp096PryingGateEventArgs ev)
+        {
+            // Severe kinetic door-crushing grunt layout injection
+            if (ev != null && ev.Player != null)
+                Manager.SetState(ev.Player, Scp096VoiceState.PryingGate);
+        }
+
+        public void On096PriedGate(Scp096PriedGateEventArgs ev)
+        {
+            // Recover from door damage execution back into standard rage
+            if (ev != null && ev.Player != null)
+                Manager.SetState(ev.Player, Scp096VoiceState.Enraged);
         }
     }
 }

@@ -4,7 +4,7 @@
     using System.Collections.Generic;
 
     /// <summary>
-    /// AAA Default SCP voice presets designed for natural, cinematic and character‑accurate timbre.
+    ///  Default SCP voice presets designed for natural, cinematic and character‑accurate timbre.
     /// Perfectly calibrated for the reconstructed high-performance stateful DSP pipeline matrix.
     /// </summary>
     public static class ScpVoiceDefaultPresets
@@ -19,6 +19,7 @@
                 [RoleTypeId.Scp049] = new ScpVoicePreset
                 {
                     Enable = true,
+                    Mode = ScpVoicePresetMode.Default,
                     OutputGain = 2.8f,
                     Pitch = 0.82f,          // Intent: deeper, aristocratic, controlled pitch
                     Formant = 0.85f,        // Intent: elongated throat cavity mimicking the ceramic beak
@@ -70,11 +71,11 @@
                     Mode = ScpVoicePresetMode.Default,
                     OutputGain = 2.60f,      // Boosted to compensate for heavy physical dampening
                     Pitch = 0.85f,           // Intent: heavy, structural mass slowdown
-                    Formant = 0.50f,         // AAA FIX: Extreme throat cavity collapse to destroy human vowels
+                    Formant = 0.50f,         //  FIX: Extreme throat cavity collapse to destroy human vowels
                     StoneCrack = 1.35f,      // Intent: brutal, explosive discrete lattice structural ruptures
                     StoneGrind = 1.20f,      // Intent: tectonic stick-slip friction scraping layer
                     Distortion = 0.65f,      // Intent: physical material hardness clipping
-                    LowPass = 1100f,         // AAA FIX: Drastic acoustic muffling inside thick solid cured concrete
+                    LowPass = 1100f,         //  FIX: Drastic acoustic muffling inside thick solid cured concrete
                     HighPass = 80f           // Remove absolute sub-bass mud
                 },
 
@@ -85,9 +86,10 @@
                 {
                     Enable = true,
                     IsGlobalTransmission = true,
-                    OutputGain = 2.25f,
+                    OutputGain = 2.45f,
                     Pitch = 0.52f,          // Intent: ancient, sub-octave dimensional abyss depth
                     Formant = 0.48f,        // Intent: fully collapsed, rotted vocal cavity architecture
+                    DemonicOctaverMix = 0.25f,     // Sub-bass expander anchoring his physical weight in the sub-frequency floor
                     Distortion = 0.65f,     // Intent: severe acidic corrosion texture destroying wave boundaries
                     LowPass = 850f,         // Intent: extreme, suffocating damp mud and subterranean dirt muffling
                     Reverb = 0.40f,         // Intent: baseline environment containment leakage
@@ -112,41 +114,45 @@
                 },
 
                 // =================================================================
-                // SCP‑079 (The Old AI) — Sterile, cold machine intelligence mainframe
+                // SCP‑079 (The Old AI) — Sterile Machine Mainframe Core
                 // =================================================================
                 [RoleTypeId.Scp079] = new ScpVoicePreset
                 {
                     Enable = true,
                     Mode = ScpVoicePresetMode.Default,
-                    OutputGain = 2.40f,
-                    Pitch = 0.92f,
+                    OutputGain = 2.50f,
+                    Pitch = 0.95f,           // Keep fundamental clear for AI bot voice texturing
                     Formant = 1.05f,
-                    Bitcrush = 0.65f,
-                    SampleRateReduce = 0.50f,
-                    Glitch = 0.45f,
-                    StaticNoise = 0.00f,
-                    Distortion = 0.12f,
-                    Subharmonic = 0.45f,
-                    DataBurst = 0.65f,       // FIX: Use the explicit digital data processor instead of bird chirps!
-                    HighPass = 80f,
-                    LowPass = 7000f
+                    DemonicOctaverMix = 0.17f,      // Generates a pixelated dual-voice supercomputer entity layer
+                    SiliconModulation = 0.75f, // Cold, inhuman metallic intermodulation synthesis
+                    Bitcrush = 0.60f,        // Increased to violently fracture the sub-octave into binary steps
+                    SampleRateReduce = 0.55f, // Heavy digital aliasing artifacts
+                    Glitch = 0.40f,
+                    StaticNoise = 0.045f,     // A little of analog fuzz
+                    Distortion = 0.15f,
+                    Subharmonic = 0.20f,     // Sub-bass room hum
+                    DataBurst = 0.70f,       // High-frequency binary tracks
+                    HighPass = 70f,          // Unblock the new deep octaver floor
+                    LowPass = 7500f
                 },
 
                 // =================================================================
-                // SCP‑049‑2 (The Genzombie) — Guttural, sub-harmonic undead rattle
+                // SCP‑049‑2 (The Cured) — Possessed Corpse Necrotic Ghoul
                 // =================================================================
                 [RoleTypeId.Scp0492] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 1.45f,
-                    Pitch = 0.62f,          // Intent: rotting throat depth
-                    Formant = 0.75f,        // Intent: deadened, loose tissue volume
-                    Guttural = 0.95f,       // Intent: aggressive, rasping ventricular fold false-cord vibration
-                    Subharmonic = 0.85f,    // Intent: phase-locked chest growl frequency divider (demonic tone)
-                    DryCrackle = 0.55f,     // Intent: rigor mortis joint cracking and bone friction
-                    WetDecay = 0.40f,       // Intent: wet decomposition echo trail
-                    LowPass = 1400f,        // Intent: deadened, muddy frequency absorption boundaries
-                    HighPass = 120f         // Intent: clean out sub-bass microphone proximity mud
+                    Mode = ScpVoicePresetMode.Default,
+                    OutputGain = 2.40f,
+                    Pitch = 0.85f,           // Slight biological heavy drag
+                    Formant = 0.55f,         // Massive elongated rotted neck structure
+                    DemonicOctaverMix = 0.70f,      // Cinematic movie demon double-voice effect
+                    Guttural = 0.65f,        // Deep false-vocal cord rasp tearing the air
+                    FleshCrackle = 0.50f,    // Wet bone shifting and muscle rupture transients during speech
+                    Distortion = 0.45f,      // Organic throat strain compression
+                    LowPass = 1800f,         // Let the piercing demonic scream pass through
+                    HighPass = 90f,          // Clean out mud floor
+                    Reverb = 0.25f           // Mild local body cavity resonance
                 },
 
                 // =================================================================

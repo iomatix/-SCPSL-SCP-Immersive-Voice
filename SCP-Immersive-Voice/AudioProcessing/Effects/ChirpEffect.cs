@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Avian Syrinx Modeling Engine for creature chirps and flamingo vocalizations.
+    ///  Avian Syrinx Modeling Engine for creature chirps and flamingo vocalizations.
     /// Driven by pure harmonic sine wave down-sweeps exciting an organic avian resonator.
     /// </summary>
     public class ChirpEffect : IAudioEffect

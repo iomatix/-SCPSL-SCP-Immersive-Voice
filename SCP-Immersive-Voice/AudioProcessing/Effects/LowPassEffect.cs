@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Stateful 2nd-order Butterworth Low-Pass filter (12 dB/octave).
+    ///  Stateful 2nd-order Butterworth Low-Pass filter (12 dB/octave).
     /// Pre-calculates stable coefficients to maximize performance and smoothly 
     /// muffles high frequencies. Ideal for SCP-049 mask or heavy physical occlusions.
     /// </summary>

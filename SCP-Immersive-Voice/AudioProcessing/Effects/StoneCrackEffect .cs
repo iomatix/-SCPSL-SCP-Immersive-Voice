@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Physical Modeling Stone Fracture Generator tailored for SCP-173.
+    ///  Physical Modeling Stone Fracture Generator tailored for SCP-173.
     /// Excites a low-frequency high-Q modal concrete resonator matrix using sparse, explosive
     /// impulse streams, while actively cross-modulating the voice buffer to strip humanity.
     /// </summary>
@@ -37,10 +37,10 @@
             _sampleRate = sampleRate > 0f ? sampleRate : 48000f;
             _lcgState = (uint)Guid.NewGuid().GetHashCode();
 
-            // AAA FIX: Deep structural concrete mass resonance (220Hz) with extreme Q for solid metallic-rock thud
+            //  FIX: Deep structural concrete mass resonance (220Hz) with extreme Q for solid metallic-rock thud
             _stoneBodyResonator.ConfigureBandPass(220f, _sampleRate, q: 38.0f);
 
-            // AAA FIX: Mid-range stone surface cleavage fracture line (1100Hz) with high rigidity
+            //  FIX: Mid-range stone surface cleavage fracture line (1100Hz) with high rigidity
             _brittleSurfaceResonator.ConfigureBandPass(1100f, _sampleRate, q: 16.0f);
 
             _envAttackCoef = (float)Math.Exp(-1000.0 / (3f * _sampleRate));
@@ -51,7 +51,7 @@
         {
             if (length < 1 || _intensity < 0.01f) return;
 
-            // AAA FIX: Drastically lowered base frequency to produce rare, massive impacts instead of sandy grain buzz
+            //  FIX: Drastically lowered base frequency to produce rare, massive impacts instead of sandy grain buzz
             float baseTriggerChance = (0.0012f * _intensity) / _sampleRate;
             uint triggerThreshold = (uint)(baseTriggerChance * uint.MaxValue);
 
@@ -91,7 +91,7 @@
                         float snapSign = ((_lcgState & 0x2000) != 0) ? 1f : -1f;
                         structuralImpulse = snapSign * _cascadeEnergy;
 
-                        // AAA FIX: Extended time gap (25ms to 115ms) to separate impulses into hard, heavy macroscopic events
+                        //  FIX: Extended time gap (25ms to 115ms) to separate impulses into hard, heavy macroscopic events
                         uint lcgBits = _lcgState * 1103515245 + 12345;
                         float deltaMod = (float)(lcgBits & 0xFFFF) / 65535f;
                         float timeGapMs = 25f + (deltaMod * 90f);
@@ -116,7 +116,7 @@
                 float wetMix = _intensity * 0.65f;
                 if (wetMix > 0.85f) wetMix = 0.85f;
 
-                // AAA FIX (Vocal Shredder Cross-Modulation): 
+                //  FIX (Vocal Shredder Cross-Modulation): 
                 // The physical fracture actively deconstructs and cancels out the phase of the human voice stream.
                 // When stone breaks, human vocal identity is suppressed and shredded.
                 float voiceDestructionFactor = 1.0f - (Math.Abs(hardShapedCrack) * 1.6f);

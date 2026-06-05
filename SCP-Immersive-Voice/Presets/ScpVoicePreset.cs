@@ -15,8 +15,10 @@
         public float HighPass { get; set; } = 0f;
         public float Reverb { get; set; } = 0f;
         public float Tremolo { get; set; } = 0f;
+        public float SiliconModulation { get; set; } = 0f;
         public float BreathNoise { get; set; } = 0f;
         public float WhisperAmount { get; set; } = 0f;
+        public float DemonicOctaverMix { get; set; } = 0f;
         public float StoneCrack { get; set; } = 0f;
         public float StoneGrind { get; set; } = 0f;
         public float WetDecay { get; set; } = 0f;

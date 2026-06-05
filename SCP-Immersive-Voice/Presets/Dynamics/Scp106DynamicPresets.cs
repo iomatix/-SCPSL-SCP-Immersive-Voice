@@ -4,7 +4,7 @@
     using SCP_Immersive_Voice.Presets.Dynamics.Enums;
 
     /// <summary>
-    /// AAA Dynamic identity states for SCP-106, tuned for severe decayed resonance,
+    /// Dynamic identity states for SCP-106, tuned for severe decayed resonance,
     /// non-Euclidean phase dislocation, and necrotic wet presence with enhanced high-frequency caustic edge.
     /// Perfectly calibrated for the stateful, zero-allocation multi-band DSP pipeline matrix.
     /// </summary>
@@ -18,13 +18,14 @@
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             IsGlobalTransmission = false, // Proximity directional 3D audio boundary
-            OutputGain = 2.35f,
+            OutputGain = 2.45f,
             Pitch = 0.52f,          // Ancient, sub-octave dimensional depth
             Formant = 0.46f,        // Collapsed, rotted vocal cavity architecture
-            Distortion = 0.70f,     // AAA SHARPNESS FIX: Harder waveshaping saturation to add harmonic bite
-            Guttural = 0.48f,       // AAA SHARPNESS FIX: Severe false-vocal cord rasp (corroded throat grit)
-            FleshCrackle = 0.25f,   // AAA SHARPNESS FIX: Liquid tissue degradation transient bubbling
-            LowPass = 1150f,        // AAA SHARPNESS FIX: Opened cutoff window to let sharp abrasive grit slice through
+            DemonicOctaverMix = 0.25f,
+            Distortion = 0.70f,     //  SHARPNESS FIX: Harder waveshaping saturation to add harmonic bite
+            Guttural = 0.48f,       //  SHARPNESS FIX: Severe false-vocal cord rasp (corroded throat grit)
+            FleshCrackle = 0.25f,   //  SHARPNESS FIX: Liquid tissue degradation transient bubbling
+            LowPass = 1150f,        //  SHARPNESS FIX: Opened cutoff window to let sharp abrasive grit slice through
             Reverb = 0.40f,
             WetDecay = 0.90f,       // Visceral viscous absorption (slime-coated walls)
             WetOrganic = 0.35f,     // Slimy throat decomposition mechanics
@@ -40,7 +41,7 @@
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             IsGlobalTransmission = false,
-            OutputGain = 2.10f,
+            OutputGain = 2.25f,
             Pitch = 0.48f,          // Voice sinks further into the substrate weight
             Formant = 0.42f,        // Extreme structural compression
             LowPass = 550f,         // Drastic cutoff simulating transmission through solid concrete/soil layers
@@ -60,9 +61,10 @@
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             IsGlobalTransmission = false,
-            OutputGain = 2.50f,
+            OutputGain = 2.60f,
             Pitch = 0.58f,
             Formant = 0.52f,
+            DemonicOctaverMix = 0.35f,
             LowPass = 1400f,        // Sudden acoustic expansion as the entity breaks into open air
             Distortion = 0.90f,     // Tearing saturation modeling the spatial rupture
             Guttural = 0.75f,       // Violent, ragged false-vocal cord rasp (spitting black mucosal bile)
@@ -80,14 +82,15 @@
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
-            IsGlobalTransmission = true, // AAA PLUG-N-PLAY ACTIVATION: Broadcasts server-wide to all live clients!
-            OutputGain = 2.55f,     // Boosted headroom for maximum global intelligibility
+            IsGlobalTransmission = true, //  PLUG-N-PLAY ACTIVATION: Broadcasts server-wide to all live clients!
+            OutputGain = 2.65f,     // Boosted headroom for maximum global intelligibility
             Pitch = 0.48f,          // Deeper pitch floor inside his own core reality domain
             Formant = 0.44f,
-            LowPass = 1250f,        // AAA SHARPNESS FIX: Opened cutoff so the global voice sounds clean and cutting
+            DemonicOctaverMix = 0.45f,
+            LowPass = 1250f,        //  SHARPNESS FIX: Opened cutoff so the global voice sounds clean and cutting
             HighPass = 80f,         // Strip rumble mud out of global broadcast
             Distortion = 0.75f,     // Heavy asymmetric overdrive edge
-            Guttural = 0.55f,       // AAA SHARPNESS FIX: Direct larynx mucosal abrasion
+            Guttural = 0.55f,       //  SHARPNESS FIX: Direct larynx mucosal abrasion
             Reverb = 0.80f,         // Massive, hollow space diffusion with maximum absorption loss
             WetDecay = 0.85f,
             WetOrganic = 0.25f,
@@ -103,7 +106,7 @@
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             IsGlobalTransmission = false,
-            OutputGain = 2.25f,
+            OutputGain = 2.35f,
             Pitch = 0.54f,
             Formant = 0.50f,
             LowPass = 1050f,        // Slightly enhanced boundary visibility passthrough
@@ -124,7 +127,7 @@
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             IsGlobalTransmission = false,
-            OutputGain = 1.95f,
+            OutputGain = 2.15f,
             Pitch = 0.45f,          // Pitch drops to an absolute biological minimum due to loss of nerve energy
             Formant = 0.40f,        // Drooping, elongated, tired throat volume
             LowPass = 800f,
@@ -145,7 +148,7 @@
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             IsGlobalTransmission = false,
-            OutputGain = 2.45f,
+            OutputGain = 2.55f,
             Pitch = 0.62f,          // Aggressive surge
             Formant = 0.55f,
             HighPass = 220f,        // Remove proximity mud to amplify sharp cutting edges

@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Voice-Reactive Breath Noise Simulator.
+    ///  Voice-Reactive Breath Noise Simulator.
     /// Combines an ultra-fast local LCG randomizer, vocal envelope tracking, and a slow 
     /// physiological LFO into a custom Biquad Bandpass filter to synthesize organic airflow turbulence.
     /// </summary>

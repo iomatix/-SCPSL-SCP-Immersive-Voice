@@ -12,7 +12,7 @@
         private readonly object _pipelineLock = new object();
 
         /// <summary>
-        /// AAA Performance Switch: Set to true ONLY during debugging. 
+        ///  Performance Switch: Set to true ONLY during debugging. 
         /// When false, the profiling loop overhead is completely bypassed (0 CPU cost).
         /// </summary>
         public static bool IsProfilingEnabled { get; set; } = false;

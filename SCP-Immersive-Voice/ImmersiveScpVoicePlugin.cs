@@ -31,7 +31,7 @@
 
         public override LoadPriority Priority { get; } = LoadPriority.High;
 
-        #region Granular AAA Handlers and Managers
+        #region Granular  Handlers and Managers
         private CoreVoiceHandler _coreVoiceHandler;
         private Scp096AudioHandler _scp096AudioHandler;
         private Scp939AudioHandler _scp939AudioHandler;
@@ -108,13 +108,11 @@
             #region Connect Structural Dynamic Providers and Handlers
 
             // --- SCP-096 Pipeline Config ---
-            Scp096Events.Enraging += _scp096AudioHandler.On096Enraging;
-            Scp096Events.Enraged += _scp096AudioHandler.On096Enraged;
-            Scp096Events.StartCrying += _scp096AudioHandler.On096StartingCrying;
-            Scp096Events.StartedCrying += _scp096AudioHandler.On096StartedCrying;
-            Scp096Events.TryingNotToCry += _scp096AudioHandler.On096TryingNotToCry;
+            Scp096Events.ChangedState += _scp096AudioHandler.On096ChangedState;
             Scp096Events.Charging += _scp096AudioHandler.On096Charging;
             Scp096Events.Charged += _scp096AudioHandler.On096Charged;
+            Scp096Events.PryingGate += _scp096AudioHandler.On096PryingGate;
+            Scp096Events.PriedGate += _scp096AudioHandler.On096PriedGate;
             ScpVoiceProfiles.DynamicProviders.Add(_scp096AudioHandler.Manager);
 
             // --- SCP-939 Pipeline Config ---
@@ -149,7 +147,7 @@
 
             #endregion
 
-            LabApi.Features.Console.Logger.Info($"[SCP Voice Chat] - Modular AAA Engine Successfully Online - {Version} by {Author}");
+            LabApi.Features.Console.Logger.Info($"[SCP Voice Chat] - Modular  Engine Successfully Online - {Version} by {Author}");
         }
 
         public override void Disable()
@@ -172,13 +170,11 @@
             // --- Unbind 096 ---
             if (_scp096AudioHandler != null)
             {
-                Scp096Events.Enraging -= _scp096AudioHandler.On096Enraging;
-                Scp096Events.Enraged -= _scp096AudioHandler.On096Enraged;
-                Scp096Events.StartCrying -= _scp096AudioHandler.On096StartingCrying;
-                Scp096Events.StartedCrying -= _scp096AudioHandler.On096StartedCrying;
-                Scp096Events.TryingNotToCry -= _scp096AudioHandler.On096TryingNotToCry;
+                Scp096Events.ChangedState -= _scp096AudioHandler.On096ChangedState;
                 Scp096Events.Charging -= _scp096AudioHandler.On096Charging;
                 Scp096Events.Charged -= _scp096AudioHandler.On096Charged;
+                Scp096Events.PryingGate -= _scp096AudioHandler.On096PryingGate;
+                Scp096Events.PriedGate -= _scp096AudioHandler.On096PriedGate;
             }
 
             // --- Unbind 939 ---
@@ -238,7 +234,7 @@
             _scp106AudioHandler = null;
             _voiceManager = null;
 
-            LabApi.Features.Console.Logger.Info("[SCP Voice Chat] - Modular AAA Engine Safely Offline.");
+            LabApi.Features.Console.Logger.Info("[SCP Voice Chat] - Modular  Engine Safely Offline.");
         }
 
         #region Local Event Router Methods (Dismantle Sessions)

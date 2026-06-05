@@ -4,7 +4,7 @@
     using SCP_Immersive_Voice.Presets.Dynamics.Enums;
 
     /// <summary>
-    /// AAA Dynamic identity states for SCP‑939, tuned for whisper mimicry, deceptive vocal camouflage,
+    ///  Dynamic identity states for SCP‑939, tuned for whisper mimicry, deceptive vocal camouflage,
     /// and raw organic throat distortion. Calibrated to preserve absolute verbal intelligibility.
     /// </summary>
     public static class Scp939DynamicPresets
@@ -42,8 +42,8 @@
             HighPass = 0f,
             WhisperAmount = 0.10f,  // Intent: minimal unvoiced air leakage
             BreathNoise = 0.08f,
-            WetOrganic = 0.12f,     // AAA FIX: Subtle fluid friction — words sound slightly too wet/slimy
-            FormantDrift = 0.08f,   // AAA FIX: Micro LFO pitch drift to make the mimicry sound unstable
+            WetOrganic = 0.12f,     //  FIX: Subtle fluid friction — words sound slightly too wet/slimy
+            FormantDrift = 0.08f,   //  FIX: Micro LFO pitch drift to make the mimicry sound unstable
             Reverb = 0.05f
         };
 
@@ -57,7 +57,7 @@
             OutputGain = 2.10f,
             Pitch = 0.58f,          // Intent: deep, controlled focus
             Formant = 0.68f,
-            HighPass = 800f,        // AAA FIX: High pass filter cutting low rumbles to sharpen voice consonants
+            HighPass = 800f,        //  FIX: High pass filter cutting low rumbles to sharpen voice consonants
             LowPass = 2800f,
             WhisperAmount = 0.95f,  // Intent: maximum whisper conversion for complete sound dampening
             BreathNoise = 0.65f,    // Intent: sharp, intense airflow monitoring
@@ -82,8 +82,8 @@
             WetOrganic = 0.75f,
             WetDecay = 0.42f,
             Distortion = 1.20f,     // Intent: severe waveshaping saturation (tearing vocal cords)
-            Guttural = 0.55f,       // AAA FIX: Heavy false-vocal fold rasping growl
-            Subharmonic = 0.60f,    // AAA FIX: MASSIVE BASSOON: pristine tracking sub-octave chest rumble
+            Guttural = 0.55f,       //  FIX: Heavy false-vocal fold rasping growl
+            Subharmonic = 0.60f,    //  FIX: MASSIVE BASSOON: pristine tracking sub-octave chest rumble
             FormantDrift = 0.45f
         };
 
@@ -97,9 +97,9 @@
             OutputGain = 1.90f,
             Pitch = 0.85f,
             Formant = 0.80f,
-            LowPass = 1200f,        // AAA FIX: Low-pass cutoff to simulate sound traveling through dense chemical mist
+            LowPass = 1200f,        //  FIX: Low-pass cutoff to simulate sound traveling through dense chemical mist
             HighPass = 0f,
-            Reverb = 0.55f,         // AAA FIX: Diffused room reverb to create a detached, dislocated dreamscape
+            Reverb = 0.55f,         //  FIX: Diffused room reverb to create a detached, dislocated dreamscape
             WhisperAmount = 0.65f,  // Intent: chemical breath substitution
             BreathNoise = 0.40f,
             WetOrganic = 0.35f,

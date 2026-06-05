@@ -49,7 +49,7 @@
                 float jitter = ((float)_rng.NextDouble() * 2f - 1f) * 0.12f;
                 float drift = (float)Math.Sin(_phase * 1.28f + jitter);
 
-                // AAA FIXED: Bounded coefficient scaling window. 
+                //  FIXED: Bounded coefficient scaling window. 
                 // Maps safely between 0.15f and 0.55f, completely avoiding negative phase loops.
                 float lpCut = 0.35f + 0.20f * drift;
                 float hpCut = 0.85f + 0.10f * drift;

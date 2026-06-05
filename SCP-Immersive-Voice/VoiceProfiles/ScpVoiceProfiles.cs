@@ -130,7 +130,7 @@
             float sr = (float)VoiceChat.VoiceChatSettings.SampleRate;
             if (sr <= 0) sr = 48000f;
 
-            // Step 1: Create the target list representing the strict AAA execution sequence requirement
+            // Step 1: Create the target list representing the strict  execution sequence requirement
             var targetNodes = new List<(string Key, Func<IAudioEffect> Factory, float ScalarValue, string ScalarFieldName)>();
 
             // ==========================================
@@ -157,6 +157,9 @@
             if (preset.Subharmonic > 0f)
                 targetNodes.Add(("Subharmonic", () => new SubharmonicGrowlEffect(preset.Subharmonic, sr), preset.Subharmonic, "_amount"));
 
+            if (preset.DemonicOctaverMix > 0f)
+                targetNodes.Add(("Octaver", () => new DemonicOctaverEffect(preset.DemonicOctaverMix, sr), preset.DemonicOctaverMix, "_mix"));
+
             if (preset.Guttural > 0f)
                 targetNodes.Add(("Guttural", () => new GutturalResonanceEffect(preset.Guttural, sr), preset.Guttural, "_amount"));
 
@@ -165,6 +168,9 @@
             // ==========================================
             if (preset.Distortion > 0f)
                 targetNodes.Add(("Distortion", () => new DistortionEffect(preset.Distortion, sr), preset.Distortion, "_amount"));
+
+            if (preset.SiliconModulation > 0f)
+                targetNodes.Add(("SiliconModulation", () => new SiliconRingModulatorEffect(preset.SiliconModulation, sr), preset.SiliconModulation, "_amount")); // Wired R&D Silicon Modulator
 
             if (preset.Bitcrush > 0f)
                 targetNodes.Add(("Bitcrush", () => new BitcrushEffect(preset.Bitcrush), preset.Bitcrush, null)); // Structurally rebuilt on bit-depth changes
@@ -176,7 +182,7 @@
             // 5. TIME-DOMAIN MODULATION & FRACTURES
             // ==========================================
             if (preset.Tremolo > 0f)
-                targetNodes.Add(("Tremolo", () => new TremoloEffect(preset.Tremolo), preset.Tremolo, "_amount")); // AAA FIX: Fully wired missing node
+                targetNodes.Add(("Tremolo", () => new TremoloEffect(preset.Tremolo), preset.Tremolo, "_amount")); //  FIX: Fully wired missing node
 
             if (preset.Glitch > 0f)
                 targetNodes.Add(("Glitch", () => new GlitchBurstEffect(preset.Glitch, sr), preset.Glitch, null));
@@ -209,7 +215,7 @@
                 targetNodes.Add(("Chirp", () => new ChirpEffect(preset.Chirp, sr), preset.Chirp, null));
 
             if (preset.DataBurst > 0f)
-                targetNodes.Add(("DataBurst", () => new DigitalDataBurstEffect(preset.DataBurst, sr), preset.DataBurst, null)); // AAA FIX: Fully wired missing computer node
+                targetNodes.Add(("DataBurst", () => new DigitalDataBurstEffect(preset.DataBurst, sr), preset.DataBurst, null)); //  FIX: Fully wired missing computer node
 
             // ==========================================
             // 7. ENVIRONMENT FILTERS & EQUALIZATION
@@ -243,7 +249,7 @@
             {
                 if (container.ActiveNodes.TryGetValue(target.Key, out var existingInstance) && target.ScalarFieldName != null)
                 {
-                    // CRITICAL AAA OPTIMIZATION: The instance exists! Maintain it to preserve history and feedback delay registers.
+                    // CRITICAL  OPTIMIZATION: The instance exists! Maintain it to preserve history and feedback delay registers.
                     // Rapidly inject the new configuration scalar via high-speed cached reflection to bypass readonly boundaries.
                     FastInjectScalarField(existingInstance, target.ScalarFieldName, target.ScalarValue);
                     temporaryMap[target.Key] = existingInstance;

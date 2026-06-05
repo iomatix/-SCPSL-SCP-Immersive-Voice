@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Dry, brittle crackle simulating bone friction, snapping joints or decayed tissue.
+    ///  Dry, brittle crackle simulating bone friction, snapping joints or decayed tissue.
     /// Employs an ultra-fast bitwise LCG randomizer, amplitude envelope tracking, 
     /// and a high-frequency Biquad High-Pass filter to isolate crisp transients. Zero allocations.
     /// </summary>

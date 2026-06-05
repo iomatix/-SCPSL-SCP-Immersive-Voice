@@ -106,7 +106,7 @@
             var pipeline = ScpVoiceProfiles.GetPipelineFor(scp, activePreset);
             if (pipeline != null)
             {
-                // AAA FORENSIC BLOCK: Process effects one-by-one to pinpoint the exact NaN source
+                //  FORENSIC BLOCK: Process effects one-by-one to pinpoint the exact NaN source
                  for (int i = 0; i < pipeline.Effects.Count; i++)
                 {
                     var effect = pipeline.Effects[i];

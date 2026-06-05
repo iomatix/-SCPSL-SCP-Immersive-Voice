@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Formant Shifter simulating vocal tract cavity scaling.
+    ///  Formant Shifter simulating vocal tract cavity scaling.
     /// Uses a cascaded 4-band Biquad Resonator Matrix to shift spectral envelopes 
     /// without altering the fundamental pitch. Zero-allocation and real-time safe.
     /// </summary>

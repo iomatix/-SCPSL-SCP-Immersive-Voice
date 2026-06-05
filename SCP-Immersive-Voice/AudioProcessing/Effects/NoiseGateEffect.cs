@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Stateful Noise Gate with RMS envelope detection.
+    ///  Stateful Noise Gate with RMS envelope detection.
     /// Features smooth Attack, Hold, and Release to isolate voice and kill tail noise.
     /// </summary>
     public class NoiseGateEffect : IAudioEffect

@@ -156,10 +156,12 @@
     <Compile Include="AudioProcessing\Effects\HighPassEffect.cs" />
     <Compile Include="AudioProcessing\Effects\LowPassEffect.cs" />
     <Compile Include="AudioProcessing\Effects\NoiseGateEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\DemonicOctaverEffect.cs" />
     <Compile Include="AudioProcessing\Effects\PitchShiftEffect.cs" />
     <Compile Include="AudioProcessing\Effects\PocketDimensionEchoEffect.cs" />
     <Compile Include="AudioProcessing\Effects\ReverbEffect.cs" />
     <Compile Include="AudioProcessing\Effects\SampleRateReducerEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\SiliconRingModulationEffect.cs" />
     <Compile Include="AudioProcessing\Effects\StaticNoiseEffect.cs" />
     <Compile Include="AudioProcessing\Effects\StoneCrackEffect .cs" />
     <Compile Include="AudioProcessing\Effects\StoneGrindEffect.cs" />

@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Delay-Line Crossfading Pitch Shifter (Doppler/Rotary method).
+    ///  Delay-Line Crossfading Pitch Shifter (Doppler/Rotary method).
     /// Uses a circular buffer with dual read pointers and cubic interpolation.
     /// Provides completely natural pitch shifting without time-stretching or metallic artifacts.
     /// </summary>

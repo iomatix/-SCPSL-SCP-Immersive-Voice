@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Organic multi-layer static noise generator for SCP-079 and radio transmission corruption.
+    ///  Organic multi-layer static noise generator for SCP-079 and radio transmission corruption.
     /// Employs a thread-safe local LCG, sample-rate independent biquad filter matrices, 
     /// and fast polynomial LFOs to simulate complex RF interference. Zero-allocation.
     /// </summary>

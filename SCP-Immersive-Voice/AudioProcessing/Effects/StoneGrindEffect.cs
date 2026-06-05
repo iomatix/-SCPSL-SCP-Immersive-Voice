@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Physical Modeling Stick-Slip Stone Grinding and Friction Engine for SCP-173.
+    ///  Physical Modeling Stick-Slip Stone Grinding and Friction Engine for SCP-173.
     /// Replaces continuous thermal white noise with a discrete interlocking crystal grid shear matrix.
     /// Uses asymmetric ring modulation to turn human speech into jagged rock grit.
     /// </summary>
@@ -37,10 +37,10 @@
             _sampleRate = sampleRate > 0f ? sampleRate : 48000f;
             _lcgState = (uint)Guid.NewGuid().GetHashCode();
 
-            // AAA FIX: Sub-bass tectonic structural displacement rumble (110Hz)
+            //  FIX: Sub-bass tectonic structural displacement rumble (110Hz)
             _stoneRumbleFilter.ConfigureBandPass(110f, _sampleRate, q: 5.0f);
 
-            // AAA FIX: Dense, crushing aggregate rock-grain abrasive scratch (750Hz)
+            //  FIX: Dense, crushing aggregate rock-grain abrasive scratch (750Hz)
             _stoneGritFilter.ConfigureBandPass(750f, _sampleRate, q: 1.8f);
 
             _envAttackCoef = (float)Math.Exp(-1000.0 / (15f * _sampleRate));
@@ -74,7 +74,7 @@
 
                 _lcgState = _lcgState * 1103515245 + 12345;
 
-                // AAA FIX (Stick-Slip Macro Modeling):
+                //  FIX (Stick-Slip Macro Modeling):
                 // Instead of streaming continuous white noise (which sounds like sand/sandpaper),
                 // we model interlocking crystal ridges. Sound is only generated when micro-fault thresholds crash.
                 float stickSlipSource = 0f;
@@ -96,7 +96,7 @@
                 float drivenGrind = activeGrindLayer * 3.0f;
                 float saturatedGrind = drivenGrind / (1f + Math.Abs(drivenGrind));
 
-                // AAA FIX (Asymmetric Tectonic Ring-Modulation):
+                //  FIX (Asymmetric Tectonic Ring-Modulation):
                 // We use a high-frequency stone lattice modulation wave driven directly by the surface wobble LFO
                 // to completely disrupt human pitch components, turning vocals into mineral grinding textures.
                 float mineralModulationWave = (float)Math.Sin(_frictionLfoPhase * TwoPi * 28f); // Harsh intermodulation

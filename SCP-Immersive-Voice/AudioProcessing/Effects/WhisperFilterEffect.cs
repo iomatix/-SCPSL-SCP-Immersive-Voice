@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Whisper Filter converting voiced speech into an unvoiced whispered texture.
+    ///  Whisper Filter converting voiced speech into an unvoiced whispered texture.
     /// Destroys harmonic pitch lines while preserving formant intelligibility using 
     /// phase-randomization sign inversion and high-frequency spectral shaping.
     /// </summary>

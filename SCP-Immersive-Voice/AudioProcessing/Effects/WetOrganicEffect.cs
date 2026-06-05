@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Wet Organic layer simulating moist, living vocal tract tissue and saliva.
+    ///  Wet Organic layer simulating moist, living vocal tract tissue and saliva.
     /// Employs a sub-millisecond fractional micro-delay line, sample-rate independent 
     /// biquad high-pass filtering, and a high-speed bitwise LCG randomizer. Zero allocations.
     /// </summary>

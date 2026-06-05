@@ -3,7 +3,7 @@
 This directory contains the core real-time, float-native Digital Signal Processing (DSP) effects for the `SCP_Immersive_Voice` subsystem. 
 
 ## Architectural Principles
-Every effect implemented in this pipeline adheres to the strict **AAA Game Audio Standards**:
+Every effect implemented in this pipeline adheres to the strict ** Game Audio Standards**:
 * **In-Place Processing:** Every effect implements `IAudioEffect` and operates directly on the native float PCM buffer (`void Process(float[] pcm, int length)`) to avoid redundant memory copies.
 * **Zero Allocations:** No heap allocations (`new`) are permitted inside the critical audio processing loops. All state variables, filters, and rings are persistent and stack/heap-allocated only during instantiation.
 * **Persistent Statefulness (Cached-DSP):** Effects that rely on time-domain or history data (delays, filters, envelopes) maintain their state context *per player* inside a persistent cache. They are never instantiated per-frame, eliminating phase fractures, zipper noise, and click artifacts.
@@ -100,6 +100,11 @@ These processors distort the voice using analog-modeled saturation algorithms or
 * **Technical Implementation:** Mid-tread amplitude quantization loop that utilizes exponential mapping to reduce bit depth (from 16-bit down to a hard 2.5-bit limit), completely bypassing analog TPDF dithering to force harsh pixelated step boundaries. Paired with a stateful 1st-order recursive DC blocker filter and rational soft-clipping.
 * **Acoustic Objective:** Introduces sterile, hard-edge digital aliasing and aggressive step-quantization noise, stripping all warmth from the audio signal to enforce a "pure binary" aesthetic.
 
+#### `SiliconRingModulatorEffect`
+* **Unit/Scale:** Demodulation and resonance matrix mix (`0.0f` to `1.0f`).
+* **Technical Implementation:** An inharmonic low-frequency pseudo-square carrier oscillator dynamically modulated by vocal root-mean-square (RMS) envelopes, coupled with a fixed 144-sample short-feedback delay line matrix acting as a physical comb filter.
+* **Acoustic Objective:** Drastically dismantles organic human harmonic structures to produce an aggressive, cold, inharmonic metallic clang. Replicates the acoustic fingerprint of an evil AI entity speaking through the vibrating steel frame of an uninsulated server room cabinet.
+ 
 #### `DigitalDataBurstEffect`
 * **Unit/Scale:** Cybernetic modulation intensity (`0.0f` to `1.0f`).
 * **Technical Implementation:** A high-frequency asynchronous impulse engine that drives a metallic Biquad resonator (centered at 5800Hz) using asymmetric binary square-wave modulation. It utilizes a stochastic LCG-based trigger cascade to simulate rapid packet loss and data-bus overflows.

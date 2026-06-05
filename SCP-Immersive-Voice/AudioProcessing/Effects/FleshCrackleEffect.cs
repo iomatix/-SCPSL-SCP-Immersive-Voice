@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Wet, organic crackle simulating tearing flesh and cellular tissue snapping.
+    ///  Wet, organic crackle simulating tearing flesh and cellular tissue snapping.
     /// Employs an ultra-fast LCG randomizer, voice amplitude envelope tracking, 
     /// and an excited lossy bandpass resonator matrix. Zero allocations, real-time safe.
     /// </summary>

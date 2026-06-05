@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Phase-Locked Subharmonic Generator.
+    ///  Phase-Locked Subharmonic Generator.
     /// Tracks the voice fundamental frequency (f0) via zero-crossing detection 
     /// and synthesizes a perfect sub-octave (f0 / 2) sub-bass layer.
     /// </summary>

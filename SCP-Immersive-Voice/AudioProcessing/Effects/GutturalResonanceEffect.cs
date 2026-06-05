@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Guttural Resonance Effect simulating false vocal cord (ventricular fold) vibration.
+    ///  Guttural Resonance Effect simulating false vocal cord (ventricular fold) vibration.
     /// Employs a modulated nonlinear feedback comb filter architecture with DC-blocking
     /// to introduce biological, gravelly throat textures. Fully real-time safe and stateless.
     /// </summary>
