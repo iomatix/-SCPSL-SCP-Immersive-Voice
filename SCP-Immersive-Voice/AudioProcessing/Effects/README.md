@@ -35,8 +35,8 @@ These effects alter the fundamental biological or structural properties of the c
 * **Technical Implementation:** Low-Frequency Oscillator (LFO) driven center-frequency modulator operating on the biquad formant matrices.
 * **Acoustic Objective:** Introduces organic, dynamic instability to the creature’s throat resonance, preventing a static digital timbre and emulating a loss of muscular or psychological vocal control.
 
-### `LaryngealAsymmetryEffect`
-* **Unit/Scale**: Uncanny asymmetry intensity ($0.0\text{f}$ to $1.0\text{f}$).
+#### `LaryngealAsymmetryEffect`
+* **Unit/Scale**: Uncanny asymmetry intensity (`0.0f` to `1.0f`).
 * **Technical Implementation**: Splits the vocal stream into two parallel asymmetrical vocal tract paths, introducing a dynamic, sub-millisecond phase and delay drift ($0.15\text{ ms} - 1.45\text{ ms}$) modulated by an organic slow-frequency tissue LFO ($5.8\text{ Hz}$).
 * **Acoustic Objective**: Simulates biological asymmetry in throat muscles, laryngeal walls, and glottis geometry. This breaks natural vocal symmetry, creating a subtle but highly unsettling "Uncanny Valley" comb-filtering effect—essential for deceptive human mimicry (SCP-939).
  
