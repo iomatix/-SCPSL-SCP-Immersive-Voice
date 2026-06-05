@@ -3,7 +3,7 @@
 This directory contains the core real-time, float-native Digital Signal Processing (DSP) effects for the `SCP_Immersive_Voice` subsystem. 
 
 ## Architectural Principles
-Every effect implemented in this pipeline adheres to the strict ** Game Audio Standards**:
+Every effect implemented in this pipeline adheres to strict **Game Audio Standards**:
 * **In-Place Processing:** Every effect implements `IAudioEffect` and operates directly on the native float PCM buffer (`void Process(float[] pcm, int length)`) to avoid redundant memory copies.
 * **Zero Allocations:** No heap allocations (`new`) are permitted inside the critical audio processing loops. All state variables, filters, and rings are persistent and stack/heap-allocated only during instantiation.
 * **Persistent Statefulness (Cached-DSP):** Effects that rely on time-domain or history data (delays, filters, envelopes) maintain their state context *per player* inside a persistent cache. They are never instantiated per-frame, eliminating phase fractures, zipper noise, and click artifacts.
@@ -22,7 +22,7 @@ These effects alter the fundamental biological or structural properties of the c
 
 #### `PitchShiftEffect`
 * **Unit/Scale:** Frequency multiplier ratio (`0.25f` to `4.0f`).
-* **Technical Implementation:** Delay-Line Crossfading Pitch Shifter (Doppler/Rotary method). Uses a power-of-two sized circular buffer with dynamic bitwise masking (`&`) wrapping. Features dual read heads operating $180^\circ$ out of phase, modulated by a continuous Hann window for constant-power crossfading. Sample extraction uses 4-point **Cubic Hermite Spline** interpolation.
+* **Technical Implementation:** Delay-Line Crossfading Pitch Shifter (Doppler/Rotary method). Uses a power-of-two sized circular buffer with dynamic bitwise masking (`&`) wrapping. Features dual read heads operating 180° out of phase, modulated by a continuous Hann window for constant-power crossfading. Sample extraction uses 4-point **Cubic Hermite Spline** interpolation.
 * **Acoustic Objective:** Alters vocal pitch natively in the time-domain *without* changing the playback speed or duration of the speech package, completely eliminating linear aliasing and metallic comb-filtering.
 
 #### `FormantShiftEffect`
@@ -34,6 +34,16 @@ These effects alter the fundamental biological or structural properties of the c
 * **Unit/Scale:** Modulation depth (`0.0f` to `1.0f`).
 * **Technical Implementation:** Low-Frequency Oscillator (LFO) driven center-frequency modulator operating on the biquad formant matrices.
 * **Acoustic Objective:** Introduces organic, dynamic instability to the creature’s throat resonance, preventing a static digital timbre and emulating a loss of muscular or psychological vocal control.
+
+#### `DemonicOctaverEffect`
+* **Unit/Scale:** Wet mix intensity (`0.0f` to `1.0f`).
+* **Technical Implementation:** Dual-head time-domain crossfading delay network using a power-of-two allocation scheme with fast bitwise wrapping. Features a sub-sample phase interpolator configured to drive a constant-power sub-octave layer (-12 semitones) without execution overhead.
+* **Acoustic Objective:** Stacks a massive, clean, cinematic sub-bass layer beneath the voice fundamental to deliver profound demonic weight and nieludzk¹ depth without modifying the original speech rate.
+
+#### `VocalShriekShifterEffect`
+* **Unit/Scale:** Multi-tap mix factor (`0.0f` to `1.0f`).
+* **Technical Implementation:** Multi-head time-domain phase dislocation transposer that executes a +14 semitone falsetto base shift while simultaneously stacking parallel +12 and +24 semitone higher harmonic channels. Utilizes sub-sample linear interpolation and an integrated XORShift pseudo-random noise matrix to inject granular phase instability (jitter).
+* **Acoustic Objective:** Violently transposes standard microphone signals at the very entrance of the pipeline into an unhinged, tearing falsetto/shriek layer to synthesize flawless High Fry Screams.
 
 #### `SubharmonicGrowlEffect`
 * **Unit/Scale:** Wet mix intensity (`0.0f` to `1.0f`).
@@ -59,6 +69,11 @@ These modules generate synthetic acoustic layers layered directly over the speec
 * **Unit/Scale:** Airflow intensity (`0.0f` to `1.0f`).
 * **Technical Implementation:** Low-pass filtered white noise shaped by an envelope follower with asymmetrical lag (fast attack, slow release).
 * **Acoustic Objective:** Synthesizes realistic, predatory hyperventilation and air-flow rushing under the creature's voice during active speech.
+
+#### `WetOrganicEffect`
+* **Unit/Scale:** Fluid saturation factor (`0.0f` to `1.0f`).
+* **Technical Implementation:** Stateful parallel recursive feedback delay-line network combined with an ultra-low frequency (ULF) chaotic offset modulator to continuously warp resonance phase lengths.
+* **Acoustic Objective:** Injects a visceral, saliva-choked, or blood-saturated texture directly over the audio buffer, modeling cellular breakdown, wet mucosal throat accumulation, or necrotic liquefaction.
 
 #### `FleshCrackleEffect`
 * **Unit/Scale:** Frequency/Density of micro-bursts (`0.0f` to `1.0f`).
@@ -100,11 +115,16 @@ These processors distort the voice using analog-modeled saturation algorithms or
 * **Technical Implementation:** Mid-tread amplitude quantization loop that utilizes exponential mapping to reduce bit depth (from 16-bit down to a hard 2.5-bit limit), completely bypassing analog TPDF dithering to force harsh pixelated step boundaries. Paired with a stateful 1st-order recursive DC blocker filter and rational soft-clipping.
 * **Acoustic Objective:** Introduces sterile, hard-edge digital aliasing and aggressive step-quantization noise, stripping all warmth from the audio signal to enforce a "pure binary" aesthetic.
 
-#### `SiliconRingModulatorEffect`
+#### `SiliconRingModulationEffect`
 * **Unit/Scale:** Demodulation and resonance matrix mix (`0.0f` to `1.0f`).
 * **Technical Implementation:** An inharmonic low-frequency pseudo-square carrier oscillator dynamically modulated by vocal root-mean-square (RMS) envelopes, coupled with a fixed 144-sample short-feedback delay line matrix acting as a physical comb filter.
 * **Acoustic Objective:** Drastically dismantles organic human harmonic structures to produce an aggressive, cold, inharmonic metallic clang. Replicates the acoustic fingerprint of an evil AI entity speaking through the vibrating steel frame of an uninsulated server room cabinet.
- 
+
+#### `ScreechModulatorEffect`
+* **Unit/Scale:** Screech intensity depth (`0.0f` to `1.0f`).
+* **Technical Implementation:** Asymmetric high-frequency envelope-driven ring modulator operating a floating carrier sweep network (1300Hz to 2100Hz), wired sequentially into a 2nd-order peaking resonator filter hard-tuned to the extreme human ear vulnerability threshold center of 3150Hz.
+* **Acoustic Objective:** Generates piercing, non-harmonic sideband distortion arrays and agonizing glass-shattering shrieks that translate screaming patterns into extreme physiological discomfort.
+
 #### `DigitalDataBurstEffect`
 * **Unit/Scale:** Cybernetic modulation intensity (`0.0f` to `1.0f`).
 * **Technical Implementation:** A high-frequency asynchronous impulse engine that drives a metallic Biquad resonator (centered at 5800Hz) using asymmetric binary square-wave modulation. It utilizes a stochastic LCG-based trigger cascade to simulate rapid packet loss and data-bus overflows.
@@ -137,7 +157,7 @@ These modules define the physical boundaries, dampening environments, and enviro
 
 #### `LowPassEffect`
 * **Unit/Scale:** Cutoff frequency in Hertz (`Hz`).
-* **Technical Implementation:** 2nd-order critically-damped Biquad/Butterworth Low-Pass filter with a strict $12\text{ dB/octave}$ roll-off slope.
+* **Technical Implementation:** 2nd-order critically-damped Biquad/Butterworth Low-Pass filter with a strict 12 dB/octave roll-off slope.
 * **Acoustic Objective:** Eliminates high-frequency content. Replicates acoustic muffling caused by heavy clothing, leather masks, skin thickness, or transmission through dense physical boundaries like concrete walls.
 
 #### `HighPassEffect`
