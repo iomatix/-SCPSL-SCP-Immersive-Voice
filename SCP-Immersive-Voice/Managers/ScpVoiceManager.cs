@@ -4,6 +4,7 @@
     using AudioManagerAPI.Features.Enums;
     using LabApi.Features.Console;
     using LabApi.Features.Wrappers;
+    using SCP_Immersive_Voice.VoiceProfiles;
     using ScpImmersiveVoice;
     using ScpImmersiveVoice.Config;
     using System.Collections.Generic;
@@ -91,9 +92,8 @@
 
         public void AppendPcm(Player scp, float[] samples)
         {
-            if (samples == null || samples.Length == 0)
+            if (scp == null || samples == null || samples.Length == 0)
             {
-                Logger.Warn($"[SCP-VOICE] AppendPcm: EMPTY PCM from {scp.Nickname}");
                 return;
             }
 
@@ -107,13 +107,38 @@
                     sessionId = StartSession(scp);
                 }
 
+                // 1. Append raw samples directly into the real-time hardware buffer
                 DefaultAudioManager.Instance.AppendPcmData(sessionId, samples);
 
+                // 2. Resolve the active speaker state context from our framework API
                 var state = DefaultAudioManager.Instance.GetSessionState(sessionId);
                 if (state == null)
                 {
                     Logger.Error($"[SCP-VOICE] AppendPcm: state NULL for session {sessionId}");
                     return;
+                }
+
+                // 3. FETCH PRESET & EVALUATE SPATIALIZATION RULES DIRECTLY AT THE SPEAKER BOUNDARY
+                var activePreset = ScpVoiceProfiles.GetPreset(scp);
+                if (activePreset != null)
+                {
+                    // If global transmission is requested, IsSpatial must be FALSE (2D Full-Map Broadcast)
+                    bool targetSpatialization = !activePreset.IsGlobalTransmission;
+
+                    if (state.IsSpatial != targetSpatialization)
+                    {
+                        state.IsSpatial = targetSpatialization;
+
+                        // Force live update on the physical hardware worker loop if allocated
+                        if (state.HasPhysicalSpeaker && state.PhysicalSpeaker != null)
+                        {
+                            state.PhysicalSpeaker.SetSpatialization(targetSpatialization);
+
+                            // Optional optimization: balance volume scaling for non-spatial projection
+                            if (!targetSpatialization)
+                                state.PhysicalSpeaker.SetVolume(activePreset.OutputGain * 0.85f);
+                        }
+                    }
                 }
 
                 if (!state.HasPhysicalSpeaker || state.PhysicalSpeaker == null)

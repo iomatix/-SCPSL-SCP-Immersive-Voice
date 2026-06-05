@@ -130,14 +130,18 @@
             float sr = (float)VoiceChat.VoiceChatSettings.SampleRate;
             if (sr <= 0) sr = 48000f;
 
-            // Step 1: Create the target list representing the execution requirement
+            // Step 1: Create the target list representing the strict AAA execution sequence requirement
             var targetNodes = new List<(string Key, Func<IAudioEffect> Factory, float ScalarValue, string ScalarFieldName)>();
 
-            // Noise Gate (Always persistent)
+            // ==========================================
+            // 1. DYNAMICS & GATING (Pipeline Entry Guard)
+            // ==========================================
             float gateThreshold = preset.UseNoiseGate ? preset.NoiseGateThreshold : -45f;
             targetNodes.Add(("NoiseGate", () => new NoiseGateEffect(gateThreshold, sr), gateThreshold, "_threshold"));
 
-            // Core Voice Modifiers
+            // ==========================================
+            // 2. TIMBRE & GEOMETRY MODIFIERS
+            // ==========================================
             if (Math.Abs(preset.Pitch - 1f) > 0.01f)
                 targetNodes.Add(("PitchShift", () => new PitchShiftEffect(preset.Pitch, sr, 40f), preset.Pitch, "_pitch"));
 
@@ -147,25 +151,39 @@
             if (preset.FormantDrift > 0f)
                 targetNodes.Add(("FormantDrift", () => new FormantDriftEffect(preset.FormantDrift), preset.FormantDrift, "_amount"));
 
-            // Harmonics
+            // ==========================================
+            // 3. HARMONIC SYNTHESIZERS
+            // ==========================================
             if (preset.Subharmonic > 0f)
                 targetNodes.Add(("Subharmonic", () => new SubharmonicGrowlEffect(preset.Subharmonic, sr), preset.Subharmonic, "_amount"));
 
             if (preset.Guttural > 0f)
                 targetNodes.Add(("Guttural", () => new GutturalResonanceEffect(preset.Guttural, sr), preset.Guttural, "_amount"));
 
-            // Distortion
+            // ==========================================
+            // 4. NON-LINEAR DEGRADATION & SATURATION
+            // ==========================================
             if (preset.Distortion > 0f)
                 targetNodes.Add(("Distortion", () => new DistortionEffect(preset.Distortion, sr), preset.Distortion, "_amount"));
 
-            // Crackles
-            if (preset.DryCrackle > 0f)
-                targetNodes.Add(("DryCrackle", () => new DryCrackleEffect(preset.DryCrackle, sr), preset.DryCrackle, "_amount"));
+            if (preset.Bitcrush > 0f)
+                targetNodes.Add(("Bitcrush", () => new BitcrushEffect(preset.Bitcrush), preset.Bitcrush, null)); // Structurally rebuilt on bit-depth changes
 
-            if (preset.FleshCrackle > 0f)
-                targetNodes.Add(("FleshCrackle", () => new FleshCrackleEffect(preset.FleshCrackle, sr), preset.FleshCrackle, "_amount"));
+            if (preset.SampleRateReduce > 0f)
+                targetNodes.Add(("SampleRateReduce", () => new SampleRateReducerEffect(preset.SampleRateReduce, sr), preset.SampleRateReduce, null));
 
-            // Noises
+            // ==========================================
+            // 5. TIME-DOMAIN MODULATION & FRACTURES
+            // ==========================================
+            if (preset.Tremolo > 0f)
+                targetNodes.Add(("Tremolo", () => new TremoloEffect(preset.Tremolo), preset.Tremolo, "_amount")); // AAA FIX: Fully wired missing node
+
+            if (preset.Glitch > 0f)
+                targetNodes.Add(("Glitch", () => new GlitchBurstEffect(preset.Glitch, sr), preset.Glitch, null));
+
+            // ==========================================
+            // 6. PROCEDURAL SYNTHETIC TEXTURE LAYERS
+            // ==========================================
             if (preset.WhisperAmount > 0f)
                 targetNodes.Add(("Whisper", () => new WhisperFilterEffect(preset.WhisperAmount, sr), preset.WhisperAmount, "_amount"));
 
@@ -175,10 +193,39 @@
             if (preset.StaticNoise > 0f)
                 targetNodes.Add(("Static", () => new StaticNoiseEffect(preset.StaticNoise, sr), preset.StaticNoise, "_amount"));
 
-            // Spatial / Wet
+            if (preset.DryCrackle > 0f)
+                targetNodes.Add(("DryCrackle", () => new DryCrackleEffect(preset.DryCrackle, sr), preset.DryCrackle, "_amount"));
+
+            if (preset.FleshCrackle > 0f)
+                targetNodes.Add(("FleshCrackle", () => new FleshCrackleEffect(preset.FleshCrackle, sr), preset.FleshCrackle, "_amount"));
+
+            if (preset.StoneCrack > 0f)
+                targetNodes.Add(("StoneCrack", () => new StoneCrackEffect(preset.StoneCrack, sr), preset.StoneCrack, null));
+
+            if (preset.StoneGrind > 0f)
+                targetNodes.Add(("StoneGrind", () => new StoneGrindEffect(preset.StoneGrind, sr), preset.StoneGrind, null));
+
+            if (preset.Chirp > 0f)
+                targetNodes.Add(("Chirp", () => new ChirpEffect(preset.Chirp, sr), preset.Chirp, null));
+
+            if (preset.DataBurst > 0f)
+                targetNodes.Add(("DataBurst", () => new DigitalDataBurstEffect(preset.DataBurst, sr), preset.DataBurst, null)); // AAA FIX: Fully wired missing computer node
+
+            // ==========================================
+            // 7. ENVIRONMENT FILTERS & EQUALIZATION
+            // ==========================================
             if (preset.WetOrganic > 0f)
                 targetNodes.Add(("WetOrganic", () => new WetOrganicEffect(preset.WetOrganic, sr), preset.WetOrganic, "_amount"));
 
+            if (preset.LowPass > 0f)
+                targetNodes.Add(("LowPass", () => new LowPassEffect(preset.LowPass, sr), preset.LowPass, null));
+
+            if (preset.HighPass > 0f)
+                targetNodes.Add(("HighPass", () => new HighPassEffect(preset.HighPass, sr), preset.HighPass, null));
+
+            // ==========================================
+            // 8. SPATIAL DIFFUSION & TIME FEEDBACK NETWORKS
+            // ==========================================
             if (preset.WetDecay > 0f)
                 targetNodes.Add(("WetDecay", () => new WetDecayEffect(preset.WetDecay, sr), preset.WetDecay, "_amount"));
 
@@ -188,34 +235,6 @@
             if (preset.Reverb > 0f)
                 targetNodes.Add(("Reverb", () => new ReverbEffect(preset.Reverb, sr), preset.Reverb, "_amount"));
 
-            // Filters
-            if (preset.LowPass > 0f)
-                targetNodes.Add(("LowPass", () => new LowPassEffect(preset.LowPass, sr), preset.LowPass, null)); // Filters rebuild on raw frequency shift
-
-            if (preset.HighPass > 0f)
-                targetNodes.Add(("HighPass", () => new HighPassEffect(preset.HighPass, sr), preset.HighPass, null));
-
-            // Degradation
-            if (preset.Bitcrush > 0f)
-                targetNodes.Add(("Bitcrush", () => new BitcrushEffect(preset.Bitcrush), preset.Bitcrush, null));
-
-            if (preset.SampleRateReduce > 0f)
-                targetNodes.Add(("SampleRateReduce", () => new SampleRateReducerEffect(preset.SampleRateReduce, sr), preset.SampleRateReduce, null));
-
-            if (preset.Glitch > 0f)
-                targetNodes.Add(("Glitch", () => new GlitchBurstEffect(preset.Glitch, sr), preset.Glitch, null));
-
-            // Stone Layers
-            if (preset.StoneCrack > 0f)
-                targetNodes.Add(("StoneCrack", () => new StoneCrackEffect(preset.StoneCrack, sr), preset.StoneCrack, null));
-
-            if (preset.StoneGrind > 0f)
-                targetNodes.Add(("StoneGrind", () => new StoneGrindEffect(preset.StoneGrind, sr), preset.StoneGrind, null));
-
-            // Chirps
-            if (preset.Chirp > 0f)
-                targetNodes.Add(("Chirp", () => new ChirpEffect(preset.Chirp, sr), preset.Chirp, null));
-
             // Step 2: In-place reconciliation loop
             var temporaryMap = new Dictionary<string, IAudioEffect>();
             container.Pipeline.Clear();
@@ -224,7 +243,7 @@
             {
                 if (container.ActiveNodes.TryGetValue(target.Key, out var existingInstance) && target.ScalarFieldName != null)
                 {
-                    // CRITICAL AAA OPTIMIZATION: The instance exists! Maintain it to preserve history registers.
+                    // CRITICAL AAA OPTIMIZATION: The instance exists! Maintain it to preserve history and feedback delay registers.
                     // Rapidly inject the new configuration scalar via high-speed cached reflection to bypass readonly boundaries.
                     FastInjectScalarField(existingInstance, target.ScalarFieldName, target.ScalarValue);
                     temporaryMap[target.Key] = existingInstance;
@@ -232,14 +251,14 @@
                 }
                 else
                 {
-                    // Instantiate fresh node only if it wasn't present before or requires structural parameter rebuilds (like filters)
+                    // Instantiate fresh node only if it wasn't present before or requires structural coefficient parameter rebuilds
                     var newInstance = target.Factory();
                     temporaryMap[target.Key] = newInstance;
                     container.Pipeline.Add(newInstance);
                 }
             }
 
-            // Step 3: Atomic state assignment update
+            // Step 3: Atomic state assignment update to guarantee zero-allocation hot thread swapping
             container.ActiveNodes.Clear();
             foreach (var kvp in temporaryMap)
             {

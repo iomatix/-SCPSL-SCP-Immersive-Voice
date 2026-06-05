@@ -5,17 +5,17 @@
     using System;
 
     /// <summary>
-    /// AAA Avian Syrinx Modeling Engine for creature chirps and flamingo vocalizations.
-    /// Driven by pure harmonic sine wave down-sweeps exciting an organic avian resonator.
+    /// AAA Cybernetic Data Burst and Diagnostic Transmission Engine for digital entities.
+    /// Employs a high-frequency metallic silicon resonator driven by asymmetric binary square-waves.
     /// </summary>
-    public class ChirpEffect : IAudioEffect
+    public class DigitalDataBurstEffect : IAudioEffect
     {
-        public string Name => "Avian Chirp";
+        public string Name => "Digital Data Burst";
 
         private readonly float _amount;
         private readonly float _sampleRate;
 
-        private BiquadFilter _avianBioResonator;
+        private BiquadFilter _mainframeResonator;
 
         private float _chirpEnvelope = 0f;
         private float _chirpPhase = 0f;
@@ -27,25 +27,25 @@
         private readonly float _voiceEnvReleaseCoef;
         private readonly float _chirpDecayCoef;
 
-        public ChirpEffect(float amount, float sampleRate)
+        public DigitalDataBurstEffect(float amount, float sampleRate)
         {
             _amount = Clamp(amount, 0f, 1f);
             _sampleRate = sampleRate > 0f ? sampleRate : 48000f;
             _lcgState = (uint)Guid.NewGuid().GetHashCode();
 
-            // Resonator fine-tuned to simulate an organic bird skull bone expansion cavity (2600Hz)
-            _avianBioResonator.ConfigureBandPass(2600f, _sampleRate, q: 2.8f);
+            // Rigid metallic PCB trace network band resonator (centered at 5800Hz)
+            _mainframeResonator.ConfigureBandPass(5800f, _sampleRate, q: 7.0f);
 
-            _voiceEnvAttackCoef = (float)Math.Exp(-1000.0 / (4f * _sampleRate));   // 4ms smooth attack
-            _voiceEnvReleaseCoef = (float)Math.Exp(-1000.0 / (60f * _sampleRate));
-            _chirpDecayCoef = (float)Math.Exp(-1000.0 / (35f * _sampleRate));     // 35ms natural decay duration
+            _voiceEnvAttackCoef = (float)Math.Exp(-1000.0 / (2f * _sampleRate)); // Fast 2ms response
+            _voiceEnvReleaseCoef = (float)Math.Exp(-1000.0 / (45f * _sampleRate));
+            _chirpDecayCoef = (float)Math.Exp(-1000.0 / (14f * _sampleRate)); // 14ms snappy burst
         }
 
         public void Process(float[] pcm, int length)
         {
             if (length < 1 || _amount < 0.01f) return;
 
-            float baseTriggerChance = (0.012f * _amount) / _sampleRate;
+            float baseTriggerChance = (0.018f * _amount) / _sampleRate;
             uint triggerThreshold = (uint)(baseTriggerChance * uint.MaxValue);
             float pi2 = 2f * (float)Math.PI;
 
@@ -63,7 +63,7 @@
 
                 if (_chirpEnvelope <= 0.001f)
                 {
-                    uint dynamicThreshold = (uint)(triggerThreshold * (0.05f + _voiceEnvelope * 1.95f));
+                    uint dynamicThreshold = (uint)(triggerThreshold * (0.1f + _voiceEnvelope * 2.2f));
 
                     if (_lcgState < dynamicThreshold)
                     {
@@ -71,28 +71,28 @@
                         _chirpPhase = 0f;
 
                         float randVal = (float)(_lcgState & 0xFFFF) / 65535f;
-                        _currentSweepFreq = 3400f + (randVal * 800f); // High organic avian pitch entry
+                        _currentSweepFreq = 5000f + (randVal * 1500f);
                     }
                 }
 
-                float synthesizedChirpNode = 0f;
+                float synthesizedDataNode = 0f;
 
                 if (_chirpEnvelope > 0.001f)
                 {
                     _chirpPhase += (pi2 * _currentSweepFreq) / _sampleRate;
                     if (_chirpPhase > pi2) _chirpPhase -= pi2;
 
-                    // Pristine, smooth sine wave extraction for natural animalistic tone generations
-                    float sinVal = (float)Math.Sin(_chirpPhase);
+                    float pureSine = (float)Math.Sin(_chirpPhase);
+                    float jaggedDigitalWave = pureSine > 0.0f ? 0.65f : -0.65f; // Asymmetric binary square
 
-                    synthesizedChirpNode = sinVal * (_chirpEnvelope * _chirpEnvelope) * _amount * 0.45f;
-                    _currentSweepFreq = 1300f + (_currentSweepFreq - 1300f) * _chirpDecayCoef;
+                    synthesizedDataNode = jaggedDigitalWave * (_chirpEnvelope * _chirpEnvelope) * _amount * 0.35f;
+                    _currentSweepFreq = 2200f + (_currentSweepFreq - 2200f) * _chirpDecayCoef;
                     _chirpEnvelope *= _chirpDecayCoef;
                 }
 
-                float acousticChirp = _avianBioResonator.Process(synthesizedChirpNode);
+                float acousticChirp = _mainframeResonator.Process(synthesizedDataNode);
 
-                float drivenChirp = acousticChirp * 1.8f;
+                float drivenChirp = acousticChirp * 2.5f;
                 float saturatedChirp = drivenChirp / (1f + Math.Abs(drivenChirp));
 
                 pcm[i] = dryInput + saturatedChirp;

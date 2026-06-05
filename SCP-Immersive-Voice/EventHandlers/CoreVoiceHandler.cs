@@ -9,6 +9,9 @@
     using System;
     using VoiceChat;
 
+    /// <summary>
+    /// Core pipeline event listener driving the routing, decoding, and DSP synchronization of live VoIP buffers.
+    /// </summary>
     public class CoreVoiceHandler
     {
         private readonly ImmersiveScpVoiceConfig _config;
@@ -22,15 +25,15 @@
 
         public void OnSendingVoiceMessage(PlayerSendingVoiceMessageEventArgs ev)
         {
-            if (!ImmersiveScpVoicePlugin.IsEnabled || ev.Player == null) return;
+            if (!ImmersiveScpVoicePlugin.IsEnabled || ev == null || ev.Player == null) return;
 
             var sender = ev.Player;
 
-            // Step 1: Fetch dynamic or static context preset blueprint
+            // Step 1: Fetch runtime context preset (Dynamic or Static)
             var preset = ScpVoiceProfiles.GetPreset(sender);
-            if (!preset.Enable) return;
+            if (preset == null || !preset.Enable) return;
 
-            // Step 2: Guard against illegal global voice rooms
+            // Step 2: Guard boundaries against illegal rooms
             if (ev.Message.Channel == VoiceChatChannel.None ||
                 ev.Message.Channel == VoiceChatChannel.Spectator ||
                 ev.Message.Channel == VoiceChatChannel.Mimicry ||
@@ -38,41 +41,44 @@
                 ev.Message.Channel == VoiceChatChannel.RoundSummary)
                 return;
 
-            // Step 3: Extract and decode incoming Opus byte buffer to raw float PCM stream
+            // Step 3: Decode Opus to raw float PCM stream
             float[] pcm = ScpVoiceDecoder.Decode(ev.Message);
-            if (pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 0.001f)) return;
+            if (pcm == null || pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 0.001f)) return;
 
-            // Step 4: Execute our in-place thread-safe DSP effect pipeline graph
+            // Step 4: Process thread-safe float-native DSP pipeline graphs
             pcm = ScpVoiceDecoder.ApplyEffects(pcm, sender);
 
-            // Step 5: Route packet according to configuration rules
+            // Step 5: Route packet according to internal standard role policies
             bool isForbiddenProximity = _config.ForbiddenProximity.Contains(sender.Role);
 
             if (isForbiddenProximity)
             {
-                // Re-encode processed floating stream back to Opus data frames for small radio transmitters (e.g., SCP-079)
                 byte[] encoded = ScpVoiceDecoder.EncodeToOpus(pcm);
                 Buffer.BlockCopy(encoded, 0, ev.Message.Data, 0, encoded.Length);
                 return;
             }
 
-            // Standard proximity spatialization route
             if (ev.Message.Channel == VoiceChatChannel.ScpChat)
-                ev.IsAllowed = false; // Block native internal SCP channel transmission to force local positional proxying
+                ev.IsAllowed = false; // Force proxy streaming engine bypass
 
+            // Pass the finalized PCM straight to our dedicated stream manager
             _voiceManager.AppendPcm(sender, pcm);
         }
 
         public void OnPlayerDied(PlayerDeathEventArgs ev)
         {
-            if (ev.Player == null) return;
-            ScpVoiceProfiles.ClearCacheFor(ev.Player);
+            if (ev != null && ev.Player != null)
+            {
+                ScpVoiceProfiles.ClearCacheFor(ev.Player);
+            }
         }
 
         public void OnChangedRole(PlayerChangedRoleEventArgs ev)
         {
-            if (ev.Player == null) return;
-            ScpVoiceProfiles.ClearCacheFor(ev.Player);
+            if (ev != null && ev.Player != null)
+            {
+                ScpVoiceProfiles.ClearCacheFor(ev.Player);
+            }
         }
     }
 }

@@ -81,9 +81,9 @@ These modules generate synthetic acoustic layers layered directly over the speec
 * **Acoustic Objective:** Simulates the heavy friction, mass, and grinding of tectonic material or sliding concrete blocks.
 
 #### `ChirpEffect`
-* **Unit/Scale:** Chirp rate / Resonance (`0.0f` to `1.0f`).
-* **Technical Implementation:** High-frequency sinusoidal micro-sweeps triggered by voice transjents, modeling avian syrinx physics.
-* **Acoustic Objective:** Injects erratic bird-like anomalies or clicks directly into the vocal delivery.
+* **Unit/Scale:** Avian syrinx penetration factor (`0.0f` to `1.0f`).
+* **Technical Implementation:** Stochastic triggering of exponential FM down-sweeps processed through a dual-band high-Q modal concrete resonator. Features real-time voice-envelope coupling to mimic biological vocal exertion.
+* **Acoustic Objective:** Reproduces organic, high-frequency avian resonance and shrill, piercing shrieks. Primarily utilized for biological mimicry and creature-based vocalizations where surgical high-end precision is required.
 
 ---
 
@@ -96,9 +96,14 @@ These processors distort the voice using analog-modeled saturation algorithms or
 * **Acoustic Objective:** Adds warm, aggressive analog grit or intense, tearing vocal strain without generating harsh, aliased square-wave clipping.
 
 #### `BitcrushEffect`
-* **Unit/Scale:** Down-quantization factor (`0.0f` to `1.0f`).
-* **Technical Implementation:** Mid-tread amplitude quantization loop that reduces sample depth down to arbitrary bit boundaries (e.g., 2-bit to 8-bit).
-* **Acoustic Objective:** Introduces cold digital quantization noise, replicating legacy hardware or degraded AD/DA converters.
+* **Unit/Scale:** Quantization depth factor (`0.0f` to `1.0f`).
+* **Technical Implementation:** Mid-tread amplitude quantization loop that utilizes exponential mapping to reduce bit depth (from 16-bit down to a hard 2.5-bit limit), completely bypassing analog TPDF dithering to force harsh pixelated step boundaries. Paired with a stateful 1st-order recursive DC blocker filter and rational soft-clipping.
+* **Acoustic Objective:** Introduces sterile, hard-edge digital aliasing and aggressive step-quantization noise, stripping all warmth from the audio signal to enforce a "pure binary" aesthetic.
+
+#### `DigitalDataBurstEffect`
+* **Unit/Scale:** Cybernetic modulation intensity (`0.0f` to `1.0f`).
+* **Technical Implementation:** A high-frequency asynchronous impulse engine that drives a metallic Biquad resonator (centered at 5800Hz) using asymmetric binary square-wave modulation. It utilizes a stochastic LCG-based trigger cascade to simulate rapid packet loss and data-bus overflows.
+* **Acoustic Objective:** Generates pristine, cold, and calculated digital bursts (chirps) without analog noise floors. Used to emulate non-organic AI mainframe diagnostics, data-stream processing, and high-frequency binary communication patterns for digital entities like SCP-079.
 
 #### `SampleRateReducerEffect`
 * **Unit/Scale:** Downsampling factor (`0.0f` to `1.0f`).
@@ -107,18 +112,18 @@ These processors distort the voice using analog-modeled saturation algorithms or
 
 #### `GlitchBurstEffect`
 * **Unit/Scale:** Instability factor (`0.0f` to `1.0f`).
-* **Technical Implementation:** Micro-buffer capture array that randomly halts read pointer progress, looping small grains of audio or dropping frames completely based on a internal random distribution.
+* **Technical Implementation:** Micro-buffer capture array that randomly halts read pointer progress, looping small grains of audio or dropping frames completely based on an internal random distribution.
 * **Acoustic Objective:** Replicates malfunctioning tech, hardware core freezing, or buffer underrun errors.
 
 #### `StaticNoiseEffect`
 * **Unit/Scale:** Interference amplitude (`0.0f` to `1.0f`).
 * **Technical Implementation:** Continuous analog RF interference emulator generating multi-band filtered white noise intermixed with micro-burst discharge models.
-* **Acoustic Objective:** Simulates environment radio interference or bad signal connections.
+* **Acoustic Objective:** Simulates environmental radio interference or bad signal connections.
 
 #### `TremoloEffect`
 * **Unit/Scale:** Modulation depth (`0.0f` to `1.0f`).
-* **Technical Implementation:** Low-Frequency Oscillator (LFO) sinus or triangle wave modulating the global amplitude envelope.
-* **Acoustic Objective:** Creates an unstable, trembling vocal delivery—essential for mimicking panic, crying, or intense emotional fear.
+* **Technical Implementation:** Low-Frequency Oscillator (LFO) sinus or triangle wave modulating the global amplitude envelope. Fully synchronized and optimized for in-place scalar overrides via reflection field injection.
+* **Acoustic Objective:** Creates an unstable, trembling vocal delivery—essential for mimicking panic, crying, or intense emotional fear (e.g., SCP-096 transitional states).
 
 ---
 

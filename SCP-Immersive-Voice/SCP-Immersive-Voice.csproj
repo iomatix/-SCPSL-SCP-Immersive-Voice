@@ -145,6 +145,7 @@
     <Compile Include="AudioProcessing\Effects\BitcrushEffect.cs" />
     <Compile Include="AudioProcessing\Effects\BreathNoiseEffect.cs" />
     <Compile Include="AudioProcessing\Effects\ChirpEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\DigitalDataBurstEffect.cs" />
     <Compile Include="AudioProcessing\Effects\DistortionEffect.cs" />
     <Compile Include="AudioProcessing\Effects\DryCrackleEffect.cs" />
     <Compile Include="AudioProcessing\Effects\FleshCrackleEffect.cs" />
@@ -188,7 +189,6 @@
     <Compile Include="Presets\Dynamics\Enums\Scp3114VoiceState.cs" />
     <Compile Include="Presets\Dynamics\Enums\Scp939VoiceState.cs" />
     <Compile Include="Presets\Dynamics\Interfaces\IDynamicVoicePresetProvider.cs" />
-    <Compile Include="Presets\Dynamics\Resolvers\Scp106PresetResolver.cs" />
     <Compile Include="Presets\Dynamics\Scp106DynamicPresets.cs" />
     <Compile Include="Presets\Dynamics\Scp096DynamicPresets.cs" />
     <Compile Include="Presets\Dynamics\Scp3114DynamicPresets.cs" />

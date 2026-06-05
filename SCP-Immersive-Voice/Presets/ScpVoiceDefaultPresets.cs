@@ -84,6 +84,7 @@
                 [RoleTypeId.Scp106] = new ScpVoicePreset
                 {
                     Enable = true,
+                    IsGlobalTransmission = true,
                     OutputGain = 2.25f,
                     Pitch = 0.52f,          // Intent: ancient, sub-octave dimensional abyss depth
                     Formant = 0.48f,        // Intent: fully collapsed, rotted vocal cavity architecture
@@ -111,20 +112,24 @@
                 },
 
                 // =================================================================
-                // SCP‑079 (The Old AI) — Corrupted low-bandwidth mainframe hardware
+                // SCP‑079 (The Old AI) — Sterile, cold machine intelligence mainframe
                 // =================================================================
                 [RoleTypeId.Scp079] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 1.15f,
-                    Pitch = 1.00f,          // Intent: sterile synthetic pitch normalization
-                    Formant = 1.00f,        // Intent: bypass any organic larynx shaping
-                    Bitcrush = 0.75f,       // Intent: dynamic quantization step reduction (true 4-bit chip crunch)
-                    SampleRateReduce = 0.65f,// Intent: severe clock-divider aliasing artifact generation (~1.2kHz)
-                    Glitch = 0.45f,         // Intent: stochastic buffer frame looping and transmission dropouts
-                    StaticNoise = 0.40f,    // Intent: heavy background RF analog interference
-                    Distortion = 0.25f,     // Intent: transistor circuitry overload warmth
-                    HighPass = 400f         // Intent: discard human lower-frequency chest coefficients completely
+                    Mode = ScpVoicePresetMode.Default,
+                    OutputGain = 2.40f,
+                    Pitch = 0.92f,
+                    Formant = 1.05f,
+                    Bitcrush = 0.65f,
+                    SampleRateReduce = 0.50f,
+                    Glitch = 0.45f,
+                    StaticNoise = 0.00f,
+                    Distortion = 0.12f,
+                    Subharmonic = 0.45f,
+                    DataBurst = 0.65f,       // FIX: Use the explicit digital data processor instead of bird chirps!
+                    HighPass = 80f,
+                    LowPass = 7000f
                 },
 
                 // =================================================================
