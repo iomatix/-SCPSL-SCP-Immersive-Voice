@@ -89,25 +89,58 @@
             if (pcm == null || pcm.Length == 0 || scp == null)
                 return pcm ?? Array.Empty<float>();
 
-            // 1. Resolve the active configuration exactly once to maintain perfect frame cross-sections
+            bool isDynamicScp = scp.Role == PlayerRoles.RoleTypeId.Scp096 ||
+                                scp.Role == PlayerRoles.RoleTypeId.Scp106 ||
+                                scp.Role == PlayerRoles.RoleTypeId.Scp939 ||
+                                scp.Role == PlayerRoles.RoleTypeId.Scp3114;
+
+            // 1. Resolve preset
             var activePreset = ScpVoiceProfiles.GetPreset(scp);
             if (activePreset == null || !activePreset.Enable)
                 return pcm;
 
-            // 2. AGC (pre‑DSP operational leveling)
+            // 2. AGC (pre‑DSP)
             pcm = ApplyAgc(pcm, targetPeak: 0.7f, maxGain: 3f);
 
-            // 3. DSP Pipeline Graph Processing
+            // 3. DSP Pipeline Forensic Processing
             var pipeline = ScpVoiceProfiles.GetPipelineFor(scp, activePreset);
             if (pipeline != null)
             {
-                pipeline.Process(pcm, pcm.Length);
+                // AAA FORENSIC BLOCK: Process effects one-by-one to pinpoint the exact NaN source
+                 for (int i = 0; i < pipeline.Effects.Count; i++)
+                {
+                    var effect = pipeline.Effects[i];
+
+                    if (effect == null) continue;
+
+                    try
+                    {
+                        effect.Process(pcm, pcm.Length);
+
+                        // Run an unallocated check for NaN or Infinity anomalies
+                        for (int ii = 0; ii < pcm.Length; ii++)
+                        {
+                            if (float.IsNaN(pcm[ii]) || float.IsInfinity(pcm[ii]))
+                            {
+                                LabApi.Features.Console.Logger.Error($"[DSP-CRASH] Effect '{effect.GetType().Name}' generated an invalid float value ({pcm[ii]}) at sample index {ii}! This effect is silencing the pipeline.");
+
+                                // Defensive safeguard: Force-purge the tainted array back to zero to prevent downstream crash waves
+                                Array.Clear(pcm, 0, pcm.Length);
+                                return pcm;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LabApi.Features.Console.Logger.Error($"[DSP-EXCEPTION] Exception thrown by '{effect.GetType().Name}': {ex.Message}");
+                    }
+                }
             }
 
-            // 4. OutputGain (Applied securely using the frozen frame configuration scalar)
+            // 4. OutputGain
             ApplyOutputGain(pcm, activePreset.OutputGain);
 
-            // 5. Limiter (Absolute anti‑clip headroom guard)
+            // 5. Limiter
             ApplyLimiter(pcm, threshold: 0.98f);
 
             return pcm;

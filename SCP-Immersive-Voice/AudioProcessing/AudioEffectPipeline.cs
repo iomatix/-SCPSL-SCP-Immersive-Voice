@@ -17,6 +17,8 @@
         /// </summary>
         public static bool IsProfilingEnabled { get; set; } = false;
 
+        public List<IAudioEffect> Effects => _effects;
+
         public void Add(IAudioEffect effect)
         {
             if (effect == null) return;
