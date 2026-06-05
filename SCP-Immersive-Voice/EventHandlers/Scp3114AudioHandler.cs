@@ -54,8 +54,8 @@
 
         public void On3114Disguising(Scp3114DisguisingEventArgs ev)
         {
-            // Protects the pipeline with a 5-second dynamic flesh-weaving watchdog window
-            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Disguising, 5.0f);
+            // Protects the pipeline with a 6-second dynamic flesh-weaving watchdog window
+            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Disguising, 6.0f);
         }
 
         public void On3114Disguised(Scp3114DisguisedEventArgs ev)
@@ -65,8 +65,8 @@
 
         public void On3114Revealing(Scp3114RevealingEventArgs ev)
         {
-            // Protects the pipeline with a 3-second structural tearing watchdog window
-            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Revealing, 3.0f);
+            // Protects the pipeline with a 3.5-second structural tearing watchdog window
+            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Revealing, 3.5f);
         }
 
         public void On3114Revealed(Scp3114RevealedEventArgs ev)
@@ -82,7 +82,7 @@
 
         public void On3114StrangleStarted(Scp3114StrangleStartedEventArgs ev)
         {
-            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Strangling, 10.0f);
+            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Strangling);
         }
 
         public void On3114StrangleAborting(Scp3114StrangleAbortingEventArgs ev)
