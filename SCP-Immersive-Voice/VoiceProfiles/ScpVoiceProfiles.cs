@@ -142,6 +142,9 @@
             // ==========================================
             // 2. TIMBRE & GEOMETRY MODIFIERS
             // ==========================================
+            if (preset.VocalShriek > 0f)
+                targetNodes.Add(("VocalShriek", () => new VocalShriekShifterEffect(preset.VocalShriek, sr), preset.VocalShriek, "_amount"));
+
             if (Math.Abs(preset.Pitch - 1f) > 0.01f)
                 targetNodes.Add(("PitchShift", () => new PitchShiftEffect(preset.Pitch, sr, 40f), preset.Pitch, "_pitch"));
 

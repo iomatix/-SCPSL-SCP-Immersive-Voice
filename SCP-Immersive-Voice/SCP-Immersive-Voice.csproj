@@ -168,6 +168,7 @@
     <Compile Include="AudioProcessing\Effects\StoneGrindEffect.cs" />
     <Compile Include="AudioProcessing\Effects\SubharmonicGrowlEffect.cs" />
     <Compile Include="AudioProcessing\Effects\TremoloEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\VocalShriekShifterEffect.cs" />
     <Compile Include="AudioProcessing\Effects\WetDecayEffect.cs" />
     <Compile Include="AudioProcessing\Effects\WetOrganicEffect.cs" />
     <Compile Include="AudioProcessing\Effects\WhisperFilterEffect.cs" />
