@@ -172,6 +172,9 @@
             if (preset.SiliconModulation > 0f)
                 targetNodes.Add(("SiliconModulation", () => new SiliconRingModulatorEffect(preset.SiliconModulation, sr), preset.SiliconModulation, "_amount")); // Wired R&D Silicon Modulator
 
+            if (preset.ScreechModulation > 0f)
+                targetNodes.Add(("ScreechModulation", () => new ScreechModulatorEffect(preset.ScreechModulation, sr), preset.ScreechModulation, "_amount")); // Wired R&D Screech Modulator
+
             if (preset.Bitcrush > 0f)
                 targetNodes.Add(("Bitcrush", () => new BitcrushEffect(preset.Bitcrush), preset.Bitcrush, null)); // Structurally rebuilt on bit-depth changes
 

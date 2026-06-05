@@ -16,6 +16,7 @@
         public float Reverb { get; set; } = 0f;
         public float Tremolo { get; set; } = 0f;
         public float SiliconModulation { get; set; } = 0f;
+        public float ScreechModulation { get; set; } = 0f;
         public float BreathNoise { get; set; } = 0f;
         public float WhisperAmount { get; set; } = 0f;
         public float DemonicOctaverMix { get; set; } = 0f;

@@ -161,6 +161,7 @@
     <Compile Include="AudioProcessing\Effects\PocketDimensionEchoEffect.cs" />
     <Compile Include="AudioProcessing\Effects\ReverbEffect.cs" />
     <Compile Include="AudioProcessing\Effects\SampleRateReducerEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\ScreechModulatorEffect.cs" />
     <Compile Include="AudioProcessing\Effects\SiliconRingModulationEffect.cs" />
     <Compile Include="AudioProcessing\Effects\StaticNoiseEffect.cs" />
     <Compile Include="AudioProcessing\Effects\StoneCrackEffect .cs" />
