@@ -120,23 +120,17 @@ All components are engineered for float‑native operation directly on the PCM s
 
 ### SCP‑096 — Hysterical Despair System
 
-Tracks stress to scale acoustic instability:
-
 - **Calm / Crying** — Deep formant drift and laryngeal tremolo layered with intense unvoiced sobbing  
 - **Trying Not to Cry** — Strong vocal‑cord constriction with rigid saturation  
 - **Enraging / Enraged** — Rising fundamentals into piercing screams backed by subharmonic low‑end  
 
 ### SCP‑939 — Biomorphic Camouflage System
 
-Balances predatory intent with uncanny mimicry:
-
 - **Idle Whisper / Focused** — Clean, band‑limited whisper matrices  
 - **Mimicking** — Human‑like fundamentals with micro‑LFO drift and wet throat articulation  
 - **Attacking / Lunging** — Fully exposed gravel, growls, and sub‑octave roars  
 
 ### SCP‑3114 — Skeletal Anatomy System
-
-Combines mechanical bone friction with organic tissue layers:
 
 - **Undisguised** — High‑tension calcium snapping and ligament cracking  
 - **Disguised** — Human mimicry with subtle full‑flesh structural noise  
