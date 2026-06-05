@@ -20,14 +20,15 @@
                 {
                     Enable = true,
                     Mode = ScpVoicePresetMode.Default,
-                    OutputGain = 2.8f,
-                    Pitch = 0.82f,          // Intent: deeper, aristocratic, controlled pitch
-                    Formant = 0.85f,        // Intent: elongated throat cavity mimicking the ceramic beak
-                    LowPass = 2200f,        // Intent: acoustic cloth + mask boundary muffling absorption
-                    Distortion = 0.14f,     // Intent: subtle structural rasp in the vocal cords
-                    Reverb = 0.35f,         // Intent: isolated, hollow cathedral room presence
-                    WhisperAmount = 0.12f,  // Intent: faint sound of air flowing beneath the heavy hood
-                    BreathNoise = 0.15f     // Intent: audible, calculated mask ventilation
+                    OutputGain = 2.80f,      // High output gain to compensate for heavy low-pass absorption
+                    Pitch = 0.82f,           // Intent: deeper, aristocratic, highly controlled pitch
+                    Formant = 0.85f,         // Intent: elongated throat cavity mimicking the ceramic beak shape
+                    LowPass = 2200f,         // Intent: heavy leather mask + fabric hood boundary absorption muffling
+                    Distortion = 0.18f,      // TWEAK: Antique triode saturation mimicking a 19th-century phonograph cylinder
+                    Guttural = 0.12f,        // TWEAK: Subdued laryngeal dry grit representing mature paper-like vocal cords
+                    Reverb = 0.22f,          // TWEAK: Tightened chamber decay to simulate mask interior reflections and boost clarity
+                    WhisperAmount = 0.10f,   // Intent: dry air friction flowing beneath the heavy hood cloth layers
+                    BreathNoise = 0.15f      // Intent: voice-reactive leather mask exhaust valve ventilation
                 },
 
                 // =================================================================
