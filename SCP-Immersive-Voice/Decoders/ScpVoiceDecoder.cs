@@ -86,21 +86,28 @@
         /// </summary>
         public static float[] ApplyEffects(float[] pcm, Player scp)
         {
-            if (pcm == null || pcm.Length == 0)
+            if (pcm == null || pcm.Length == 0 || scp == null)
                 return pcm ?? Array.Empty<float>();
 
-            // 2. AGC (pre‑DSP)
+            // 1. Resolve the active configuration exactly once to maintain perfect frame cross-sections
+            var activePreset = ScpVoiceProfiles.GetPreset(scp);
+            if (activePreset == null || !activePreset.Enable)
+                return pcm;
+
+            // 2. AGC (pre‑DSP operational leveling)
             pcm = ApplyAgc(pcm, targetPeak: 0.7f, maxGain: 3f);
 
-            // 3. DSP Pipeline (pitch, formant, reverb, etc.)
-            var pipeline = ScpVoiceProfiles.GetPipelineFor(scp);
-            pipeline.Process(pcm, pcm.Length);
+            // 3. DSP Pipeline Graph Processing
+            var pipeline = ScpVoiceProfiles.GetPipelineFor(scp, activePreset);
+            if (pipeline != null)
+            {
+                pipeline.Process(pcm, pcm.Length);
+            }
 
-            // 4. OutputGain (preset)
-            ApplyOutputGain(pcm, ScpVoiceProfiles.GetPreset(scp).OutputGain);
+            // 4. OutputGain (Applied securely using the frozen frame configuration scalar)
+            ApplyOutputGain(pcm, activePreset.OutputGain);
 
-
-            // 5. Limiter (anti‑clip)
+            // 5. Limiter (Absolute anti‑clip headroom guard)
             ApplyLimiter(pcm, threshold: 0.98f);
 
             return pcm;

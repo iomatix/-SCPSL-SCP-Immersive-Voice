@@ -34,6 +34,9 @@
             }
         }
 
+        /// <summary>
+        /// Main audio processing loop.
+        /// </summary>
         public void Process(float[] pcm, int samples)
         {
             if (pcm == null || samples < 1) return;

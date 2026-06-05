@@ -33,22 +33,20 @@
             public readonly object SyncLock = new object();
         }
 
-        public static AudioEffectPipeline GetPipelineFor(Player player)
+        /// <summary>
+        /// Resolves and updates the stateful processing graph using a pre-fetched configuration preset.
+        /// </summary>
+        public static AudioEffectPipeline GetPipelineFor(Player player, ScpVoicePreset targetPreset)
         {
-            if (player == null) return null;
+            if (player == null || targetPreset == null) return null;
 
-            // 1. Fetch or initialize the permanent context container for the player
             var container = _stableCache.GetOrAdd(player.PlayerId, id => new PipelineContainer());
 
-            // 2. Resolve what preset should be processed at this exact microsecond
-            var targetPreset = GetPreset(player);
-
-            // 3. AAA FIX: Structural deep-property match instead of unstable high-level memory address check
+            // Structural deep-property match utilizing the pre-fetched frame preset
             if (container.LastAppliedPreset == null || !ArePresetsAcousticallyIdentical(container.LastAppliedPreset, targetPreset))
             {
                 lock (container.SyncLock)
                 {
-                    // Re-verify under safe thread isolation block
                     if (container.LastAppliedPreset == null || !ArePresetsAcousticallyIdentical(container.LastAppliedPreset, targetPreset))
                     {
                         SynchronizePipelineGraph(container, targetPreset);
@@ -91,21 +89,33 @@
             _stableCache.TryRemove(player.PlayerId, out _);
         }
 
+        /// <summary>
+        /// Resolves the voice preset context governed by priority matrices and administrator config overrides.
+        /// </summary>
         public static ScpVoicePreset GetPreset(Player player)
         {
+            if (player == null) return new ScpVoicePreset { Enable = false };
             var role = player.Role;
 
-            // Dynamic states have highest execution priority
-            foreach (var provider in DynamicProviders)
+            // Step 1: Dynamic states execute first ONLY if explicitly enabled by the server administrator
+            if (_config.EnableDynamicStates)
             {
-                if (provider.TryGetDynamicPreset(player, out var dynamicPreset))
-                    return dynamicPreset;
+                foreach (var provider in DynamicProviders)
+                {
+                    if (provider.TryGetDynamicPreset(player, out var dynamicPreset))
+                    {
+                        return dynamicPreset;
+                    }
+                }
             }
 
-            // Fallback to configured static role presets
+            // Step 2: Fallback to custom static role configurations from Config.yml
             if (_config.Presets.TryGetValue(role, out var preset) && preset.Enable)
+            {
                 return preset;
+            }
 
+            // Step 3: Absolute architectural fallback to handcrafted cinematic defaults
             return ScpVoiceDefaultPresets.Create().TryGetValue(role, out var defaultPreset)
                 ? defaultPreset
                 : new ScpVoicePreset { Enable = false };
