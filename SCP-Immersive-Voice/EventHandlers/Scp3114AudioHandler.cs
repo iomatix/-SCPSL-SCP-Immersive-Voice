@@ -82,7 +82,8 @@
 
         public void On3114StrangleStarted(Scp3114StrangleStartedEventArgs ev)
         {
-            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Strangling);
+            // Sets execution state with a 10-second absolute chokehold lifespan limit
+            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Strangling, 10.0f);
         }
 
         public void On3114StrangleAborting(Scp3114StrangleAbortingEventArgs ev)
