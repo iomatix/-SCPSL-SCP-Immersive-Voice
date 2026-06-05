@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// AAA Production-Grade Multi-Tap High Fry Scream & Dual Upper-Octave Synthesizer Engine.
+    /// Production-Grade Multi-Tap High Fry Scream & Dual Upper-Octave Synthesizer Engine.
     /// Features sub-sample linear interpolation, low-CPU linear boundary crossfading,
     /// and a phase-instability chaos matrix to deliver authentic, tearing high fry shrieks. Zero heap allocations.
     /// </summary>
@@ -91,7 +91,7 @@
                 // Summate all vectors under balanced constant-power compensation
                 float compositeScream = (s1 * w1 * 0.55f) + (s2 * w2 * 0.35f) + (s3 * w3 * 0.45f);
 
-                // AAA Soft-Limiter Knee Block to clamp screaming blowouts cleanly
+                // Soft-Limiter Knee Block to clamp screaming blowouts cleanly
                 if (compositeScream > 0.75f) compositeScream = 0.75f + (compositeScream - 0.75f) * 0.15f;
                 else if (compositeScream < -0.75f) compositeScream = -0.75f + (compositeScream + 0.75f) * 0.15f;
 

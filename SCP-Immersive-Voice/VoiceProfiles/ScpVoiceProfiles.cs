@@ -154,6 +154,9 @@
             if (preset.FormantDrift > 0f)
                 targetNodes.Add(("FormantDrift", () => new FormantDriftEffect(preset.FormantDrift), preset.FormantDrift, "_amount"));
 
+            if (preset.LaryngealAsymmetry > 0f)
+                targetNodes.Add(("LaryngealAsymmetry", () => new LaryngealAsymmetryEffect(preset.LaryngealAsymmetry, sr), preset.LaryngealAsymmetry, "_amount"));
+
             // ==========================================
             // 3. HARMONIC SYNTHESIZERS
             // ==========================================
@@ -199,6 +202,18 @@
             // ==========================================
             // 6. PROCEDURAL SYNTHETIC TEXTURE LAYERS
             // ==========================================
+
+            if (preset.PredatoryCamouflage > 0f)
+                targetNodes.Add(
+                (
+                    "PredatoryCamouflage",
+                    () => new PredatoryCamouflageEffect(
+                        preset.PredatoryCamouflage,
+                        sr),
+                    preset.PredatoryCamouflage,
+                    "_amount"
+                ));
+
             if (preset.WhisperAmount > 0f)
                 targetNodes.Add(("Whisper", () => new WhisperFilterEffect(preset.WhisperAmount, sr), preset.WhisperAmount, "_amount"));
 

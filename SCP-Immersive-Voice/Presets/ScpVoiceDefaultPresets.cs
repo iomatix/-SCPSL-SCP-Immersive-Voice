@@ -57,7 +57,7 @@
                     OutputGain = 1.85f,
                     Pitch = 0.55f,          // Intent: deep, predatory harmonic base
                     Formant = 0.65f,        // Intent: heavily expanded reptilian vocal tract
-                    WhisperAmount = 0.85f,  // Intent: signature unvoiced camouflage layer (human copycat)
+                    PredatoryCamouflage = 0.85f,  // Intent: signature unvoiced camouflage layer (human copycat)
                     BreathNoise = 0.50f,    // Intent: constant hissing, cold animalistic exhalation
                     WetOrganic = 0.45f,     // Intent: dense mucous and saliva coating inside the jaw
                     Distortion = 0.08f      // Intent: minimal laryngeal gravel

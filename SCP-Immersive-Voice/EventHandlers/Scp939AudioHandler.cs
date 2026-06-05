@@ -3,12 +3,14 @@
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.Scp939Events;
     using PlayerRoles;
+    using SCP_Immersive_Voice.Presets;
     using SCP_Immersive_Voice.Presets.Dynamics;
     using SCP_Immersive_Voice.Presets.Dynamics.Core;
     using SCP_Immersive_Voice.Presets.Dynamics.Enums;
 
     /// <summary>
-    /// Manages biomorphic camouflage abilities and combat triggers for SCP-939, routing state evaluations to the core manager.
+    /// Routes biomorphic camouflage abilities and combat triggers for SCP-939 to the generic dynamic voice state manager.
+    /// Utilizes automated fallback watchdogs to prevent transitional stuck voice states.
     /// </summary>
     public class Scp939AudioHandler
     {
@@ -67,31 +69,32 @@
 
             if (ev.FocusState)
             {
-                // Sharpens the directional whisper matrix structure
+                // Transition into focused predator stealth whisper
                 Manager.SetState(ev.Player, Scp939VoiceState.Focused);
             }
             else
             {
-                // Releases predator vision and rolls back to baseline audio camouflage
+                // Fallback cleanly to standard idle voice camouflage
                 Manager.ResetToDefault(ev.Player);
             }
         }
 
         public void On939Attacking(Scp939AttackingEventArgs ev)
         {
-            // Forces raw throat exposure with a 3-second mechanical safety limit
+            // Protects the combat stream with an absolute 3-second safety watchdog threshold
             if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.Attacking, 3.0f);
         }
 
         public void On939Attacked(Scp939AttackedEventArgs ev)
         {
-            if (ev != null) Manager.ResetToDefault(ev.Player);
+            // Protects the combat stream with an absolute 1.5-second safety watchdog threshold
+            if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.Attacking, 1.5f);
         }
 
         public void On939Lunging(Scp939LungingEventArgs ev)
         {
-            // High-velocity strike override bound by a 2.5-second processing watchdog window
-            if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.Attacking, 2.5f);
+            // Sets a strict 3.5-second lunge animation window before auto-expiring back to idle
+            if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.Attacking, 3.5f);
         }
 
         public void On939Lunged(Scp939LungedEventArgs ev)
@@ -101,13 +104,13 @@
 
         public void On939CreatingAmnesticCloud(Scp939CreatingAmnesticCloudEventArgs ev)
         {
-            // Introduces heavy environmental chemical dampening for a strict 15-second block
+            // Protects the chemical dispersion stream with a 15-second absolute timer limits
             if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.AmnesticCloud, 15.0f);
         }
 
         public void On939CreatedAmnesticCloud(Scp939CreatedAmnesticCloudEventArgs ev)
         {
-            if (ev != null) Manager.ResetToDefault(ev.Player);
+            if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.AmnesticCloud, 60.0f);
         }
     }
 }

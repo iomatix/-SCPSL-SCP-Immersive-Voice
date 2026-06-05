@@ -4,86 +4,90 @@
     using SCP_Immersive_Voice.Presets.Dynamics.Enums;
 
     /// <summary>
-    ///  Dynamic identity states for SCP‑939, tuned for whisper mimicry, deceptive vocal camouflage,
-    /// and raw organic throat distortion. Calibrated to preserve absolute verbal intelligibility.
+    /// Dynamic emotional states for SCP-939, tuned for biomorphic vocal camouflage, predatory stealth,
+    /// and visceral, flesh-tearing physical execution roars.
+    /// Perfectly calibrated for the stateful, zero-allocation multi-band DSP pipeline matrix.
     /// </summary>
     public static class Scp939DynamicPresets
     {
         // =================================================================
-        // IDLE WHISPER — Signature unvoiced camouflage layer (Matches core baseline)
+        // IDLE WHISPER — Signature biomorphic unvoiced camouflage baseline
         // =================================================================
         public static readonly ScpVoicePreset IdleWhisperPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             OutputGain = 1.85f,
-            Pitch = 0.55f,          // Intent: deep, predatory harmonic base
-            Formant = 0.65f,        // Intent: heavily expanded reptilian vocal tract volume
+            Pitch = 0.55f,          // Predatory chest fundamental slowdown
+            Formant = 0.65f,        // Elongated reptilian throat volume
             LowPass = 2400f,
             HighPass = 260f,
-            WhisperAmount = 0.85f,  // Intent: primary unvoiced whisper conversion matrix
-            BreathNoise = 0.50f,    // Intent: constant hissing, cold animalistic exhalation
-            WetOrganic = 0.45f,     // Intent: dense mucous and saliva coating inside the jaw
+            PredatoryCamouflage = 0.65f,  // Converts speech into a creepy, unvoiced friction whisper
+            BreathNoise = 0.25f,    // Soft, rhythmic lung-air ventilation
+            WetOrganic = 0.45f,     // Saliva coating inside the split jaw
             FormantDrift = 0.22f,
-            Distortion = 0.08f      // Intent: minimal laryngeal gravel
+            Distortion = 0.08f
         };
 
         // =================================================================
-        // MIMICKING — Deceptive human speech with an Uncanny Valley leak
+        // MIMICKING — Deceptive human speech with a creepy Uncanny Valley leak
         // =================================================================
         public static readonly ScpVoicePreset MimickingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             OutputGain = 2.00f,
-            Pitch = 0.98f,          // Intent: close to real human fundamental frequency
-            Formant = 1.00f,        // Intent: standard human vocal tract articulation
+            Pitch = 0.98f,          // Matches standard human vocal chord vibration rates
+            Formant = 1.00f,        // Standard human larynx simulation
+            LaryngealAsymmetry = 0.35f, // UNCANNY FIX: Microscopic phase drift representing non-human asymmetric throat muscles
             LowPass = 5200f,
             HighPass = 0f,
-            WhisperAmount = 0.10f,  // Intent: minimal unvoiced air leakage
-            BreathNoise = 0.08f,
-            WetOrganic = 0.12f,     //  FIX: Subtle fluid friction — words sound slightly too wet/slimy
-            FormantDrift = 0.08f,   //  FIX: Micro LFO pitch drift to make the mimicry sound unstable
+            PredatoryCamouflage = 0.15f,
+            BreathNoise = 0.06f,
+            WetOrganic = 0.12f,     // Slight fluid stickiness under the stolen skin
+            FormantDrift = 0.08f,   // Unstable throat muscle imitation drift
             Reverb = 0.05f
         };
 
         // =================================================================
-        // FOCUSED — Predator focus: cold, sharpened, highly directional whisper
+        // FOCUSED — Predator stealth: cold, sharpened, highly directional whisper
         // =================================================================
         public static readonly ScpVoicePreset FocusedPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             OutputGain = 2.10f,
-            Pitch = 0.58f,          // Intent: deep, controlled focus
+            Pitch = 0.58f,
             Formant = 0.68f,
-            HighPass = 800f,        //  FIX: High pass filter cutting low rumbles to sharpen voice consonants
+            LaryngealAsymmetry = 0.60f, // UNCANNY FIX: Strips human cues further to signify pure predatory intent
+            HighPass = 800f,        // Cuts chest thuds entirely to isolate cold, airy sibilants
             LowPass = 2800f,
-            WhisperAmount = 0.95f,  // Intent: maximum whisper conversion for complete sound dampening
-            BreathNoise = 0.65f,    // Intent: sharp, intense airflow monitoring
+            PredatoryCamouflage = 0.85f,  // Absolute unvoiced whisper replacement
+            BreathNoise = 0.35f,
             WetOrganic = 0.50f,
-            Distortion = 0.15f,     // Intent: controlled taryngeal growl friction
+            Distortion = 0.15f,
             FormantDrift = 0.25f
         };
 
         // =================================================================
-        // ATTACKING — Lunge execution: unhinged primal roar with devastating low-end
+        // ATTACKING — Combat execution: unhinged, fluid-choked biological roar
         // =================================================================
         public static readonly ScpVoicePreset AttackingPreset = new ScpVoicePreset
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
-            OutputGain = 2.30f,      // Intent: dynamic boost to dominate combat scenes
-            Pitch = 0.68f,          // Intent: pitch rises slightly due to raw kinetic violence
-            Formant = 0.62f,        // Intent: jaw fully extended for maximum throat volume
-            HighPass = 1500f,
-            WhisperAmount = 0.70f,  // Intent: blending real vocal cords back in for aggressive energy
-            BreathNoise = 1.20f,    // Intent: violent, massive lung exhalation pressure
+            OutputGain = 2.30f,
+            Pitch = 0.68f,
+            Formant = 0.62f,
+            DeathRattle = 0.40f,    // BIOLOGY FIX: Adds visceral, waterlogged trachea fluid gurgling
+            Guttural = 0.55f,       // Aggressive ventricular fold abrasion rasping
+            DemonicOctaverMix = 0.45f, // Sub-octave chest reinforcement for kinetic threat
+            Distortion = 1.20f,     // Screaming operational laryngeal strain
+            PredatoryCamouflage = 0.35f,
+            BreathNoise = 0.75f,    // Severe, suffocating lung pressure exhaust
             WetOrganic = 0.75f,
             WetDecay = 0.42f,
-            Distortion = 1.20f,     // Intent: severe waveshaping saturation (tearing vocal cords)
-            Guttural = 0.55f,       //  FIX: Heavy false-vocal fold rasping growl
-            Subharmonic = 0.60f,    //  FIX: MASSIVE BASSOON: pristine tracking sub-octave chest rumble
+            HighPass = 150f,
             FormantDrift = 0.45f
         };
 
@@ -94,16 +98,17 @@
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
+            IsGlobalTransmission = true, // Global Audio
             OutputGain = 1.90f,
             Pitch = 0.85f,
             Formant = 0.80f,
-            LowPass = 1200f,        //  FIX: Low-pass cutoff to simulate sound traveling through dense chemical mist
+            LowPass = 1200f,        // Cuts high components to simulate sound travelling through dense gas
             HighPass = 0f,
-            Reverb = 0.55f,         //  FIX: Diffused room reverb to create a detached, dislocated dreamscape
-            WhisperAmount = 0.65f,  // Intent: chemical breath substitution
-            BreathNoise = 0.40f,
+            Reverb = 0.55f,         // Smeared spatial room reflections representing disorientation
+            PredatoryCamouflage = 0.45f,
+            BreathNoise = 0.18f,
             WetOrganic = 0.35f,
-            FormantDrift = 0.30f,   // Intent: unstable, floating frequency envelope
+            FormantDrift = 0.30f,
             Distortion = 0.05f
         };
 

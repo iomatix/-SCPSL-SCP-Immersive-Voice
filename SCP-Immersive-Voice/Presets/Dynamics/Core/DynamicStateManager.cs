@@ -59,7 +59,9 @@
         public TState GetCurrentState(Player player)
         {
             if (player == null) return _defaultState;
-            return _activeTrackers.TryGetValue(player.PlayerId, out var tracker) ? tracker.CurrentState : _defaultState;
+
+            return _activeTrackers.TryGetValue(player.PlayerId, out var tracker)
+                    ? tracker.GetActiveState() : _defaultState;
         }
 
         /// <summary>

@@ -149,6 +149,7 @@
     <Compile Include="AudioProcessing\Effects\DigitalDataBurstEffect.cs" />
     <Compile Include="AudioProcessing\Effects\DistortionEffect.cs" />
     <Compile Include="AudioProcessing\Effects\DryCrackleEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\LaryngealAsymmetryEffect.cs" />
     <Compile Include="AudioProcessing\Effects\FleshCrackleEffect.cs" />
     <Compile Include="AudioProcessing\Effects\FormantDriftEffect.cs" />
     <Compile Include="AudioProcessing\Effects\FormantShiftEffect.cs" />
@@ -160,6 +161,7 @@
     <Compile Include="AudioProcessing\Effects\DemonicOctaverEffect.cs" />
     <Compile Include="AudioProcessing\Effects\PitchShiftEffect.cs" />
     <Compile Include="AudioProcessing\Effects\PocketDimensionEchoEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\PredatoryCamouflageEffect.cs" />
     <Compile Include="AudioProcessing\Effects\ReverbEffect.cs" />
     <Compile Include="AudioProcessing\Effects\SampleRateReducerEffect.cs" />
     <Compile Include="AudioProcessing\Effects\ScreechModulatorEffect.cs" />
