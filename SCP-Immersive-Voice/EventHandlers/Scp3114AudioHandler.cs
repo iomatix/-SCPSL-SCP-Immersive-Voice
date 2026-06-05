@@ -2,42 +2,97 @@
 {
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.Scp3114Events;
-    using LabApi.Features.Wrappers;
-    using SCP_Immersive_Voice.Presets.Dynamics.Controllers;
+    using PlayerRoles;
+    using SCP_Immersive_Voice.Presets;
+    using SCP_Immersive_Voice.Presets.Dynamics;
+    using SCP_Immersive_Voice.Presets.Dynamics.Core;
     using SCP_Immersive_Voice.Presets.Dynamics.Enums;
-    using System.Collections.Concurrent;
 
+    /// <summary>
+    /// Routes gameplay hooks and structural state updates for SCP-3114 to the generic dynamic voice state manager.
+    /// </summary>
     public class Scp3114AudioHandler
     {
-        private readonly ConcurrentDictionary<int, Scp3114VoiceStateController> _states = new ConcurrentDictionary<int, Scp3114VoiceStateController>();
+        /// <summary>
+        /// Gets the centralized thread-safe state manager for SCP-3114.
+        /// </summary>
+        public DynamicStateManager<Scp3114VoiceState> Manager { get; }
 
-        public ConcurrentDictionary<int, Scp3114VoiceStateController> States => _states;
-
-        private Scp3114VoiceStateController GetState(Player player)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Scp3114AudioHandler"/> class.
+        /// </summary>
+        public Scp3114AudioHandler()
         {
-            if (player == null) return null;
-            return _states.GetOrAdd(player.PlayerId, _ => new Scp3114VoiceStateController());
+            Manager = new DynamicStateManager<Scp3114VoiceState>(
+                RoleTypeId.Scp3114,
+                Scp3114VoiceState.Undisguised,
+                Scp3114DynamicPresets.GetPresetForState
+            );
         }
 
+        /// <summary>
+        /// Session cleanup hook triggered upon player death.
+        /// </summary>
         public void OnPlayerDied(PlayerDeathEventArgs ev)
         {
-            if (ev?.Player == null) return;
-            _states.TryRemove(ev.Player.PlayerId, out _);
+            if (ev != null && ev.Player != null)
+            {
+                Manager.RemovePlayer(ev.Player);
+            }
         }
 
+        /// <summary>
+        /// Session cleanup hook triggered when a player changes their role class.
+        /// </summary>
         public void OnChangedRole(PlayerChangedRoleEventArgs ev)
         {
-            if (ev?.Player == null) return;
-            _states.TryRemove(ev.Player.PlayerId, out _);
+            if (ev != null && ev.Player != null)
+            {
+                Manager.RemovePlayer(ev.Player);
+            }
         }
 
-        public void On3114Disguising(Scp3114DisguisingEventArgs ev) => GetState(ev.Player)?.SetState(Scp3114VoiceState.Disguising, 5.0f);
-        public void On3114Disguised(Scp3114DisguisedEventArgs ev) => GetState(ev.Player)?.SetState(Scp3114VoiceState.Disguised);
-        public void On3114Revealing(Scp3114RevealingEventArgs ev) => GetState(ev.Player)?.SetState(Scp3114VoiceState.Revealing, 3.0f);
-        public void On3114Revealed(Scp3114RevealedEventArgs ev) => GetState(ev.Player)?.ResetToIdle();
-        public void On3114StrangleStarting(Scp3114StrangleStartingEventArgs ev) => GetState(ev.Player)?.SetState(Scp3114VoiceState.Strangling, 10.0f);
-        public void On3114StrangleStarted(Scp3114StrangleStartedEventArgs ev) => GetState(ev.Player)?.SetState(Scp3114VoiceState.Strangling, 10.0f);
-        public void On3114StrangleAborting(Scp3114StrangleAbortingEventArgs ev) => GetState(ev.Player)?.ResetToIdle();
-        public void On3114StrangleAborted(Scp3114StrangleAbortedEventArgs ev) => GetState(ev.Player)?.ResetToIdle();
+        public void On3114Disguising(Scp3114DisguisingEventArgs ev)
+        {
+            // Protects the pipeline with a 5-second dynamic flesh-weaving watchdog window
+            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Disguising, 5.0f);
+        }
+
+        public void On3114Disguised(Scp3114DisguisedEventArgs ev)
+        {
+            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Disguised);
+        }
+
+        public void On3114Revealing(Scp3114RevealingEventArgs ev)
+        {
+            // Protects the pipeline with a 3-second structural tearing watchdog window
+            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Revealing, 3.0f);
+        }
+
+        public void On3114Revealed(Scp3114RevealedEventArgs ev)
+        {
+            if (ev != null) Manager.ResetToDefault(ev.Player);
+        }
+
+        public void On3114StrangleStarting(Scp3114StrangleStartingEventArgs ev)
+        {
+            // Sets execution state with a 10-second absolute chokehold lifespan limit
+            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Strangling, 10.0f);
+        }
+
+        public void On3114StrangleStarted(Scp3114StrangleStartedEventArgs ev)
+        {
+            if (ev != null) Manager.SetState(ev.Player, Scp3114VoiceState.Strangling, 10.0f);
+        }
+
+        public void On3114StrangleAborting(Scp3114StrangleAbortingEventArgs ev)
+        {
+            if (ev != null) Manager.ResetToDefault(ev.Player);
+        }
+
+        public void On3114StrangleAborted(Scp3114StrangleAbortedEventArgs ev)
+        {
+            if (ev != null) Manager.ResetToDefault(ev.Player);
+        }
     }
 }

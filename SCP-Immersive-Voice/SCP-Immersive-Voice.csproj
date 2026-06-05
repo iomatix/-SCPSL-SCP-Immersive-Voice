@@ -180,10 +180,8 @@
     <Compile Include="Managers\ScpVoiceUpdater.cs" />
     <Compile Include="Patches\OpusDecoderPatch.cs" />
     <Compile Include="Patches\OpusEncoderPatch.cs" />
-    <Compile Include="Presets\Dynamics\Controllers\Scp106VoiceStateController.cs" />
-    <Compile Include="Presets\Dynamics\Controllers\Scp3114VoiceStateController.cs" />
-    <Compile Include="Presets\Dynamics\Controllers\Scp939VoiceStateController.cs" />
-    <Compile Include="Presets\Dynamics\Controllers\Scp096VoiceStateController.cs" />
+    <Compile Include="Presets\Dynamics\Core\DynamicStateManager.cs" />
+    <Compile Include="Presets\Dynamics\Core\VoiceStateTracker.cs" />
     <Compile Include="Presets\Dynamics\Enums\Scp106VoiceState.cs" />
     <Compile Include="Presets\Dynamics\Enums\Scp096VoiceState.cs" />
     <Compile Include="ImmersiveScpVoicePlugin.cs" />
@@ -191,11 +189,7 @@
     <Compile Include="Presets\Dynamics\Enums\Scp939VoiceState.cs" />
     <Compile Include="Presets\Dynamics\Interfaces\IDynamicVoicePresetProvider.cs" />
     <Compile Include="Presets\Dynamics\Resolvers\Scp106PresetResolver.cs" />
-    <Compile Include="Presets\Dynamics\Providers\Scp106DynamicPresetProvider.cs" />
     <Compile Include="Presets\Dynamics\Scp106DynamicPresets.cs" />
-    <Compile Include="Presets\Dynamics\Providers\Scp3114DynamicPresetProvider .cs" />
-    <Compile Include="Presets\Dynamics\Providers\Scp939DynamicPresetProvider.cs" />
-    <Compile Include="Presets\Dynamics\Providers\Scp096DynamicPresetProvider.cs" />
     <Compile Include="Presets\Dynamics\Scp096DynamicPresets.cs" />
     <Compile Include="Presets\Dynamics\Scp3114DynamicPresets.cs" />
     <Compile Include="Presets\Dynamics\Scp939DynamicPresets.cs" />

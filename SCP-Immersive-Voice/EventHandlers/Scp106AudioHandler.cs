@@ -2,67 +2,110 @@
 {
     using LabApi.Events.Arguments.PlayerEvents;
     using LabApi.Events.Arguments.Scp106Events;
-    using LabApi.Features.Wrappers;
-    using SCP_Immersive_Voice.Presets.Dynamics.Controllers;
+    using PlayerRoles;
+    using SCP_Immersive_Voice.Presets.Dynamics;
+    using SCP_Immersive_Voice.Presets.Dynamics.Core;
     using SCP_Immersive_Voice.Presets.Dynamics.Enums;
-    using System.Collections.Concurrent;
 
+    /// <summary>
+    /// Processes conditional parameters and active ability flags for SCP-106, translating them to localized voice states.
+    /// </summary>
     public class Scp106AudioHandler
     {
-        private readonly ConcurrentDictionary<int, Scp106VoiceStateController> _states = new ConcurrentDictionary<int, Scp106VoiceStateController>();
+        /// <summary>
+        /// Gets the centralized thread-safe state manager for SCP-106.
+        /// </summary>
+        public DynamicStateManager<Scp106VoiceState> Manager { get; }
 
-        public ConcurrentDictionary<int, Scp106VoiceStateController> States => _states;
-
-        private Scp106VoiceStateController GetState(Player player)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Scp106AudioHandler"/> class.
+        /// </summary>
+        public Scp106AudioHandler()
         {
-            if (player == null) return null;
-            return _states.GetOrAdd(player.PlayerId, _ => new Scp106VoiceStateController());
+            Manager = new DynamicStateManager<Scp106VoiceState>(
+                RoleTypeId.Scp106,
+                Scp106VoiceState.Idle,
+                Scp106DynamicPresets.GetPresetForState
+            );
         }
 
+        /// <summary>
+        /// Session cleanup hook triggered upon player death.
+        /// </summary>
         public void OnPlayerDied(PlayerDeathEventArgs ev)
         {
-            if (ev?.Player == null) return;
-            _states.TryRemove(ev.Player.PlayerId, out _);
+            if (ev != null && ev.Player != null)
+            {
+                Manager.RemovePlayer(ev.Player);
+            }
         }
 
+        /// <summary>
+        /// Session cleanup hook triggered when a player changes their role class.
+        /// </summary>
         public void OnChangedRole(PlayerChangedRoleEventArgs ev)
         {
-            if (ev?.Player == null) return;
-            _states.TryRemove(ev.Player.PlayerId, out _);
+            if (ev != null && ev.Player != null)
+            {
+                Manager.RemovePlayer(ev.Player);
+            }
         }
 
         public void On106ChangedStalkMode(Scp106ChangedStalkModeEventArgs ev)
         {
-            var state = GetState(ev.Player);
-            if (state == null) return;
+            if (ev == null || ev.Player == null) return;
 
             if (ev.IsStalkActive)
-                state.SetState(Scp106VoiceState.Stalking);
+            {
+                // Submerged state: heavy low-pass mud dampening
+                Manager.SetState(ev.Player, Scp106VoiceState.Stalking);
+            }
             else
-                state.SetState(Scp106VoiceState.Emerging, 3.5f);
+            {
+                // Emerging state: wet flesh rupture modeling with a 3.5-second fallback window
+                Manager.SetState(ev.Player, Scp106VoiceState.Emerging, 3.5f);
+            }
         }
 
         public void On106ChangedVigor(Scp106ChangedVigorEventArgs ev)
         {
-            var state = GetState(ev.Player);
-            if (state == null) return;
+            if (ev == null || ev.Player == null) return;
 
-            if (ev.Value < 20f) state.TrySetLowPriorityState(Scp106VoiceState.LowVigor);
-            else state.ClearLowVigor();
+            // Evaluates low-vigor exhaustion fatigue limits dynamically
+            if (ev.Value < 20f)
+            {
+                Manager.SetState(ev.Player, Scp106VoiceState.LowVigor);
+            }
+            else
+            {
+                // Reverts back to baseline if the exhaustion threshold is recovered
+                Manager.ResetToDefault(ev.Player);
+            }
         }
 
         public void On106TeleportingPlayer(Scp106TeleportingPlayerEvent ev)
         {
-            GetState(ev.Player)?.SetState(Scp106VoiceState.PocketDimension, 5.0f);
+            // Forces extradimensional phase dislocation for 5 seconds during pocket transfers
+            if (ev != null && ev.Player != null)
+            {
+                Manager.SetState(ev.Player, Scp106VoiceState.PocketDimension, 5.0f);
+            }
         }
 
         public void On106UsingHunterAtlas(Scp106UsingHunterAtlasEventArgs ev)
         {
-            var state = GetState(ev.Player);
-            if (state == null) return;
+            if (ev == null || ev.Player == null) return;
 
-            if (ev.IsAllowed) state.TrySetMediumPriorityState(Scp106VoiceState.AtlasDimensional);
-            else if (state.CurrentState == Scp106VoiceState.AtlasDimensional) state.ResetToIdle();
+            if (ev.IsAllowed)
+            {
+                // Seamlessly injects the structural room-sensing dimensional bleed
+                Manager.SetState(ev.Player, Scp106VoiceState.AtlasDimensional);
+            }
+            else
+            {
+                // Gracefully closes the atlas map overlap profile
+                Manager.ResetToDefault(ev.Player);
+            }
         }
     }
 }
