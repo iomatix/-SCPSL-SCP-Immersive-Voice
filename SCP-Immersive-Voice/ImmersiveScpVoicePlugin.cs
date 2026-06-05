@@ -8,8 +8,6 @@
     using LabApi.Loader.Features.Plugins;
     using LabApi.Loader.Features.Plugins.Enums;
     using SCP_Immersive_Voice.Managers;
-    using SCP_Immersive_Voice.Presets.Dynamics;
-    using SCP_Immersive_Voice.Presets.Dynamics.Providers;
     using SCP_Immersive_Voice.VoiceProfiles;
     using ScpImmersiveVoice.Config;
     using ScpImmersiveVoice.EventHandlers;
@@ -17,13 +15,17 @@
     using System;
     using UnityEngine;
 
+    /// <summary>
+    /// The primary framework lifecycle controller for SCP Immersive Voice.
+    /// Manages patching vectors, modular event routing domains, and thread-safe dynamic graph allocations.
+    /// </summary>
     public class ImmersiveScpVoicePlugin : Plugin<ImmersiveScpVoiceConfig>
     {
         #region Plugin Metadata
         public override string Name => "SCP Voice Chat";
         public override string Description => "Enables proximity voice chat for SCPs and adds audio effects";
         public override string Author => "iomatix";
-        public override Version Version => new Version(0, 9, 1);
+        public override Version Version => new Version(0, 9, 2);
         public override Version RequiredApiVersion { get; } = new Version(LabApiProperties.CompiledVersion);
         #endregion
 
@@ -113,7 +115,7 @@
             Scp096Events.TryingNotToCry += _scp096AudioHandler.On096TryingNotToCry;
             Scp096Events.Charging += _scp096AudioHandler.On096Charging;
             Scp096Events.Charged += _scp096AudioHandler.On096Charged;
-            ScpVoiceProfiles.DynamicProviders.Add(new Scp096DynamicPresetProvider(_scp096AudioHandler.States));
+            ScpVoiceProfiles.DynamicProviders.Add(_scp096AudioHandler.Manager);
 
             // --- SCP-939 Pipeline Config ---
             Scp939Events.MimickingEnvironment += _scp939AudioHandler.On939MimickingEnvironment;
@@ -125,7 +127,7 @@
             Scp939Events.Lunged += _scp939AudioHandler.On939Lunged;
             Scp939Events.CreatingAmnesticCloud += _scp939AudioHandler.On939CreatingAmnesticCloud;
             Scp939Events.CreatedAmnesticCloud += _scp939AudioHandler.On939CreatedAmnesticCloud;
-            ScpVoiceProfiles.DynamicProviders.Add(new Scp939DynamicPresetProvider(_scp939AudioHandler.States));
+            ScpVoiceProfiles.DynamicProviders.Add(_scp939AudioHandler.Manager);
 
             // --- SCP-3114 Pipeline Config ---
             Scp3114Events.Disguising += _scp3114AudioHandler.On3114Disguising;
@@ -136,14 +138,14 @@
             Scp3114Events.StrangleStarted += _scp3114AudioHandler.On3114StrangleStarted;
             Scp3114Events.StrangleAborting += _scp3114AudioHandler.On3114StrangleAborting;
             Scp3114Events.StrangleAborted += _scp3114AudioHandler.On3114StrangleAborted;
-            ScpVoiceProfiles.DynamicProviders.Add(new Scp3114DynamicPresetProvider(_scp3114AudioHandler.States));
+            ScpVoiceProfiles.DynamicProviders.Add(_scp3114AudioHandler.Manager);
 
             // --- SCP-106 Pipeline Config ---
             Scp106Events.ChangedStalkMode += _scp106AudioHandler.On106ChangedStalkMode;
             Scp106Events.ChangedVigor += _scp106AudioHandler.On106ChangedVigor;
             Scp106Events.TeleportingPlayer += _scp106AudioHandler.On106TeleportingPlayer;
             Scp106Events.UsingHunterAtlas += _scp106AudioHandler.On106UsingHunterAtlas;
-            ScpVoiceProfiles.DynamicProviders.Add(new Scp106DynamicPresetProvider(_scp106AudioHandler.States));
+            ScpVoiceProfiles.DynamicProviders.Add(_scp106AudioHandler.Manager);
 
             #endregion
 
@@ -242,35 +244,44 @@
         #region Local Event Router Methods (Dismantle Sessions)
         private void OnChangedRole(PlayerChangedRoleEventArgs ev)
         {
-            if (ev.Player == null) return;
+            if (ev == null || ev.Player == null) return;
+
             _voiceManager?.StopSession(ev.Player);
             ScpVoiceProfiles.ClearCacheFor(ev.Player);
-            _scp096AudioHandler?.OnChangedRole(ev);
-            _scp939AudioHandler?.OnChangedRole(ev);
-            _scp3114AudioHandler?.OnChangedRole(ev);
-            _scp106AudioHandler?.OnChangedRole(ev);
+
+            // Explicit generic manager purges to instantly clear memory contexts
+            _scp096AudioHandler?.Manager.RemovePlayer(ev.Player);
+            _scp939AudioHandler?.Manager.RemovePlayer(ev.Player);
+            _scp3114AudioHandler?.Manager.RemovePlayer(ev.Player);
+            _scp106AudioHandler?.Manager.RemovePlayer(ev.Player);
         }
 
         private void OnPlayerLeft(PlayerLeftEventArgs ev)
         {
-            if (ev.Player == null) return;
+            if (ev == null || ev.Player == null) return;
+
             _voiceManager?.StopSession(ev.Player);
             ScpVoiceProfiles.ClearCacheFor(ev.Player);
-            _scp096AudioHandler?.OnPlayerDied(null); // Direct state wipe on leave
-            _scp939AudioHandler?.OnPlayerDied(null);
-            _scp3114AudioHandler?.OnPlayerDied(null);
-            _scp106AudioHandler?.OnPlayerDied(null);
+
+            // Explicit structural tracker drops upon connection tear down
+            _scp096AudioHandler?.Manager.RemovePlayer(ev.Player);
+            _scp939AudioHandler?.Manager.RemovePlayer(ev.Player);
+            _scp3114AudioHandler?.Manager.RemovePlayer(ev.Player);
+            _scp106AudioHandler?.Manager.RemovePlayer(ev.Player);
         }
 
         private void OnPlayerDied(PlayerDeathEventArgs ev)
         {
-            if (ev.Player == null) return;
+            if (ev == null || ev.Player == null) return;
+
             _voiceManager?.StopSession(ev.Player);
             ScpVoiceProfiles.ClearCacheFor(ev.Player);
-            _scp096AudioHandler?.OnPlayerDied(null);
-            _scp939AudioHandler?.OnPlayerDied(null);
-            _scp3114AudioHandler?.OnPlayerDied(null);
-            _scp106AudioHandler?.OnPlayerDied(null);
+
+            // Route safe tracking purges during combat lifecycle end points
+            _scp096AudioHandler?.Manager.RemovePlayer(ev.Player);
+            _scp939AudioHandler?.Manager.RemovePlayer(ev.Player);
+            _scp3114AudioHandler?.Manager.RemovePlayer(ev.Player);
+            _scp106AudioHandler?.Manager.RemovePlayer(ev.Player);
         }
         #endregion
     }
