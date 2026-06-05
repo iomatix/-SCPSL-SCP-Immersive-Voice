@@ -1,8 +1,51 @@
 # SCP Immersive Voice
 
-**SCP Immersive Voice** is an enterprise-grade real-time Digital Signal Processing (DSP) and proximity voice chat framework for **SCP: Secret Laboratory** powered by **LabAPI**.
+**SCP Immersive Voice** is an enterprise-grade real-time Digital Signal Processing (DSP) and proximity voice chat framework for **SCP: Secret Laboratory** powered by **[LabAPI](https://github.com/northwood-studios/LabAPI)** and **[AudioManagerAPI](https://github.com/iomatix/-SCPSL-AudioManagerAPI/tree/main/AudioManagerAPI)**.
+
+The core real-time, float-native Digital Signal Processing (DSP) effects for the `SCP_Immersive_Voice` subsystem are implemented **within** this repository.
+
+## Architectural Principles
+
+Every effect implemented in this pipeline adheres to strict **AAA Game Audio Standards**:
+* **In-Place Processing:** Every effect implements `IAudioEffect` and operates directly on the native float PCM buffer (`void Process(float[] pcm, int length)`) to avoid redundant memory copies.
+* **Zero Allocations:** No heap allocations (`new`) are permitted inside the critical audio processing loops. All state variables, filters, and rings are persistent and stack/heap-allocated only during instantiation.
+* **Persistent Statefulness (Cached-DSP):** Effects that rely on time-domain or history data (delays, filters, envelopes) maintain their state context *per player* inside a persistent cache. They are never instantiated per-frame, eliminating phase fractures, zipper noise, and click artifacts.
 
 By bypassing high-overhead frame-by-frame reinstantiations, this framework runs a stateful, thread-safe, and completely zero-allocation processing pipeline. Every SCP is equipped with an organic, character-accurate acoustic model that dynamically reacts to their physical abilities, health states, and environmental conditions in real time.
+
+## **Effects Documentation** - [README.md](SCP-Immersive-Voice/AudioProcessing/Effects/README.md)
+
+
+## 📝 Changelog — Version 1.0.0 (The Foundation Update)
+
+This is the most significant milestone in the project's history. Version 1.0.0 is not just a collection of new effects; it is a total reconstruction of the `SCP Immersive Voice` engine. Every SCP has been re-calibrated, and the audio processing architecture has been rewritten from the ground up to provide studio-grade fidelity with minimal CPU overhead.
+
+### 🏗️ Architecture & Performance
+- **Full Modularity:** The monolithic handler has been decomposed into independent, lightweight modules (`Scp096AudioHandler`, `Scp939AudioHandler`, etc.). Each SCP now manages its state in total isolation.
+- **Zero-Allocation Pipeline:** The entire DSP pipeline now operates in "zero-heap-allocation" mode. By eliminating redundant memory allocations, we guarantee zero jitter and perfect audio continuity, even under heavy server load.
+- **Thread-Safety 2.0:** Pipeline synchronization has been migrated to the `PipelineContainer` level. Atomic operations and `ConcurrentDictionary` usage eliminate race conditions, ending the era of "audio gurgling" or state-lock issues common in older versions.
+
+### 🔊 Comprehensive Roster Rework
+- **Unified Acoustic Matrix:** All SCP roles have been re-tuned based on our internal "Audio Engineer’s Bible." Every preset—from 049 to 3114—now utilizes improved organic resonance algorithms rather than static filters.
+- **State Transition Smoothing:** We implemented advanced transition smoothing across all states. Digital "clicks" and abrupt volume jumps during emotional transitions or attack triggers have been eliminated.
+- **State Watchdogs:** Every SCP state is now guarded by a high-precision temporal watchdog. If the game engine fails to fire a completion event (e.g., during tick rate spikes), the system automatically and seamlessly reverts to the baseline state.
+
+### 🧪 DSP Innovations
+- **Uncanny Valley Generator (`LaryngealAsymmetryEffect`):** Introduced for SCP-939; generates unnatural, biology-inspired asymmetry, perfect for deceptive mimicry.
+- **Airy Whisper Engine:** A complete whisper synthesis overhaul. Replacing radio-like noise with filtered aerodynamic airflow, achieving crystal-clear speech intelligibility.
+- **Real-time Diagnostics:** Integrated an internal floating-point trace engine that detects `NaN` (Not a Number) spikes in real-time, instantly resetting affected modules to protect the global audio stream.
+
+### 🔧 Stability & Reliability
+- Resolved all persistent issues regarding SCPs becoming "stuck" in combat states.
+- Optimized CPU usage via condition-gated gating (DSP nodes are only computed if the player is actively transmitting).
+- Fixed all event-leak vulnerabilities that occurred during hot-reloads.
+
+---
+
+## 🚀 The Road Ahead
+Version 1.0.0 serves as the solid, professional-grade foundation I have been working toward. While this build covers the entire roster with absolute precision, the architecture is now flexible enough to support even more complex acoustic phenomena. I am looking forward to exploring further physical modeling and even deeper integration with the game's environmental audio in future updates.
+
+*This project has been a solo journey of technical obsession—thank you for following along and for your interest in the high-fidelity future of SCP: Secret Laboratory voice chat.*
 
 ---
 
