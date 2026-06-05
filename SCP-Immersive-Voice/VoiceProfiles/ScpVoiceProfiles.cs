@@ -157,6 +157,9 @@
             // ==========================================
             // 3. HARMONIC SYNTHESIZERS
             // ==========================================
+            if (preset.DeathRattle > 0f)
+                targetNodes.Add(("DeathRattle", () => new DeathRattleEffect(preset.DeathRattle, sr), preset.DeathRattle, "_amount"));
+
             if (preset.Subharmonic > 0f)
                 targetNodes.Add(("Subharmonic", () => new SubharmonicGrowlEffect(preset.Subharmonic, sr), preset.Subharmonic, "_amount"));
 

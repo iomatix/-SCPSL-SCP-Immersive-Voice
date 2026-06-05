@@ -145,6 +145,7 @@
     <Compile Include="AudioProcessing\Effects\BitcrushEffect.cs" />
     <Compile Include="AudioProcessing\Effects\BreathNoiseEffect.cs" />
     <Compile Include="AudioProcessing\Effects\ChirpEffect.cs" />
+    <Compile Include="AudioProcessing\Effects\DeathRattleEffect.cs" />
     <Compile Include="AudioProcessing\Effects\DigitalDataBurstEffect.cs" />
     <Compile Include="AudioProcessing\Effects\DistortionEffect.cs" />
     <Compile Include="AudioProcessing\Effects\DryCrackleEffect.cs" />

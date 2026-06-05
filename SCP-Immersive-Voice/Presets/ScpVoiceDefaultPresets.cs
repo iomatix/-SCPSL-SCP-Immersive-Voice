@@ -137,22 +137,22 @@
                 },
 
                 // =================================================================
-                // SCP‑049‑2 (The Cured) — Possessed Corpse Necrotic Ghoul
+                // SCP‑049‑2 (The Cured) — Visceral Necrotic Gasping Corpse
                 // =================================================================
                 [RoleTypeId.Scp0492] = new ScpVoicePreset
                 {
                     Enable = true,
                     Mode = ScpVoicePresetMode.Default,
-                    OutputGain = 2.40f,
-                    Pitch = 0.85f,           // Slight biological heavy drag
-                    Formant = 0.55f,         // Massive elongated rotted neck structure
-                    DemonicOctaverMix = 0.70f,      // Cinematic movie demon double-voice effect
-                    Guttural = 0.65f,        // Deep false-vocal cord rasp tearing the air
-                    FleshCrackle = 0.50f,    // Wet bone shifting and muscle rupture transients during speech
-                    Distortion = 0.45f,      // Organic throat strain compression
-                    LowPass = 1800f,         // Let the piercing demonic scream pass through
-                    HighPass = 90f,          // Clean out mud floor
-                    Reverb = 0.25f           // Mild local body cavity resonance
+                    OutputGain = 2.45f,
+                    Pitch = 0.76f,           // TUNING: Heavier biological drag (more sluggish)
+                    Formant = 0.50f,         // TUNING: Fully expanded rotted trachea
+                    DeathRattle = 0.85f,     // R&D INJECTION: Dominant visceral choking gurgle
+                    DemonicOctaverMix = 0.20f, // BALANCE: Dropped to a subtle low-end shadow (no longer occult lord)
+                    Guttural = 0.80f,        // Massive false-vocal cord larynx sandpaper abrasion
+                    FleshCrackle = 0.65f,    // Wet snapping bone and stretching tissue transients
+                    Distortion = 0.35f,
+                    LowPass = 1500f,         // Muffled high-frequencies matching heavy physical decay
+                    HighPass = 90f
                 },
 
                 // =================================================================
