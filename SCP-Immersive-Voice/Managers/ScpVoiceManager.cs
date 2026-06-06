@@ -148,20 +148,6 @@
             }
         }
 
-        public void AppendPcm(Player scp, short[] pcm)
-        {
-            if (pcm == null || pcm.Length == 0)
-                return;
-
-            float[] samples = new float[pcm.Length];
-            const float inv = 1f / 32768f;
-
-            for (int i = 0; i < pcm.Length; i++)
-                samples[i] = pcm[i] * inv;
-
-            AppendPcm(scp, samples);
-        }
-
         public void UpdatePositions()
         {
             foreach (var kvp in _sessions)
