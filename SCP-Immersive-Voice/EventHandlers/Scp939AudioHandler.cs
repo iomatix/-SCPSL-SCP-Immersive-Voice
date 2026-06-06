@@ -104,8 +104,8 @@
 
         public void On939CreatingAmnesticCloud(Scp939CreatingAmnesticCloudEventArgs ev)
         {
-            // Protects the chemical dispersion stream with a 15-second absolute timer limits
-            if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.AmnesticCloud, 15.0f);
+            // Protects the chemical dispersion stream with a 25-second absolute timer limits
+            if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.AmnesticCloud, 25.0f);
         }
 
         public void On939CreatedAmnesticCloud(Scp939CreatedAmnesticCloudEventArgs ev)

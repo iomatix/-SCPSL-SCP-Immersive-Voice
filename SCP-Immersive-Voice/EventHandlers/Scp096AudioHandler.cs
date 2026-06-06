@@ -78,9 +78,9 @@
         // ==========================================
         public void On096Charging(Scp096ChargingEventArgs ev)
         {
-            // Inject bull-rush sprint pressure overlay (automatically expires after 4 seconds)
+            // Inject bull-rush sprint pressure overlay (automatically expires after 5 seconds)
             if (ev != null && ev.Player != null)
-                Manager.SetState(ev.Player, Scp096VoiceState.Charging, 4.0f);
+                Manager.SetState(ev.Player, Scp096VoiceState.Charging, 5.0f);
         }
 
         public void On096Charged(Scp096ChargedEventArgs ev)
