@@ -159,7 +159,16 @@
                     int playerId = kvp.Key;
 
                     Player scp = Player.ReadyList.FirstOrDefault(p => p.PlayerId == playerId);
-                    if (scp == null || !scp.IsReady) continue;
+                    if (scp == null || !scp.IsReady)
+                    {
+                        if (_sessions.TryGetValue(playerId, out int deadSessionId))
+                        {
+                            try { DefaultAudioManager.Instance.DestroySession(deadSessionId); } catch { }
+                            _sessions.Remove(playerId);
+                            Logger.Warn($"[VOICE SECURITY] Pruned voice session {deadSessionId} for disconnected PlayerId: {playerId}");
+                        }
+                        continue;
+                    }
 
                     DefaultAudioManager.Instance.SetSessionPosition(kvp.Value, scp.Position);
                 }
