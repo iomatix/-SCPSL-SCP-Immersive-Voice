@@ -7,6 +7,7 @@
     using SCP_Immersive_Voice.VoiceProfiles;
     using ScpImmersiveVoice;
     using ScpImmersiveVoice.Config;
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -15,150 +16,153 @@
         private readonly ImmersiveScpVoiceConfig _config = ImmersiveScpVoicePlugin.StaticConfig;
 
         /// <summary>
-        /// Audio sessions: key = PlayerId, value = sessionId
+        /// Audio sessions registry tracking active streams. Key = PlayerId, Value = SessionId.
         /// </summary>
         private readonly Dictionary<int, int> _sessions = new Dictionary<int, int>();
 
         /// <summary>
-        /// Per-player locks to prevent duplicate StartSession
+        /// Thread-safe synchronization root protecting all internal collection mutations across network threads.
         /// </summary>
-        private readonly Dictionary<int, object> _locks = new Dictionary<int, object>();
+        private readonly object _stateLock = new object();
 
-        private object GetLock(int playerId)
-        {
-            if (!_locks.TryGetValue(playerId, out var l))
-            {
-                l = new object();
-                _locks[playerId] = l;
-            }
-            return l;
-        }
-
+        /// <summary>
+        /// Allocates a synchronized real-time audio stream channel for a designated network actor.
+        /// </summary>
         public int StartSession(Player scp)
         {
-            if (_sessions.TryGetValue(scp.PlayerId, out int existing))
-                return existing;
+            if (scp == null) return 0;
 
-            int sessionId = DefaultAudioManager.Instance.CreateStreamSession(
-                position: scp.Position,
-                isSpatial: true,
-                minDistance: 4.25f,
-                maxDistance: _config.ProximityDistance,
-                volume: 1f,
-                priority: AudioPriority.High,
-                validPlayersFilter: p => p != null && p.IsReady && p != scp
-            );
+            lock (_stateLock)
+            {
+                // Double-check lock pattern to prevent duplicate thread racing allocation
+                if (_sessions.TryGetValue(scp.PlayerId, out int existing))
+                    return existing;
 
-            _sessions[scp.PlayerId] = sessionId;
+                int sessionId = DefaultAudioManager.Instance.CreateStreamSession(
+                    position: scp.Position,
+                    isSpatial: true,
+                    minDistance: 4.25f,
+                    maxDistance: _config.ProximityDistance,
+                    volume: 1f,
+                    priority: AudioPriority.High,
+                    validPlayersFilter: p => p != null && p.IsReady && p != scp
+                );
 
-            Logger.Debug($"[VOICE DEBUG] Session ADDED to dictionary. PlayerId: {scp.PlayerId}, SessionId: {sessionId}");
-            Logger.Debug($"[VOICE DEBUG] Total sessions in dictionary: {_sessions.Count}");
-            Logger.Debug($"[VOICE DEBUG] Session created for player: {scp.Nickname}, SessionId: {sessionId}");
+                if (sessionId == 0) return 0;
 
-            return sessionId;
+                _sessions[scp.PlayerId] = sessionId;
+
+                Logger.Debug($"[VOICE HARDENING] Session REGISTERED. PlayerId: {scp.PlayerId}, SessionId: {sessionId}");
+                return sessionId;
+            }
         }
 
+        /// <summary>
+        /// Deterministically tears down an active voice transmission pipeline and releases hardware descriptors.
+        /// </summary>
         public void StopSession(Player scp)
         {
-            Logger.Debug($"[VOICE DEBUG] StopSession called for player: {scp.Nickname}, PlayerId: {scp.PlayerId}");
-            Logger.Debug($"[VOICE DEBUG] Current sessions: {string.Join(", ", _sessions.Keys)}");
+            if (scp == null) return;
 
             var key = scp.PlayerId;
 
-            lock (GetLock(key))
+            lock (_stateLock)
             {
                 if (!_sessions.TryGetValue(key, out int sessionId))
                 {
-                    Logger.Debug($"[VOICE DEBUG] Session NOT found for player: {scp.Nickname}");
+                    // Shuts down quiet log noise for non-tracked base human players changing roles
                     return;
                 }
 
                 DefaultAudioManager.Instance.DestroySession(sessionId);
-
-                Logger.Debug($"[VOICE DEBUG] Audio Streaming Seassion no. {sessionId} Destroyed");
                 _sessions.Remove(key);
+
+                Logger.Debug($"[VOICE HARDENING] Audio Streaming Session no. {sessionId} successfully destroyed for {scp.Nickname}");
             }
         }
 
+        /// <summary>
+        /// Forces a cascade flush of all active voice allocations during hard plugin/round context drops.
+        /// </summary>
         public void StopAllSessions()
         {
-            foreach (var kvp in _sessions)
-                DefaultAudioManager.Instance.DestroySession(kvp.Value);
+            lock (_stateLock)
+            {
+                foreach (var kvp in _sessions)
+                {
+                    try { DefaultAudioManager.Instance.DestroySession(kvp.Value); } catch { }
+                }
 
-            Logger.Debug("[VOICE DEBUG] All Audio Streaming Seassions Destroyed");
-            _sessions.Clear();
-            _locks.Clear();
+                Logger.Debug("[VOICE HARDENING] All active audio streaming slots cleared from native heap.");
+                _sessions.Clear();
+            }
         }
 
+        /// <summary>
+        /// Feeds incoming asynchronous raw PCM frames straight into the synchronized active hardware pipeline.
+        /// </summary>
         public void AppendPcm(Player scp, float[] samples)
         {
-            if (scp == null || samples == null || samples.Length == 0)
-            {
-                return;
-            }
+            if (scp == null || samples == null || samples.Length == 0) return;
 
             var key = scp.PlayerId;
+            int sessionId;
 
-            lock (GetLock(key))
+            // Thread-safe isolation gate ensuring dictionary read/write safety
+            lock (_stateLock)
             {
-                if (!_sessions.TryGetValue(key, out int sessionId))
+                if (!_sessions.TryGetValue(key, out sessionId))
                 {
-                    Logger.Debug($"[SCP-VOICE] AppendPcm: NO SESSION for {scp.Nickname}, creating new one");
                     sessionId = StartSession(scp);
                 }
+            }
 
-                // 1. Append raw samples directly into the real-time hardware buffer
-                DefaultAudioManager.Instance.AppendPcmData(sessionId, samples);
+            if (sessionId == 0) return;
 
-                // 2. Resolve the active speaker state context from our framework API
-                var state = DefaultAudioManager.Instance.GetSessionState(sessionId);
-                if (state == null)
+            // Audio push operations execute outside the strict state lock to guarantee sub-millisecond voice thread performance
+            DefaultAudioManager.Instance.AppendPcmData(sessionId, samples);
+
+            var state = DefaultAudioManager.Instance.GetSessionState(sessionId);
+            if (state == null) return;
+
+            var activePreset = ScpVoiceProfiles.GetPreset(scp);
+            if (activePreset != null)
+            {
+                bool targetSpatialization = !activePreset.IsGlobalTransmission;
+
+                if (state.IsSpatial != targetSpatialization)
                 {
-                    Logger.Error($"[SCP-VOICE] AppendPcm: state NULL for session {sessionId}");
-                    return;
-                }
+                    state.IsSpatial = targetSpatialization;
 
-                // 3. FETCH PRESET & EVALUATE SPATIALIZATION RULES DIRECTLY AT THE SPEAKER BOUNDARY
-                var activePreset = ScpVoiceProfiles.GetPreset(scp);
-                if (activePreset != null)
-                {
-                    // If global transmission is requested, IsSpatial must be FALSE (2D Full-Map Broadcast)
-                    bool targetSpatialization = !activePreset.IsGlobalTransmission;
-
-                    if (state.IsSpatial != targetSpatialization)
+                    if (state.HasPhysicalSpeaker && state.PhysicalSpeaker != null)
                     {
-                        state.IsSpatial = targetSpatialization;
+                        state.PhysicalSpeaker.SetSpatialization(targetSpatialization);
 
-                        // Force live update on the physical hardware worker loop if allocated
-                        if (state.HasPhysicalSpeaker && state.PhysicalSpeaker != null)
-                        {
-                            state.PhysicalSpeaker.SetSpatialization(targetSpatialization);
-
-                            // Optional optimization: balance volume scaling for non-spatial projection
-                            if (!targetSpatialization)
-                                state.PhysicalSpeaker.SetVolume(activePreset.OutputGain * 0.85f);
-                        }
+                        if (!targetSpatialization)
+                            state.PhysicalSpeaker.SetVolume(activePreset.OutputGain * 0.85f);
                     }
-                }
-
-                if (!state.HasPhysicalSpeaker || state.PhysicalSpeaker == null)
-                {
-                    Logger.Warn($"[SCP-VOICE] AppendPcm: NO PHYSICAL SPEAKER for session {sessionId}");
                 }
             }
         }
 
+        /// <summary>
+        /// Synchronizes real-time world coordinate vectors for all registered active transmission targets.
+        /// </summary>
         public void UpdatePositions()
         {
-            foreach (var kvp in _sessions)
+            lock (_stateLock)
             {
-                int playerId = kvp.Key;
+                if (_sessions.Count == 0) return;
 
-                Player scp = Player.ReadyList.FirstOrDefault(p => p.PlayerId == playerId);
-                if (scp == null) continue;
+                foreach (var kvp in _sessions)
+                {
+                    int playerId = kvp.Key;
 
-                var sessionId = kvp.Value;
-                DefaultAudioManager.Instance.SetSessionPosition(sessionId, scp.Position);
+                    Player scp = Player.ReadyList.FirstOrDefault(p => p.PlayerId == playerId);
+                    if (scp == null || !scp.IsReady) continue;
+
+                    DefaultAudioManager.Instance.SetSessionPosition(kvp.Value, scp.Position);
+                }
             }
         }
     }
