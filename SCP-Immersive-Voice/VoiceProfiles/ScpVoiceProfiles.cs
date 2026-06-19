@@ -15,16 +15,14 @@
 
     public static class ScpVoiceProfiles
     {
-        public static List<IDynamicVoicePresetProvider> DynamicProviders { get; } = new List<IDynamicVoicePresetProvider>();
+        public static ConcurrentBag<IDynamicVoicePresetProvider> DynamicProviders { get; } = new ConcurrentBag<IDynamicVoicePresetProvider>();
 
         private readonly static ImmersiveScpVoiceConfig _config = ImmersiveScpVoicePlugin.StaticConfig;
 
-        // Permanent thread-safe cache containing stateful container blocks instead of raw naked pipelines
         private readonly static ConcurrentDictionary<int, PipelineContainer> _stableCache = new ConcurrentDictionary<int, PipelineContainer>();
 
-        /// <summary>
-        /// Context container holding the processing pipeline and live instances map to protect memory boundaries.
-        /// </summary>
+        private readonly static ConcurrentDictionary<(Type, string), FieldInfo> _fieldCache = new ConcurrentDictionary<(Type, string), FieldInfo>();
+
         private class PipelineContainer
         {
             public readonly AudioEffectPipeline Pipeline = new AudioEffectPipeline();
@@ -33,16 +31,12 @@
             public readonly object SyncLock = new object();
         }
 
-        /// <summary>
-        /// Resolves and updates the stateful processing graph using a pre-fetched configuration preset.
-        /// </summary>
         public static AudioEffectPipeline GetPipelineFor(Player player, ScpVoicePreset targetPreset)
         {
             if (player == null || targetPreset == null) return null;
 
             var container = _stableCache.GetOrAdd(player.PlayerId, id => new PipelineContainer());
 
-            // Structural deep-property match utilizing the pre-fetched frame preset
             if (container.LastAppliedPreset == null || !ArePresetsAcousticallyIdentical(container.LastAppliedPreset, targetPreset))
             {
                 lock (container.SyncLock)
@@ -58,16 +52,11 @@
             return container.Pipeline;
         }
 
-        /// <summary>
-        /// Real-time structural fingerprint comparator. Compares values instead of memory pointers 
-        /// to fully avoid multi-threaded reference locking bugs.
-        /// </summary>
         private static bool ArePresetsAcousticallyIdentical(ScpVoicePreset a, ScpVoicePreset b)
         {
-            if (ReferenceEquals(a, b)) return true; // Quick win if memory points to exact same register
+            if (ReferenceEquals(a, b)) return true;
             if (a == null || b == null) return false;
 
-            // Deep value verification of properties that structurally alter our DSP graph chains
             return Math.Abs(a.Pitch - b.Pitch) < 0.001f &&
                    Math.Abs(a.Formant - b.Formant) < 0.001f &&
                    Math.Abs(a.LowPass - b.LowPass) < 0.001f &&
@@ -89,15 +78,11 @@
             _stableCache.TryRemove(player.PlayerId, out _);
         }
 
-        /// <summary>
-        /// Resolves the voice preset context governed by priority matrices and administrator config overrides.
-        /// </summary>
         public static ScpVoicePreset GetPreset(Player player)
         {
             if (player == null) return new ScpVoicePreset { Enable = false };
             var role = player.Role;
 
-            // Step 1: Dynamic states execute first ONLY if explicitly enabled by the server administrator
             if (_config.EnableDynamicStates)
             {
                 foreach (var provider in DynamicProviders)
@@ -109,39 +94,26 @@
                 }
             }
 
-            // Step 2: Fallback to custom static role configurations from Config.yml
             if (_config.Presets.TryGetValue(role, out var preset) && preset.Enable)
             {
                 return preset;
             }
 
-            // Step 3: Absolute architectural fallback to handcrafted cinematic defaults
             return ScpVoiceDefaultPresets.Create().TryGetValue(role, out var defaultPreset)
                 ? defaultPreset
                 : new ScpVoicePreset { Enable = false };
         }
 
-        /// <summary>
-        /// Synchronizes the running processing graph in-place. 
-        /// Reuses active node instances to maintain perfect mathematical filter phase continuity.
-        /// </summary>
         private static void SynchronizePipelineGraph(PipelineContainer container, ScpVoicePreset preset)
         {
             float sr = (float)VoiceChat.VoiceChatSettings.SampleRate;
             if (sr <= 0) sr = 48000f;
 
-            // Step 1: Create the target list representing the strict  execution sequence requirement
             var targetNodes = new List<(string Key, Func<IAudioEffect> Factory, float ScalarValue, string ScalarFieldName)>();
 
-            // ==========================================
-            // 1. DYNAMICS & GATING (Pipeline Entry Guard)
-            // ==========================================
             float gateThreshold = preset.UseNoiseGate ? preset.NoiseGateThreshold : -45f;
             targetNodes.Add(("NoiseGate", () => new NoiseGateEffect(gateThreshold, sr), gateThreshold, "_threshold"));
 
-            // ==========================================
-            // 2. TIMBRE & GEOMETRY MODIFIERS
-            // ==========================================
             if (preset.VocalShriek > 0f)
                 targetNodes.Add(("VocalShriek", () => new VocalShriekShifterEffect(preset.VocalShriek, sr), preset.VocalShriek, "_amount"));
 
@@ -157,9 +129,6 @@
             if (preset.LaryngealAsymmetry > 0f)
                 targetNodes.Add(("LaryngealAsymmetry", () => new LaryngealAsymmetryEffect(preset.LaryngealAsymmetry, sr), preset.LaryngealAsymmetry, "_amount"));
 
-            // ==========================================
-            // 3. HARMONIC SYNTHESIZERS
-            // ==========================================
             if (preset.DeathRattle > 0f)
                 targetNodes.Add(("DeathRattle", () => new DeathRattleEffect(preset.DeathRattle, sr), preset.DeathRattle, "_amount"));
 
@@ -172,47 +141,29 @@
             if (preset.Guttural > 0f)
                 targetNodes.Add(("Guttural", () => new GutturalResonanceEffect(preset.Guttural, sr), preset.Guttural, "_amount"));
 
-            // ==========================================
-            // 4. NON-LINEAR DEGRADATION & SATURATION
-            // ==========================================
             if (preset.Distortion > 0f)
                 targetNodes.Add(("Distortion", () => new DistortionEffect(preset.Distortion, sr), preset.Distortion, "_amount"));
 
             if (preset.SiliconModulation > 0f)
-                targetNodes.Add(("SiliconModulation", () => new SiliconRingModulatorEffect(preset.SiliconModulation, sr), preset.SiliconModulation, "_amount")); // Wired R&D Silicon Modulator
+                targetNodes.Add(("SiliconModulation", () => new SiliconRingModulatorEffect(preset.SiliconModulation, sr), preset.SiliconModulation, "_amount"));
 
             if (preset.ScreechModulation > 0f)
-                targetNodes.Add(("ScreechModulation", () => new ScreechModulatorEffect(preset.ScreechModulation, sr), preset.ScreechModulation, "_amount")); // Wired R&D Screech Modulator
+                targetNodes.Add(("ScreechModulation", () => new ScreechModulatorEffect(preset.ScreechModulation, sr), preset.ScreechModulation, "_amount"));
 
             if (preset.Bitcrush > 0f)
-                targetNodes.Add(("Bitcrush", () => new BitcrushEffect(preset.Bitcrush), preset.Bitcrush, null)); // Structurally rebuilt on bit-depth changes
+                targetNodes.Add(("Bitcrush", () => new BitcrushEffect(preset.Bitcrush), preset.Bitcrush, null));
 
             if (preset.SampleRateReduce > 0f)
                 targetNodes.Add(("SampleRateReduce", () => new SampleRateReducerEffect(preset.SampleRateReduce, sr), preset.SampleRateReduce, null));
 
-            // ==========================================
-            // 5. TIME-DOMAIN MODULATION & FRACTURES
-            // ==========================================
             if (preset.Tremolo > 0f)
-                targetNodes.Add(("Tremolo", () => new TremoloEffect(preset.Tremolo), preset.Tremolo, "_amount")); //  FIX: Fully wired missing node
+                targetNodes.Add(("Tremolo", () => new TremoloEffect(preset.Tremolo), preset.Tremolo, "_amount"));
 
             if (preset.Glitch > 0f)
                 targetNodes.Add(("Glitch", () => new GlitchBurstEffect(preset.Glitch, sr), preset.Glitch, null));
 
-            // ==========================================
-            // 6. PROCEDURAL SYNTHETIC TEXTURE LAYERS
-            // ==========================================
-
             if (preset.PredatoryCamouflage > 0f)
-                targetNodes.Add(
-                (
-                    "PredatoryCamouflage",
-                    () => new PredatoryCamouflageEffect(
-                        preset.PredatoryCamouflage,
-                        sr),
-                    preset.PredatoryCamouflage,
-                    "_amount"
-                ));
+                targetNodes.Add(("PredatoryCamouflage", () => new PredatoryCamouflageEffect(preset.PredatoryCamouflage, sr), preset.PredatoryCamouflage, "_amount"));
 
             if (preset.WhisperAmount > 0f)
                 targetNodes.Add(("Whisper", () => new WhisperFilterEffect(preset.WhisperAmount, sr), preset.WhisperAmount, "_amount"));
@@ -239,11 +190,8 @@
                 targetNodes.Add(("Chirp", () => new ChirpEffect(preset.Chirp, sr), preset.Chirp, null));
 
             if (preset.DataBurst > 0f)
-                targetNodes.Add(("DataBurst", () => new DigitalDataBurstEffect(preset.DataBurst, sr), preset.DataBurst, null)); //  FIX: Fully wired missing computer node
+                targetNodes.Add(("DataBurst", () => new DigitalDataBurstEffect(preset.DataBurst, sr), preset.DataBurst, null));
 
-            // ==========================================
-            // 7. ENVIRONMENT FILTERS & EQUALIZATION
-            // ==========================================
             if (preset.WetOrganic > 0f)
                 targetNodes.Add(("WetOrganic", () => new WetOrganicEffect(preset.WetOrganic, sr), preset.WetOrganic, "_amount"));
 
@@ -253,9 +201,6 @@
             if (preset.HighPass > 0f)
                 targetNodes.Add(("HighPass", () => new HighPassEffect(preset.HighPass, sr), preset.HighPass, null));
 
-            // ==========================================
-            // 8. SPATIAL DIFFUSION & TIME FEEDBACK NETWORKS
-            // ==========================================
             if (preset.WetDecay > 0f)
                 targetNodes.Add(("WetDecay", () => new WetDecayEffect(preset.WetDecay, sr), preset.WetDecay, "_amount"));
 
@@ -265,7 +210,6 @@
             if (preset.Reverb > 0f)
                 targetNodes.Add(("Reverb", () => new ReverbEffect(preset.Reverb, sr), preset.Reverb, "_amount"));
 
-            // Step 2: In-place reconciliation loop
             var temporaryMap = new Dictionary<string, IAudioEffect>();
             container.Pipeline.Clear();
 
@@ -273,22 +217,18 @@
             {
                 if (container.ActiveNodes.TryGetValue(target.Key, out var existingInstance) && target.ScalarFieldName != null)
                 {
-                    // CRITICAL  OPTIMIZATION: The instance exists! Maintain it to preserve history and feedback delay registers.
-                    // Rapidly inject the new configuration scalar via high-speed cached reflection to bypass readonly boundaries.
                     FastInjectScalarField(existingInstance, target.ScalarFieldName, target.ScalarValue);
                     temporaryMap[target.Key] = existingInstance;
                     container.Pipeline.Add(existingInstance);
                 }
                 else
                 {
-                    // Instantiate fresh node only if it wasn't present before or requires structural coefficient parameter rebuilds
                     var newInstance = target.Factory();
                     temporaryMap[target.Key] = newInstance;
                     container.Pipeline.Add(newInstance);
                 }
             }
 
-            // Step 3: Atomic state assignment update to guarantee zero-allocation hot thread swapping
             container.ActiveNodes.Clear();
             foreach (var kvp in temporaryMap)
             {
@@ -296,21 +236,21 @@
             }
         }
 
-        /// <summary>
-        /// High-speed reflection helper to overwrite configuration values while protecting active filter state memory registers.
-        /// </summary>
         private static void FastInjectScalarField(object instance, string fieldName, float value)
         {
             try
             {
-                var field = instance.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+                var type = instance.GetType();
+                var field = _fieldCache.GetOrAdd((type, fieldName), key =>
+                    key.Item1.GetField(key.Item2, BindingFlags.NonPublic | BindingFlags.Instance));
+
                 if (field != null)
                 {
                     field.SetValue(instance, value);
                 }
             }
             catch
-            { // Safeguard fallback block 
+            {
             }
         }
     }

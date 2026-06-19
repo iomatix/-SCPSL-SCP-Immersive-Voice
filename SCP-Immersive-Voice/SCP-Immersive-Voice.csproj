@@ -42,6 +42,7 @@
     <Reference Include="AudioManagerAPI, Version=2.3.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\SCPSL-AudioManagerAPI.2.3.3\lib\net48\AudioManagerAPI.dll</HintPath>
     </Reference>
+    <Reference Include="CommandSystem.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="LabApi, Version=1.1.7.0, Culture=neutral, processorArchitecture=AMD64">
       <HintPath>packages\Northwood.LabAPI.1.1.7\lib\net48\LabApi.dll</HintPath>
     </Reference>
