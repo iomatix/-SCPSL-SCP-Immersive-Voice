@@ -26,7 +26,7 @@
         public override string Name => "SCP Immersive Voice";
         public override string Description => "Enables proximity voice chat for SCPs and adds audio effects";
         public override string Author => "iomatix";
-        public override Version Version => new Version(1,1,1);
+        public override Version Version => new Version(1,1,2);
         public override Version RequiredApiVersion { get; } = new Version(LabApiProperties.CompiledVersion);
         #endregion
 
@@ -114,7 +114,7 @@
             Scp096Events.Charged += _scp096AudioHandler.On096Charged;
             Scp096Events.PryingGate += _scp096AudioHandler.On096PryingGate;
             Scp096Events.PriedGate += _scp096AudioHandler.On096PriedGate;
-            ScpVoiceProfiles.DynamicProviders.AddItem(_scp096AudioHandler.Manager);
+            ScpVoiceProfiles.DynamicProviders.Enqueue(_scp096AudioHandler.Manager);
 
             // --- SCP-939 Pipeline Config ---
             Scp939Events.MimickingEnvironment += _scp939AudioHandler.On939MimickingEnvironment;
@@ -126,7 +126,7 @@
             Scp939Events.Lunged += _scp939AudioHandler.On939Lunged;
             Scp939Events.CreatingAmnesticCloud += _scp939AudioHandler.On939CreatingAmnesticCloud;
             Scp939Events.CreatedAmnesticCloud += _scp939AudioHandler.On939CreatedAmnesticCloud;
-            ScpVoiceProfiles.DynamicProviders.AddItem(_scp939AudioHandler.Manager);
+            ScpVoiceProfiles.DynamicProviders.Enqueue(_scp939AudioHandler.Manager);
 
             // --- SCP-3114 Pipeline Config ---
             Scp3114Events.Disguising += _scp3114AudioHandler.On3114Disguising;
@@ -137,14 +137,14 @@
             Scp3114Events.StrangleStarted += _scp3114AudioHandler.On3114StrangleStarted;
             Scp3114Events.StrangleAborting += _scp3114AudioHandler.On3114StrangleAborting;
             Scp3114Events.StrangleAborted += _scp3114AudioHandler.On3114StrangleAborted;
-            ScpVoiceProfiles.DynamicProviders.AddItem(_scp3114AudioHandler.Manager);
+            ScpVoiceProfiles.DynamicProviders.Enqueue(_scp3114AudioHandler.Manager);
 
             // --- SCP-106 Pipeline Config ---
             Scp106Events.ChangedStalkMode += _scp106AudioHandler.On106ChangedStalkMode;
             Scp106Events.ChangedVigor += _scp106AudioHandler.On106ChangedVigor;
             Scp106Events.TeleportingPlayer += _scp106AudioHandler.On106TeleportingPlayer;
             Scp106Events.UsingHunterAtlas += _scp106AudioHandler.On106UsingHunterAtlas;
-            ScpVoiceProfiles.DynamicProviders.AddItem(_scp106AudioHandler.Manager);
+            ScpVoiceProfiles.DynamicProviders.Enqueue(_scp106AudioHandler.Manager);
 
             #endregion
 
