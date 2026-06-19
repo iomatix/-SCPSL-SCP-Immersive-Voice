@@ -69,6 +69,23 @@
                    Math.Abs(a.Guttural - b.Guttural) < 0.001f &&
                    Math.Abs(a.DryCrackle - b.DryCrackle) < 0.001f &&
                    Math.Abs(a.FleshCrackle - b.FleshCrackle) < 0.001f &&
+                   Math.Abs(a.VocalShriek - b.VocalShriek) < 0.001f &&
+                   Math.Abs(a.LaryngealAsymmetry - b.LaryngealAsymmetry) < 0.001f &&
+                   Math.Abs(a.DeathRattle - b.DeathRattle) < 0.001f &&
+                   Math.Abs(a.DemonicOctaverMix - b.DemonicOctaverMix) < 0.001f &&
+                   Math.Abs(a.SiliconModulation - b.SiliconModulation) < 0.001f &&
+                   Math.Abs(a.ScreechModulation - b.ScreechModulation) < 0.001f &&
+                   Math.Abs(a.Tremolo - b.Tremolo) < 0.001f &&
+                   Math.Abs(a.Glitch - b.Glitch) < 0.001f &&
+                   Math.Abs(a.PredatoryCamouflage - b.PredatoryCamouflage) < 0.001f &&
+                   Math.Abs(a.BreathNoise - b.BreathNoise) < 0.001f &&
+                   Math.Abs(a.StaticNoise - b.StaticNoise) < 0.001f &&
+                   Math.Abs(a.WetOrganic - b.WetOrganic) < 0.001f &&
+                   Math.Abs(a.WetDecay - b.WetDecay) < 0.001f &&
+                   Math.Abs(a.PocketEcho - b.PocketEcho) < 0.001f &&
+                   Math.Abs(a.Reverb - b.Reverb) < 0.001f &&
+                   a.UseNoiseGate == b.UseNoiseGate &&
+                   Math.Abs(a.NoiseGateThreshold - b.NoiseGateThreshold) < 0.001f &&
                    a.Enable == b.Enable &&
                    a.Mode == b.Mode;
         }
