@@ -39,8 +39,8 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="AudioManagerAPI, Version=2.3.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\SCPSL-AudioManagerAPI.2.3.2\lib\net48\AudioManagerAPI.dll</HintPath>
+    <Reference Include="AudioManagerAPI, Version=2.3.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\SCPSL-AudioManagerAPI.2.3.3\lib\net48\AudioManagerAPI.dll</HintPath>
     </Reference>
     <Reference Include="LabApi, Version=1.1.7.0, Culture=neutral, processorArchitecture=AMD64">
       <HintPath>packages\Northwood.LabAPI.1.1.7\lib\net48\LabApi.dll</HintPath>

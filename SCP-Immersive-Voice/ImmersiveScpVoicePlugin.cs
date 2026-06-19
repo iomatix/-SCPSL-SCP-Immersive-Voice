@@ -147,7 +147,7 @@
 
             #endregion
 
-            LabApi.Features.Console.Logger.Info($"[SCP Voice Chat] - Modular  Engine Successfully Online - {Version} by {Author}");
+            LabApi.Features.Console.Logger.Info($"[{Name}] - Modular Engine Successfully Online - {Version} by {Author}");
         }
 
         public override void Disable()
@@ -234,7 +234,7 @@
             _scp106AudioHandler = null;
             _voiceManager = null;
 
-            LabApi.Features.Console.Logger.Info("[SCP Voice Chat] - Modular  Engine Safely Offline.");
+            LabApi.Features.Console.Logger.Info($"[{Name}] - Modular  Engine Safely Offline.");
         }
 
         #region Local Event Router Methods (Dismantle Sessions)
