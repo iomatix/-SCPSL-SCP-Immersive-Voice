@@ -37,6 +37,7 @@
 
             var container = _stableCache.GetOrAdd(player.PlayerId, id => new PipelineContainer());
 
+
             if (container.LastAppliedPreset == null || !ArePresetsAcousticallyIdentical(container.LastAppliedPreset, targetPreset))
             {
                 lock (container.SyncLock)
@@ -44,7 +45,7 @@
                     if (container.LastAppliedPreset == null || !ArePresetsAcousticallyIdentical(container.LastAppliedPreset, targetPreset))
                     {
                         SynchronizePipelineGraph(container, targetPreset);
-                        container.LastAppliedPreset = targetPreset;
+                        container.LastAppliedPreset = targetPreset.Clone();
                     }
                 }
             }

@@ -41,6 +41,11 @@
         public float Subharmonic { get; set; } = 0f;
         public float Chirp { get; set; } = 0f;
 
+        public ScpVoicePreset Clone()
+        {
+            return (ScpVoicePreset)this.MemberwiseClone();
+        }
+
 
     }
 
