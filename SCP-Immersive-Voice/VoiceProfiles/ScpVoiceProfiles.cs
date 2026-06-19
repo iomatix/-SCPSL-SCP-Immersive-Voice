@@ -15,7 +15,7 @@
 
     public static class ScpVoiceProfiles
     {
-        public static ConcurrentBag<IDynamicVoicePresetProvider> DynamicProviders { get; } = new ConcurrentBag<IDynamicVoicePresetProvider>();
+        public static ConcurrentQueue<IDynamicVoicePresetProvider> DynamicProviders { get; } = new ConcurrentQueue<IDynamicVoicePresetProvider>();
 
         private readonly static ImmersiveScpVoiceConfig _config = ImmersiveScpVoicePlugin.StaticConfig;
 

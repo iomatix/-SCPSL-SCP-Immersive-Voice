@@ -7,6 +7,7 @@
     using LabApi.Features;
     using LabApi.Loader.Features.Plugins;
     using LabApi.Loader.Features.Plugins.Enums;
+    using Mirror;
     using SCP_Immersive_Voice.Managers;
     using SCP_Immersive_Voice.VoiceProfiles;
     using ScpImmersiveVoice.Config;
@@ -113,7 +114,7 @@
             Scp096Events.Charged += _scp096AudioHandler.On096Charged;
             Scp096Events.PryingGate += _scp096AudioHandler.On096PryingGate;
             Scp096Events.PriedGate += _scp096AudioHandler.On096PriedGate;
-            ScpVoiceProfiles.DynamicProviders.Add(_scp096AudioHandler.Manager);
+            ScpVoiceProfiles.DynamicProviders.AddItem(_scp096AudioHandler.Manager);
 
             // --- SCP-939 Pipeline Config ---
             Scp939Events.MimickingEnvironment += _scp939AudioHandler.On939MimickingEnvironment;
@@ -125,7 +126,7 @@
             Scp939Events.Lunged += _scp939AudioHandler.On939Lunged;
             Scp939Events.CreatingAmnesticCloud += _scp939AudioHandler.On939CreatingAmnesticCloud;
             Scp939Events.CreatedAmnesticCloud += _scp939AudioHandler.On939CreatedAmnesticCloud;
-            ScpVoiceProfiles.DynamicProviders.Add(_scp939AudioHandler.Manager);
+            ScpVoiceProfiles.DynamicProviders.AddItem(_scp939AudioHandler.Manager);
 
             // --- SCP-3114 Pipeline Config ---
             Scp3114Events.Disguising += _scp3114AudioHandler.On3114Disguising;
@@ -136,14 +137,14 @@
             Scp3114Events.StrangleStarted += _scp3114AudioHandler.On3114StrangleStarted;
             Scp3114Events.StrangleAborting += _scp3114AudioHandler.On3114StrangleAborting;
             Scp3114Events.StrangleAborted += _scp3114AudioHandler.On3114StrangleAborted;
-            ScpVoiceProfiles.DynamicProviders.Add(_scp3114AudioHandler.Manager);
+            ScpVoiceProfiles.DynamicProviders.AddItem(_scp3114AudioHandler.Manager);
 
             // --- SCP-106 Pipeline Config ---
             Scp106Events.ChangedStalkMode += _scp106AudioHandler.On106ChangedStalkMode;
             Scp106Events.ChangedVigor += _scp106AudioHandler.On106ChangedVigor;
             Scp106Events.TeleportingPlayer += _scp106AudioHandler.On106TeleportingPlayer;
             Scp106Events.UsingHunterAtlas += _scp106AudioHandler.On106UsingHunterAtlas;
-            ScpVoiceProfiles.DynamicProviders.Add(_scp106AudioHandler.Manager);
+            ScpVoiceProfiles.DynamicProviders.AddItem(_scp106AudioHandler.Manager);
 
             #endregion
 
@@ -224,6 +225,7 @@
 
             // Flush tracking structures completely
             ScpVoiceProfiles.DynamicProviders.Clear();
+
             _voiceManager?.StopAllSessions();
 
             // Dereference handlers to allow standard GC sweep
