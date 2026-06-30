@@ -33,18 +33,26 @@
         {
             if (player == null || targetPreset == null || VoiceManagerInstance == null) return null;
 
-            // Route the request straight to the unique, isolated session context container
             var session = VoiceManagerInstance.StartSession(player);
             if (session == null) return null;
 
             lock (session.SyncLock)
             {
-                // Atomically update the node properties only if structural acoustic transformations are detected
-                if (session.LastAppliedPreset == null || !ArePresetsAcousticallyIdentical(session.LastAppliedPreset, targetPreset))
+                DateTime now = DateTime.Now;
+
+                bool presetChanged = session.LastAppliedPreset == null || !ArePresetsAcousticallyIdentical(session.LastAppliedPreset, targetPreset);
+                bool silenceGapTriggered = (now - session.LastPacketReceivedTime).TotalSeconds > 0.5f;
+
+                // INTENT: Rebuild the DSP graph if the structural configuration profile mutates, 
+                // OR flush internal delay lines/buffers if a transmission gap suggests a new phrase has started.
+                if (presetChanged || silenceGapTriggered)
                 {
                     session.SynchronizePipelineGraph(targetPreset);
                     session.LastAppliedPreset = targetPreset.Clone();
                 }
+
+                // Maintain the temporal tracking reference to monitor incoming packet frequency.
+                session.LastPacketReceivedTime = now;
             }
 
             return session.Pipeline;

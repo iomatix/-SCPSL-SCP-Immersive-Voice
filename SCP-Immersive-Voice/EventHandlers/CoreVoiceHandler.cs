@@ -1,7 +1,6 @@
 ﻿namespace ScpImmersiveVoice.EventHandlers
 {
     using LabApi.Events.Arguments.PlayerEvents;
-    using LabApi.Features.Wrappers;
     using SCP_Immersive_Voice.Decoders;
     using SCP_Immersive_Voice.Managers;
     using SCP_Immersive_Voice.VoiceProfiles;
@@ -45,23 +44,10 @@
             float[] pcm = ScpVoiceDecoder.Decode(ev.Message);
             if (pcm == null || pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 0.001f)) return;
 
-            // Step 4: Resolve session container and atomically validate/synchronize DSP graph state
-            var session = _voiceManager.StartSession(sender);
-            if (session == null) return;
-
-            lock (session.SyncLock)
-            {
-                if (session.LastAppliedPreset == null || !ScpVoiceProfiles.ArePresetsAcousticallyIdentical(session.LastAppliedPreset, preset))
-                {
-                    session.SynchronizePipelineGraph(preset);
-                    session.LastAppliedPreset = preset.Clone();
-                }
-            }
-
-            // Process thread-safe float-native DSP pipeline graphs bound exclusively to this session context
+            // Step 4: Process thread-safe float-native DSP pipeline graphs bound exclusively to this session context
             pcm = ScpVoiceDecoder.ApplyEffects(pcm, sender);
 
-            // Step 5: Route message (pozostała część metody bez zmian) ...
+            // Step 5: Route packet according to internal standard role policies
             bool isForbiddenProximity = _config.ForbiddenProximity.Contains(sender.Role);
 
             if (isForbiddenProximity)
@@ -72,8 +58,9 @@
             }
 
             if (ev.Message.Channel == VoiceChatChannel.ScpChat)
-                ev.IsAllowed = false;
+                ev.IsAllowed = false; // Force proxy streaming engine bypass
 
+            // Pass the finalized PCM straight to our dedicated stream manager
             _voiceManager.AppendPcm(sender, pcm);
         }
 

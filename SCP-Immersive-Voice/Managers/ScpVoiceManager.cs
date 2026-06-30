@@ -26,6 +26,7 @@
         public AudioEffectPipeline Pipeline { get; } = new AudioEffectPipeline();
         public Dictionary<string, IAudioEffect> ActiveNodes { get; } = new Dictionary<string, IAudioEffect>();
         public ScpVoicePreset LastAppliedPreset { get; set; } = null;
+        public DateTime LastPacketReceivedTime { get; set; } = DateTime.MinValue;
         public readonly object SyncLock = new object();
 
         // INTENT: Track spatial state mutations to throttle high-frequency hardware transitions caused by network jitter.

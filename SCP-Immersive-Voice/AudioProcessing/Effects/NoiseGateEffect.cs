@@ -5,14 +5,14 @@
     using System;
 
     /// <summary>
-    ///  Stateful Noise Gate with RMS envelope detection.
-    /// Features smooth Attack, Hold, and Release to isolate voice and kill tail noise.
+    /// Stateful Noise Gate with energy-based RMS envelope detection.
+    /// Integrates signal power over time to prevent clipping during zero-crossings and sibilants.
     /// </summary>
     public class NoiseGateEffect : IAudioEffect
     {
         public string Name => "Noise Gate";
 
-        private readonly float _thresholdLinear;
+        private readonly float _thresholdLinearSquared; // Optimized to bypass Math.Sqrt in loop
         private readonly float _attackCoef;
         private readonly float _releaseCoef;
         private readonly int _holdSamples;
@@ -21,20 +21,18 @@
         private float _currentGain = 1f;
         private int _holdCounter = 0;
 
-        /// <summary>
-        /// Initializes the Noise Gate using a dB threshold.
-        /// </summary>
-        /// <param name="thresholdDb">Threshold in dB. -45f is general VoIP standard, -35f is tighter.</param>
-        /// <param name="sampleRate">Engine sample rate from VoiceChatSettings.</param>
         public NoiseGateEffect(float thresholdDb, float sampleRate)
         {
             float clampedDb = Clamp(thresholdDb, -96f, 0f);
-            _thresholdLinear = (float)Math.Pow(10, clampedDb / 20.0);
+            float thresholdLinear = (float)Math.Pow(10, clampedDb / 20.0);
 
-            // Studio standard presets: Attack=2ms, Hold=100ms, Release=200ms
+            // INTENT: Store the squared threshold to evaluate raw power directly, saving CPU cycles.
+            _thresholdLinearSquared = thresholdLinear * thresholdLinear;
+
+            // Studio standard integration constraints: Attack=2ms, Hold=120ms (slightly expanded for sibilants), Release=200ms
             _attackCoef = (float)Math.Exp(-1000.0 / (2f * sampleRate));
             _releaseCoef = (float)Math.Exp(-1000.0 / (200f * sampleRate));
-            _holdSamples = (int)(sampleRate * (100f / 1000f));
+            _holdSamples = (int)(sampleRate * (120f / 1000f));
         }
 
         public void Process(float[] pcm, int length)
@@ -43,15 +41,18 @@
 
             for (int i = 0; i < length; i++)
             {
-                float sampleAbs = Math.Abs(pcm[i]);
+                // INTENT: Square the sample to capture total instantaneous power instead of absolute raw voltage peaks.
+                float samplePower = pcm[i] * pcm[i];
 
-                if (sampleAbs > _envelope)
-                    _envelope = _attackCoef * _envelope + (1f - _attackCoef) * sampleAbs;
+                // Smooth the power envelope using leaky integrator time constants
+                if (samplePower > _envelope)
+                    _envelope = _attackCoef * _envelope + (1f - _attackCoef) * samplePower;
                 else
-                    _envelope = _releaseCoef * _envelope + (1f - _releaseCoef) * sampleAbs;
+                    _envelope = _releaseCoef * _envelope + (1f - _releaseCoef) * samplePower;
 
                 float targetGain;
-                if (_envelope >= _thresholdLinear)
+                // Evaluate power directly against the squared threshold matrix
+                if (_envelope >= _thresholdLinearSquared)
                 {
                     targetGain = 1f;
                     _holdCounter = _holdSamples;
@@ -69,6 +70,7 @@
                     }
                 }
 
+                // Smooth the gain transition to eliminate digital waveform steps (clicks)
                 if (targetGain > _currentGain)
                     _currentGain = _attackCoef * _currentGain + (1f - _attackCoef) * targetGain;
                 else
