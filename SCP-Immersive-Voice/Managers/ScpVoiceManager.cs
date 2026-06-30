@@ -11,10 +11,53 @@
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Reflection;
+    using System.Diagnostics;
     using SCP_Immersive_Voice.AudioProcessing;
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
     using SCP_Immersive_Voice.AudioProcessing.Effects;
     using SCP_Immersive_Voice.Presets;
+
+    /// <summary>
+    /// Thread-safe, allocation-free temporal debouncer protecting underlying native 
+    /// audio circular buffers from high-frequency network packet jitter.
+    /// </summary>
+    public class SpatializationDebouncer
+    {
+        private readonly long _hysteresisTicks;
+        private long _lastTransitionTimestamp;
+        private bool _currentSpatializedState;
+
+        public SpatializationDebouncer(float minimumHysteresisMs = 350f)
+        {
+            _hysteresisTicks = (long)((minimumHysteresisMs / 1000f) * Stopwatch.Frequency);
+            _lastTransitionTimestamp = 0;
+            _currentSpatializedState = false;
+        }
+
+        // INTENT: Guard state changes against low-overhead hardware tick boundaries to eliminate rapid packet bouncing.
+        public bool UpdateState(bool targetSpatialized)
+        {
+            if (targetSpatialized == _currentSpatializedState)
+            {
+                return _currentSpatializedState;
+            }
+
+            long currentTicks = Stopwatch.GetTimestamp();
+            if (_lastTransitionTimestamp == 0 || (currentTicks - _lastTransitionTimestamp) >= _hysteresisTicks)
+            {
+                _currentSpatializedState = targetSpatialized;
+                _lastTransitionTimestamp = currentTicks;
+            }
+
+            return _currentSpatializedState;
+        }
+
+        public void Reset(bool initialState = false)
+        {
+            _currentSpatializedState = initialState;
+            _lastTransitionTimestamp = 0;
+        }
+    }
 
     /// <summary>
     /// Stateful container wrapping hardware network stream bindings 
@@ -29,9 +72,8 @@
         public DateTime LastPacketReceivedTime { get; set; } = DateTime.MinValue;
         public readonly object SyncLock = new object();
 
-        // INTENT: Track spatial state mutations to throttle high-frequency hardware transitions caused by network jitter.
-        public DateTime LastSpatialFlipTime { get; set; } = DateTime.MinValue;
-
+        // INTENT: Encapsulate spatial updates inside a high-precision hardware tick boundary layer.
+        public SpatializationDebouncer SpatialDebouncer { get; } = new SpatializationDebouncer(350f);
 
         private readonly static ConcurrentDictionary<(Type, string), FieldInfo> _fieldCache =
             new ConcurrentDictionary<(Type, string), FieldInfo>();
@@ -47,8 +89,13 @@
             var targetNodes = new List<(string Key, Func<IAudioEffect> Factory, float ScalarValue, string ScalarFieldName)>();
 
             float gateThreshold = preset.UseNoiseGate ? preset.NoiseGateThreshold : -45f;
-            // FIX: Linked field name to accurate token '_thresholdLinear' matching the stateful NoiseGate structure.
-            targetNodes.Add(("NoiseGate", () => new NoiseGateEffect(gateThreshold, sr), gateThreshold, "_thresholdLinear"));
+            float clampedDb = gateThreshold < -96f ? -96f : (gateThreshold > 0f ? 0f : gateThreshold);
+            float thresholdLinear = (float)Math.Pow(10, clampedDb / 20.0);
+
+            // INTENT: Convert the raw dB threshold into a pre-squared linear value offline to ensure the 
+            // reflection field matches the expectations of the float-native RMS loop seamlessly.
+            float thresholdLinearSquared = thresholdLinear * thresholdLinear;
+            targetNodes.Add(("NoiseGate", () => new NoiseGateEffect(gateThreshold, sr), thresholdLinearSquared, "_thresholdLinearSquared"));
 
             if (preset.VocalShriek > 0f)
                 targetNodes.Add(("VocalShriek", () => new VocalShriekShifterEffect(preset.VocalShriek, sr), preset.VocalShriek, "_amount"));
@@ -165,7 +212,6 @@
                 }
             }
 
-            // Expose the temporary array atomic transfer layer to prevent multi-threaded signal distortion
             Pipeline.UpdateEffects(updatedEffects);
 
             ActiveNodes.Clear();
@@ -296,21 +342,19 @@
                 {
                     bool targetSpatialization = !activePreset.IsGlobalTransmission;
 
-                    if (state.IsSpatial != targetSpatialization)
+                    // INTENT: Route state requests into the OOP debouncer primitive to shelter downstream native buffers from network flushes.
+                    bool debouncedSpatialization = session.SpatialDebouncer.UpdateState(targetSpatialization);
+
+                    if (state.IsSpatial != debouncedSpatialization)
                     {
-                        // INTENT: Enforce a tactical temporal deadzone to prevent network packet jitter from causing hardware buffer flushes and audio pops.
-                        if ((DateTime.Now - session.LastSpatialFlipTime).TotalSeconds >= 0.35f)
+                        state.IsSpatial = debouncedSpatialization;
+
+                        if (state.HasPhysicalSpeaker && state.PhysicalSpeaker != null)
                         {
-                            state.IsSpatial = targetSpatialization;
-                            session.LastSpatialFlipTime = DateTime.Now;
+                            state.PhysicalSpeaker.SetSpatialization(debouncedSpatialization);
 
-                            if (state.HasPhysicalSpeaker && state.PhysicalSpeaker != null)
-                            {
-                                state.PhysicalSpeaker.SetSpatialization(targetSpatialization);
-
-                                if (!targetSpatialization)
-                                    state.PhysicalSpeaker.SetVolume(activePreset.OutputGain * 0.85f);
-                            }
+                            if (!debouncedSpatialization)
+                                state.PhysicalSpeaker.SetVolume(activePreset.OutputGain * 0.85f);
                         }
                     }
                 }

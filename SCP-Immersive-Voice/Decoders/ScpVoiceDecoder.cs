@@ -3,6 +3,7 @@
     using LabApi.Features.Audio;
     using LabApi.Features.Wrappers;
     using SCP_Immersive_Voice.AudioProcessing;
+    using SCP_Immersive_Voice.AudioProcessing.Interfaces;
     using SCP_Immersive_Voice.VoiceProfiles;
     using System;
     using VoiceChat.Codec;
@@ -22,7 +23,7 @@
         private static readonly OpusDecoder _decoder = new OpusDecoder();
 
         // Shared Opus encoder: float PCM → Opus
-        private static readonly OpusEncoder _encoder = new OpusEncoder(OpusApplicationType.Voip); // Audio?
+        private static readonly OpusEncoder _encoder = new OpusEncoder(OpusApplicationType.Voip);
 
 
         private static readonly int SampleRate = VoiceChat.VoiceChatSettings.SampleRate;
@@ -102,10 +103,15 @@
             var pipeline = ScpVoiceProfiles.GetPipelineFor(scp, activePreset);
             if (pipeline != null)
             {
-                //  FORENSIC BLOCK: Process effects one-by-one to pinpoint the exact NaN source
-                 for (int i = 0; i < pipeline.Effects.Count; i++)
+                // INTENT: Fetching a local array reference insulation protects the hot-path loop from out-of-bounds 
+                // crashes if a separate management thread triggers an atomic reference swap mid-execution.
+                IAudioEffect[] localEffects = pipeline.Effects;
+                int effectCount = localEffects.Length;
+
+                // FORENSIC BLOCK: Process effects one-by-one to pinpoint the exact NaN source
+                for (int i = 0; i < effectCount; i++)
                 {
-                    var effect = pipeline.Effects[i];
+                    var effect = localEffects[i];
 
                     if (effect == null) continue;
 
@@ -282,8 +288,5 @@
                 pcm[i] *= gain;
             }
         }
-
-
-
     }
 }
