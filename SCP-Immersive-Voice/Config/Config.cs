@@ -11,7 +11,7 @@
         public bool EnableScpProximityVoice { get; set; } = true;
 
         [Description("SCP proximity chat radious")]
-        public float ProximityDistance { get; set; } = 75.25f;
+        public float ProximityDistance { get; set; } = 65.35f;
 
         [Description("Enable audio effects (pitch/formant/distortion) for SCP voices")]
         public bool EnableScpVoiceEffects { get; set; } = true;
