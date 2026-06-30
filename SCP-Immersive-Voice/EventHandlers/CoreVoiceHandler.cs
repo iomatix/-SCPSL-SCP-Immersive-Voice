@@ -45,10 +45,23 @@
             float[] pcm = ScpVoiceDecoder.Decode(ev.Message);
             if (pcm == null || pcm.Length == 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 0.001f)) return;
 
-            // Step 4: Process thread-safe float-native DSP pipeline graphs
+            // Step 4: Resolve session container and atomically validate/synchronize DSP graph state
+            var session = _voiceManager.StartSession(sender);
+            if (session == null) return;
+
+            lock (session.SyncLock)
+            {
+                if (session.LastAppliedPreset == null || !ScpVoiceProfiles.ArePresetsAcousticallyIdentical(session.LastAppliedPreset, preset))
+                {
+                    session.SynchronizePipelineGraph(preset);
+                    session.LastAppliedPreset = preset.Clone();
+                }
+            }
+
+            // Process thread-safe float-native DSP pipeline graphs bound exclusively to this session context
             pcm = ScpVoiceDecoder.ApplyEffects(pcm, sender);
 
-            // Step 5: Route packet according to internal standard role policies
+            // Step 5: Route message (pozostała część metody bez zmian) ...
             bool isForbiddenProximity = _config.ForbiddenProximity.Contains(sender.Role);
 
             if (isForbiddenProximity)
@@ -59,9 +72,8 @@
             }
 
             if (ev.Message.Channel == VoiceChatChannel.ScpChat)
-                ev.IsAllowed = false; // Force proxy streaming engine bypass
+                ev.IsAllowed = false;
 
-            // Pass the finalized PCM straight to our dedicated stream manager
             _voiceManager.AppendPcm(sender, pcm);
         }
 

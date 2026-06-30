@@ -76,6 +76,7 @@
 
             // Initialize underlying high-performance structures
             _voiceManager = new ScpVoiceManager();
+            ScpVoiceProfiles.VoiceManagerInstance = _voiceManager;
 
             // Allocate separated handler context domains
             _coreVoiceHandler = new CoreVoiceHandler(Config, _voiceManager);

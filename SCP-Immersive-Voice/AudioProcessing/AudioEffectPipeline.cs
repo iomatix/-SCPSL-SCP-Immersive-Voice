@@ -28,6 +28,20 @@
             }
         }
 
+        /// <summary>
+        /// Atomically replaces the active effect stack under a full pipeline lock 
+        /// to prevent concurrent processing threads from executing a partially rebuilt graph.
+        /// </summary>
+        public void UpdateEffects(IEnumerable<IAudioEffect> newEffects)
+        {
+            if (newEffects == null) return;
+            lock (_pipelineLock)
+            {
+                _effects.Clear();
+                _effects.AddRange(newEffects);
+            }
+        }
+
         public void Clear()
         {
             lock (_pipelineLock)

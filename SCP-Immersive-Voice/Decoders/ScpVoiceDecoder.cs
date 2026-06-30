@@ -2,6 +2,7 @@
 {
     using LabApi.Features.Audio;
     using LabApi.Features.Wrappers;
+    using SCP_Immersive_Voice.AudioProcessing;
     using SCP_Immersive_Voice.VoiceProfiles;
     using System;
     using VoiceChat.Codec;
@@ -88,11 +89,6 @@
         {
             if (pcm == null || pcm.Length == 0 || scp == null)
                 return pcm ?? Array.Empty<float>();
-
-            bool isDynamicScp = scp.Role == PlayerRoles.RoleTypeId.Scp096 ||
-                                scp.Role == PlayerRoles.RoleTypeId.Scp106 ||
-                                scp.Role == PlayerRoles.RoleTypeId.Scp939 ||
-                                scp.Role == PlayerRoles.RoleTypeId.Scp3114;
 
             // 1. Resolve preset
             var activePreset = ScpVoiceProfiles.GetPreset(scp);
