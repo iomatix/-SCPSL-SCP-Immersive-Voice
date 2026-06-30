@@ -7,24 +7,29 @@
 
     public class AudioEffectPipeline
     {
-        // Internal effects storage backed by a dedicated synchronization lock
-        private readonly List<IAudioEffect> _effects = new List<IAudioEffect>();
+        // INTENT: Utilizing a volatile array reference snapshot ensures completely lock-free iterations
+        // within the high-frequency voice loop, permanently resolving real-time audio thread stalling.
+        private volatile IAudioEffect[] _effects = new IAudioEffect[0];
         private readonly object _pipelineLock = new object();
 
         /// <summary>
-        ///  Performance Switch: Set to true ONLY during debugging. 
+        /// Performance Switch: Set to true ONLY during debugging. 
         /// When false, the profiling loop overhead is completely bypassed (0 CPU cost).
         /// </summary>
         public static bool IsProfilingEnabled { get; set; } = false;
 
-        public List<IAudioEffect> Effects => _effects;
+        public IAudioEffect[] Effects => _effects;
 
         public void Add(IAudioEffect effect)
         {
             if (effect == null) return;
             lock (_pipelineLock)
             {
-                _effects.Add(effect);
+                int currentLength = _effects.Length;
+                IAudioEffect[] newEffects = new IAudioEffect[currentLength + 1];
+                Array.Copy(_effects, newEffects, currentLength);
+                newEffects[currentLength] = effect;
+                _effects = newEffects;
             }
         }
 
@@ -37,8 +42,15 @@
             if (newEffects == null) return;
             lock (_pipelineLock)
             {
-                _effects.Clear();
-                _effects.AddRange(newEffects);
+                List<IAudioEffect> tempList = new List<IAudioEffect>();
+                foreach (var item in newEffects)
+                {
+                    if (item != null)
+                    {
+                        tempList.Add(item);
+                    }
+                }
+                _effects = tempList.ToArray();
             }
         }
 
@@ -46,52 +58,50 @@
         {
             lock (_pipelineLock)
             {
-                _effects.Clear();
+                _effects = new IAudioEffect[0];
             }
         }
 
         /// <summary>
-        /// Main audio processing loop.
+        /// Main audio processing loop. Executes completely lock-free via local array reference snapshotting.
         /// </summary>
         public void Process(float[] pcm, int samples)
         {
             if (pcm == null || samples < 1) return;
 
-            // Thread-safe isolation of the processing loop
-            lock (_pipelineLock)
+            // INTENT: A local reference snapshot insulates the hot-path execution loop from external graph adjustments,
+            // bypassing heavy locks while ensuring thread safety across overlapping VoIP streaming packet contexts.
+            IAudioEffect[] localEffects = _effects;
+            int count = localEffects.Length;
+
+            for (int e = 0; e < count; e++)
             {
-                int count = _effects.Count;
-                for (int e = 0; e < count; e++)
+                IAudioEffect effect = localEffects[e];
+
+                if (IsProfilingEnabled)
                 {
-                    var effect = _effects[e];
-
-                    if (IsProfilingEnabled)
+                    DspStats before = Analyze(pcm, samples);
+                    try
                     {
-                        // Conditional profiling executed only on explicit demand
-                        DspStats before = Analyze(pcm, samples);
-                        try
-                        {
-                            effect.Process(pcm, samples);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error($"[DSP Pipeline] Exception in effect '{effect.Name}': {ex.Message}");
-                        }
-                        DspStats after = Analyze(pcm, samples);
-
-                        DspProfiler.Log(effect.Name, before, after);
+                        effect.Process(pcm, samples);
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        // Ultra-fast direct execution path for standard production matches
-                        try
-                        {
-                            effect.Process(pcm, samples);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error($"[DSP Pipeline] Exception in effect '{effect.Name}': {ex.Message}");
-                        }
+                        Logger.Error($"[DSP Pipeline] Exception in effect '{effect.Name}': {ex.Message}");
+                    }
+                    DspStats after = Analyze(pcm, samples);
+
+                    DspProfiler.Log(effect.Name, before, after);
+                }
+                else
+                {
+                    try
+                    {
+                        effect.Process(pcm, samples);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"[DSP Pipeline] Exception in effect '{effect.Name}': {ex.Message}");
                     }
                 }
             }
@@ -110,9 +120,8 @@
         /// </summary>
         public static DspStats Analyze(float[] pcm, int samples)
         {
-            if (pcm == null || samples < 1) return default;
+            if (pcm == null || samples < 1) return default(DspStats);
 
-            // Protect against bounds overflow
             int activeSamples = Math.Min(samples, pcm.Length);
 
             float squaredSum = 0f;
@@ -135,11 +144,9 @@
 
             float rms = (float)Math.Sqrt(squaredSum / activeSamples);
 
-            // True Noise Floor approximation utilizing lowest active discrete state energy
             float estimatedNoiseFloor = absoluteMinNonZero * 0.5f;
             if (estimatedNoiseFloor > rms) estimatedNoiseFloor = rms * 0.1f;
 
-            // Mathematically valid Signal-to-Noise ratio formulation: 20 * log10(RMS / Noise)
             float snr = 0f;
             if (rms > 1e-5f && estimatedNoiseFloor > 1e-6f)
             {
@@ -162,14 +169,12 @@
         {
             public static void Log(string name, DspStats before, DspStats after)
             {
-                // Warn about structural DC audio dropouts or full pipeline mutes
                 if (before.Rms > 0.01f && after.Rms < before.Rms * 0.05f)
                 {
                     Logger.Warn($"[DSP Profiler] '{name}' triggered severe signal degradation! RMS Drop: {before.Rms:F4} -> {after.Rms:F4}");
                     return;
                 }
 
-                // Check for dynamic clipping or processing overloads
                 if (after.Peak > 1.0f)
                 {
                     Logger.Error($"[DSP Profiler] '{name}' caused digital CLIPPING! Peak reached: {after.Peak:F2}");

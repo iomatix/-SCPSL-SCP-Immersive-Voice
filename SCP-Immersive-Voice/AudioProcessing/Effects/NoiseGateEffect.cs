@@ -3,6 +3,7 @@
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
     using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
+    using System.Diagnostics;
 
     /// <summary>
     /// Stateful Noise Gate with energy-based RMS envelope detection.
@@ -12,14 +13,19 @@
     {
         public string Name => "Noise Gate";
 
-        private readonly float _thresholdLinearSquared; // Optimized to bypass Math.Sqrt in loop
+        private readonly float _thresholdLinearSquared;
         private readonly float _attackCoef;
         private readonly float _releaseCoef;
         private readonly int _holdSamples;
+        private readonly int _maxSilenceSamples;
 
         private float _envelope = 0f;
         private float _currentGain = 1f;
         private int _holdCounter = 0;
+
+        // High-performance trackers assigned to catch stream timeout and in-band silence intervals
+        private long _lastProcessTimestamp = 0;
+        private int _silenceSamplesCounter = 0;
 
         public NoiseGateEffect(float thresholdDb, float sampleRate)
         {
@@ -29,15 +35,34 @@
             // INTENT: Store the squared threshold to evaluate raw power directly, saving CPU cycles.
             _thresholdLinearSquared = thresholdLinear * thresholdLinear;
 
-            // Studio standard integration constraints: Attack=2ms, Hold=120ms (slightly expanded for sibilants), Release=200ms
+            // Studio standard integration constraints: Attack=2ms, Hold=120ms, Release=200ms
             _attackCoef = (float)Math.Exp(-1000.0 / (2f * sampleRate));
             _releaseCoef = (float)Math.Exp(-1000.0 / (200f * sampleRate));
             _holdSamples = (int)(sampleRate * (120f / 1000f));
+
+            // INTENT: Map 500ms into precise sample limits to automate state cleansing during continuous stream silence.
+            _maxSilenceSamples = (int)(sampleRate * 0.5f);
         }
 
         public void Process(float[] pcm, int length)
         {
             if (length < 1) return;
+
+            // INTENT: Evaluate temporal discrepancies between discrete VoIP transmission blocks.
+            // When real-time silence gaps exceed 500ms, state storage fields are forcefully flushed to destroy residual artifacts.
+            long currentTimestamp = Stopwatch.GetTimestamp();
+            if (_lastProcessTimestamp != 0)
+            {
+                double elapsedMs = (double)(currentTimestamp - _lastProcessTimestamp) * 1000.0 / Stopwatch.Frequency;
+                if (elapsedMs > 500.0)
+                {
+                    _envelope = 0f;
+                    _currentGain = 0f;
+                    _holdCounter = 0;
+                    _silenceSamplesCounter = 0;
+                }
+            }
+            _lastProcessTimestamp = currentTimestamp;
 
             for (int i = 0; i < length; i++)
             {
@@ -56,6 +81,7 @@
                 {
                     targetGain = 1f;
                     _holdCounter = _holdSamples;
+                    _silenceSamplesCounter = 0;
                 }
                 else
                 {
@@ -67,6 +93,16 @@
                     else
                     {
                         targetGain = 0f;
+                    }
+
+                    // INTENT: Prevent acoustic ghost leakage by monitoring consecutive low-energy samples within an active stream.
+                    _silenceSamplesCounter++;
+                    if (_silenceSamplesCounter >= _maxSilenceSamples)
+                    {
+                        _envelope = 0f;
+                        _currentGain = 0f;
+                        _holdCounter = 0;
+                        _silenceSamplesCounter = _maxSilenceSamples;
                     }
                 }
 
