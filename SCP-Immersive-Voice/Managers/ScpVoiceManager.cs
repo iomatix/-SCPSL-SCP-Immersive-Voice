@@ -179,7 +179,7 @@ namespace SCP_Immersive_Voice.Managers
                 var session = new VoiceSession { SessionId = sessionId };
                 _sessions[scp.PlayerId] = session;
 
-                iLogger.Debug(nameof(ScpVoiceManager), $"[VOICE HARDENING] Session REGISTERED. PlayerId: {scp.PlayerId}, SessionId: {sessionId}");
+                iLogger.Debug(nameof(ScpVoiceManager), $"[VOICE HARDENING] Session REGISTERED. PlayerId: {scp.PlayerId}, SessionId: {sessionId}", _config.Debug);
                 return session;
             }
         }
@@ -195,7 +195,7 @@ namespace SCP_Immersive_Voice.Managers
             if (_sessions.TryRemove(key, out var session))
             {
                 DefaultAudioManager.Instance.DestroySession(session.SessionId);
-                iLogger.Debug(nameof(ScpVoiceManager), $"[VOICE HARDENING] Audio Streaming Session no. {session.SessionId} successfully destroyed for {scp.Nickname}");
+                iLogger.Debug(nameof(ScpVoiceManager), $"[VOICE HARDENING] Audio Streaming Session no. {session.SessionId} successfully destroyed for {scp.Nickname}", _config.Debug);
             }
         }
 
@@ -210,7 +210,7 @@ namespace SCP_Immersive_Voice.Managers
                 try { DefaultAudioManager.Instance.DestroySession(session.SessionId); } catch { }
             }
 
-            iLogger.Debug(nameof(ScpVoiceManager), "[VOICE HARDENING] All active audio streaming slots cleared from native heap.");
+            iLogger.Debug(nameof(ScpVoiceManager), "[VOICE HARDENING] All active audio streaming slots cleared from native heap.", _config.Debug);
             _sessions.Clear();
         }
         #endregion
