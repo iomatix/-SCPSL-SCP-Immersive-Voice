@@ -22,10 +22,10 @@
             Pitch = 0.52f,          // Ancient, sub-octave dimensional depth
             Formant = 0.46f,        // Collapsed, rotted vocal cavity architecture
             DemonicOctaverMix = 0.25f,
-            Distortion = 0.70f,     //  SHARPNESS FIX: Harder waveshaping saturation to add harmonic bite
-            Guttural = 0.48f,       //  SHARPNESS FIX: Severe false-vocal cord rasp (corroded throat grit)
-            FleshCrackle = 0.25f,   //  SHARPNESS FIX: Liquid tissue degradation transient bubbling
-            LowPass = 1150f,        //  SHARPNESS FIX: Opened cutoff window to let sharp abrasive grit slice through
+            Distortion = 0.70f,     // SHARPNESS FIX: Harder waveshaping saturation to add harmonic bite
+            Guttural = 0.48f,       // SHARPNESS FIX: Severe false-vocal cord rasp (corroded throat grit)
+            FleshCrackle = 0.25f,   // SHARPNESS FIX: Liquid tissue degradation transient bubbling
+            LowPass = 1150f,        // SHARPNESS FIX: Opened cutoff window to let sharp abrasive grit slice through
             Reverb = 0.40f,
             WetDecay = 0.90f,       // Visceral viscous absorption (slime-coated walls)
             WetOrganic = 0.35f,     // Slimy throat decomposition mechanics
@@ -82,15 +82,15 @@
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
-            IsGlobalTransmission = true, //  PLUG-N-PLAY ACTIVATION: Broadcasts server-wide to all live clients!
+            IsGlobalTransmission = true, // PLUG-N-PLAY ACTIVATION: Broadcasts server-wide to all live clients!
             OutputGain = 2.65f,     // Boosted headroom for maximum global intelligibility
             Pitch = 0.48f,          // Deeper pitch floor inside his own core reality domain
             Formant = 0.44f,
             DemonicOctaverMix = 0.45f,
-            LowPass = 1250f,        //  SHARPNESS FIX: Opened cutoff so the global voice sounds clean and cutting
+            LowPass = 1250f,        // SHARPNESS FIX: Opened cutoff so the global voice sounds clean and cutting
             HighPass = 80f,         // Strip rumble mud out of global broadcast
             Distortion = 0.75f,     // Heavy asymmetric overdrive edge
-            Guttural = 0.55f,       //  SHARPNESS FIX: Direct larynx mucosal abrasion
+            Guttural = 0.55f,       // SHARPNESS FIX: Direct larynx mucosal abrasion
             Reverb = 0.80f,         // Massive, hollow space diffusion with maximum absorption loss
             WetDecay = 0.85f,
             WetOrganic = 0.25f,
@@ -99,7 +99,7 @@
         };
 
         // =================================================================
-        // ATLAS DIMENSIONAL — Sensing rooms: looking through walls
+        // AMBIENT — Sensing rooms: looking through walls (Old: ATLAS DIMENSIONAL)
         // =================================================================
         public static readonly ScpVoicePreset AtlasDimensionalPreset = new ScpVoicePreset
         {
@@ -162,34 +162,17 @@
             FormantDrift = 0.55f
         };
 
-        public static ScpVoicePreset GetPresetForState(Scp106VoiceState state)
-        {
-            switch (state)
+        public static ScpVoicePreset GetPresetForState(Scp106VoiceState state) =>
+            state switch
             {
-                case Scp106VoiceState.Idle:
-                    return IdlePreset;
-
-                case Scp106VoiceState.Stalking:
-                    return StalkingPreset;
-
-                case Scp106VoiceState.Emerging:
-                    return EmergingPreset;
-
-                case Scp106VoiceState.PocketDimension:
-                    return PocketDimensionPreset;
-
-                case Scp106VoiceState.AtlasDimensional:
-                    return AtlasDimensionalPreset;
-
-                case Scp106VoiceState.LowVigor:
-                    return LowVigorPreset;
-
-                case Scp106VoiceState.Attack:
-                    return AttackPreset;
-
-                default:
-                    return IdlePreset;
-            }
-        }
+                Scp106VoiceState.Idle => IdlePreset,
+                Scp106VoiceState.Stalking => StalkingPreset,
+                Scp106VoiceState.Emerging => EmergingPreset,
+                Scp106VoiceState.PocketDimension => PocketDimensionPreset,
+                Scp106VoiceState.AtlasDimensional => AtlasDimensionalPreset,
+                Scp106VoiceState.LowVigor => LowVigorPreset,
+                Scp106VoiceState.Attack => AttackPreset,
+                _ => IdlePreset
+            };
     }
 }

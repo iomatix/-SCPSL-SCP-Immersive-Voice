@@ -159,37 +159,18 @@
             LowPass = 2600f         // Clamps upper frequency ranges to model a dense, heavy closed grunt
         };
 
-        public static ScpVoicePreset GetPresetForState(Scp096VoiceState state)
-        {
-            switch (state)
+        public static ScpVoicePreset GetPresetForState(Scp096VoiceState state) =>
+            state switch
             {
-                case Scp096VoiceState.Calm:
-                    return CalmPreset;
-
-                case Scp096VoiceState.Crying:
-                    return CryingPreset;
-
-                case Scp096VoiceState.TryingNotToCry:
-                    return TryingPreset;
-
-                case Scp096VoiceState.Enraging:
-                    return EnragingPreset;
-
-                case Scp096VoiceState.Enraged:
-                    return RagePreset;
-
-                case Scp096VoiceState.Charging:
-                    return ChargingPreset;
-
-                case Scp096VoiceState.Charged:
-                    return ChargedPreset;
-
-                case Scp096VoiceState.PryingGate:
-                    return PryingPreset;
-
-                default:
-                    return CalmPreset;
-            }
-        }
+                Scp096VoiceState.Calm => CalmPreset,
+                Scp096VoiceState.Crying => CryingPreset,
+                Scp096VoiceState.TryingNotToCry => TryingPreset,
+                Scp096VoiceState.Enraging => EnragingPreset,
+                Scp096VoiceState.Enraged => RagePreset,
+                Scp096VoiceState.Charging => ChargingPreset,
+                Scp096VoiceState.Charged => ChargedPreset,
+                Scp096VoiceState.PryingGate => PryingPreset,
+                _ => CalmPreset
+            };
     }
 }
