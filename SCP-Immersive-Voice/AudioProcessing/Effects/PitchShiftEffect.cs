@@ -1,33 +1,40 @@
-﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
-{
-    using SCP_Immersive_Voice.AudioProcessing.Interfaces;
-    using System;
+﻿using LabApi.Extensions;
+using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+using System.Runtime.CompilerServices;
+using UnityEngine;
 
+namespace SCP_Immersive_Voice.AudioProcessing.Effects
+{
     /// <summary>
-    ///  Delay-Line Crossfading Pitch Shifter (Doppler/Rotary method).
-    /// Uses a circular buffer with dual read pointers and cubic interpolation.
+    /// Delay-Line Crossfading Pitch Shifter (Doppler/Rotary method).
+    /// Uses a circular buffer with dual read pointers and cubic Hermite spline interpolation.
     /// Provides completely natural pitch shifting without time-stretching or metallic artifacts.
     /// </summary>
     public class PitchShiftEffect : IAudioEffect
     {
-        public string Name => "Pitch Shift";
+        #region Private Constants
+        private const float TwoPi = 2f * Mathf.PI;
+        #endregion
+
+        #region Private Execution Vectors
+        private readonly float _sampleRate;
+        private readonly int _windowSize;
+        private readonly int _bufferMask;
+        private readonly float[] _ringBuffer;
 
         private float _targetPitch;
+
+        // Stateful parameters synchronized via local stack register windows
         private float _smoothPitch;
-
-        // Ring buffer parameters
-        private readonly float[] _ringBuffer;
-        private readonly int _bufferMask;
-        private int _writeIndex;
-
-        // Pitch shifter parameters
         private float _phase;
-        private readonly int _windowSize;
-        private readonly float _sampleRate;
+        private int _writeIndex;
+        #endregion
 
-        // Precalculated constants
-        private const float Pi2 = 2f * (float)Math.PI;
+        #region Public Metadata Properties
+        public string Name => "Pitch Shift";
+        #endregion
 
+        #region Initialization
         /// <summary>
         /// Initializes the Pitch Shifter.
         /// </summary>
@@ -37,16 +44,20 @@
         public PitchShiftEffect(float pitch, float sampleRate, float windowSizeMs = 40f)
         {
             _sampleRate = sampleRate > 0f ? sampleRate : 48000f;
-            _targetPitch = Clamp(pitch, 0.25f, 4f);
+
+            // FLUENT API ALIGNMENT: Enforcing safe operational bounds straight via math extensions
+            _targetPitch = pitch.Clamp(0.25f, 4f);
             _smoothPitch = _targetPitch;
 
             // Calculate window size in samples
             _windowSize = (int)(_sampleRate * (windowSizeMs / 1000f));
-            if (_windowSize < 64) _windowSize = 64;
+            if (_windowSize < 64)
+                _windowSize = 64;
 
-            // Force ring buffer size to the next power of 2 for ultra-fast wrapping (Bitwise AND)
+            // Force ring buffer size to the next power of 2 for ultra-fast bitwise wrapping (& mask)
             int size = 1;
-            while (size < _windowSize * 2) size <<= 1;
+            while (size < _windowSize * 2)
+                size <<= 1;
 
             _ringBuffer = new float[size];
             _bufferMask = size - 1;
@@ -54,100 +65,123 @@
             _writeIndex = 0;
             _phase = 0f;
         }
+        #endregion
 
+        #region High-Frequency DSP Hot-Path Loop
         public void Process(float[] pcm, int length)
         {
-            if (length < 2)
-                return;
+            if (pcm is null || length < 2) return;
+
+            // Cache volatile pointers and structural states onto the CPU stack frame.
+            // Bypasses persistent heap/sterta reference chasing completely across the audio stream block.
+            float localPhase = _phase;
+            float localSmoothPitch = _smoothPitch;
+            int localWriteIndex = _writeIndex;
+
+            float target = _targetPitch;
+            int winSize = _windowSize;
+            int mask = _bufferMask;
+            float[] buf = _ringBuffer;
+            int bufLen = buf.Length;
 
             for (int i = 0; i < length; i++)
             {
-                // 1. Smooth pitch transitions to avoid zipper noise
-                _smoothPitch += 0.005f * (_targetPitch - _smoothPitch);
+                // 1. Smooth pitch transitions linearly to avoid severe digital zipper noise
+                localSmoothPitch += 0.005f * (target - localSmoothPitch);
 
-                // 2. Write input to the ring buffer
-                _ringBuffer[_writeIndex] = pcm[i];
+                // 2. Write active input sample to cyclic storage
+                buf[localWriteIndex] = pcm[i];
 
-                // 3. Calculate phase increment based on pitch ratio.
-                float phaseInc = (1f - _smoothPitch) / _windowSize;
-                _phase += phaseInc;
+                // 3. Calculate phase increment based on pitch ratio trajectory
+                float phaseInc = (1f - localSmoothPitch) / winSize;
+                localPhase += phaseInc;
 
-                // Wrap phase strictly between 0.0 and 1.0
-                while (_phase >= 1f) _phase -= 1f;
-                while (_phase < 0f) _phase += 1f;
+                // PERFORMANCE FIX: Eradicated high-overhead while loops. 
+                // Since phaseInc is a tiny fractional sample offset, a single conditional branch is completely safe.
+                if (localPhase >= 1f)
+                    localPhase -= 1f;
+                else if (localPhase < 0f)
+                    localPhase += 1f;
 
-                // 4. Calculate delay times (in samples) for the two read heads
-                float delayA = _phase * _windowSize;
-                float phaseB = (_phase + 0.5f) % 1f;
-                float delayB = phaseB * _windowSize;
+                // 4. Calculate delay times (in samples) for the parallel dual-head crossfade layout
+                float delayA = localPhase * winSize;
+                float phaseB = localPhase + 0.5f;
+                if (phaseB >= 1f)
+                    phaseB -= 1f; // Fast branch-optimized modulo alternative
 
-                // 5. Read from both heads using Cubic Hermite Spline interpolation
-                float tapA = ReadCubic(delayA);
-                float tapB = ReadCubic(delayB);
+                float delayB = phaseB * winSize;
 
-                // 6. Calculate crossfade weights using a Hann window for constant power
-                float weightA = 0.5f - 0.5f * (float)Math.Cos(_phase * Pi2);
-                float weightB = 0.5f - 0.5f * (float)Math.Cos(phaseB * Pi2);
+                // 5. Read from both heads using 4-point Cubic Hermite Spline interpolation (Aggressive Inlined)
+                float readPosA = localWriteIndex - delayA;
+                if (readPosA < 0f)
+                    readPosA += bufLen;
 
-                // 7. Sum the output and validate float stability
+                float tapA = DiscreteCubicRead(buf, readPosA, mask);
+
+                float readPosB = localWriteIndex - delayB;
+                if (readPosB < 0f)
+                    readPosB += bufLen;
+
+                float tapB = DiscreteCubicRead(buf, readPosB, mask);
+
+                // 6. Calculate crossfade weights using a float-native Hann window for pristine constant power
+                float weightA = 0.5f - 0.5f * Mathf.Cos(localPhase * TwoPi);
+                float weightB = 0.5f - 0.5f * Mathf.Cos(phaseB * TwoPi);
+
+                // 7. Sum the output and validate float stability via fluent extensions
                 float mixed = (tapA * weightA) + (tapB * weightB);
 
-                if (float.IsNaN(mixed) || float.IsInfinity(mixed))
-                {
-                    pcm[i] = 0f;
-                }
-                else
-                {
-                    pcm[i] = mixed;
-                }
+                pcm[i] = mixed.IsNanOrInfinity() ? 0f : mixed;
 
-                // 8. Advance the write head using bitwise mask for zero-cost wrapping
-                _writeIndex = (_writeIndex + 1) & _bufferMask;
+                // 8. Advance the write head using bitwise mask for zero-cost wrapping boundaries
+                localWriteIndex = (localWriteIndex + 1) & mask;
             }
-        }
 
+            // Write computed local variables back into object persistent instance tracking storage fields.
+            _phase = localPhase;
+            _smoothPitch = localSmoothPitch;
+            _writeIndex = localWriteIndex;
+        }
+        #endregion
+
+        #region Operational Mutations
         /// <summary>
         /// Updates the target pitch at runtime.
         /// </summary>
-        public void SetPitch(float pitch)
-        {
-            _targetPitch = Clamp(pitch, 0.25f, 4f);
-        }
+        public void SetPitch(float pitch) => _targetPitch = pitch.Clamp(0.25f, 4f);
+        #endregion
 
+        #region Internal High-Performance Mathematical Interpolators
         /// <summary>
-        /// Reads a fractional delay from the ring buffer using 4-point cubic interpolation.
-        /// Completely eliminates the metallic/aliasing sound of linear interpolation.
+        /// Reads a fractional delay from the ring buffer using an optimized 4-point cubic Hermite spline interpolation.
+        /// Fully inlined by the JIT compiler to eliminate stack frame instantiation costs entirely.
         /// </summary>
-        private float ReadCubic(float delay)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float DiscreteCubicRead(float[] buffer, float readPos, int mask)
         {
-            // Calculate absolute read position
-            float readPos = _writeIndex - delay;
-
-            // Handle negative wrap-around robustly
-            while (readPos < 0f)
-                readPos += _ringBuffer.Length;
-
             int i0 = (int)readPos;
             float frac = readPos - i0;
 
-            // Get 4 adjacent samples
-            int idxM1 = (i0 - 1) & _bufferMask;
-            int idx0 = i0 & _bufferMask;
-            int idx1 = (i0 + 1) & _bufferMask;
-            int idx2 = (i0 + 2) & _bufferMask;
+            // Resolve 4 adjacent discrete sample index locations via bitwise masking boundaries
+            int idxM1 = (i0 - 1) & mask;
+            int idx0 = i0 & mask;
+            int idx1 = (i0 + 1) & mask;
+            int idx2 = (i0 + 2) & mask;
 
-            float yM1 = _ringBuffer[idxM1];
-            float y0 = _ringBuffer[idx0];
-            float y1 = _ringBuffer[idx1];
-            float y2 = _ringBuffer[idx2];
+            float yM1 = buffer[idxM1];
+            float y0 = buffer[idx0];
+            float y1 = buffer[idx1];
+            float y2 = buffer[idx2];
 
-            // Evaluate Cubic Hermite Spline
+            // Evaluate Cubic Hermite Spline Matrix Coefficients
             float a = -0.5f * yM1 + 1.5f * y0 - 1.5f * y1 + 0.5f * y2;
             float b = yM1 - 2.5f * y0 + 2f * y1 - 0.5f * y2;
             float c = -0.5f * yM1 + 0.5f * y1;
             float d = y0;
 
+            // Clamped Horner's scheme calculation structure
             return ((a * frac + b) * frac + c) * frac + d;
         }
+        #endregion
     }
 }

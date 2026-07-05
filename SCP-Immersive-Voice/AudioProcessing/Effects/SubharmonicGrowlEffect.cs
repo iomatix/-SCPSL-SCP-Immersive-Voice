@@ -1,30 +1,40 @@
-﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
-{
-    using SCP_Immersive_Voice.AudioProcessing.Interfaces;
-    using System;
+﻿using LabApi.Extensions;
+using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+using UnityEngine;
 
+namespace SCP_Immersive_Voice.AudioProcessing.Effects
+{
     /// <summary>
-    ///  Phase-Locked Subharmonic Generator.
+    /// Phase-Locked Subharmonic Generator.
     /// Tracks the voice fundamental frequency (f0) via zero-crossing detection 
     /// and synthesizes a perfect sub-octave (f0 / 2) sub-bass layer.
     /// </summary>
     public class SubharmonicGrowlEffect : IAudioEffect
     {
-        public string Name => "Subharmonic Growl";
+        #region Private Constants
+        private const float TwoPi = 2f * Mathf.PI;
+        #endregion
 
+        #region Private Execution Vectors
         private readonly float _amount;
+        private readonly float _envAttackCoef;
+        private readonly float _envReleaseCoef;
 
         // Dynamic Biquad filters for tracking and reconstruction
         private BiquadFilter _inputAnalysisLp;
         private BiquadFilter _subharmonicSmoothLp;
 
-        // Stateful tracking variables
+        // Stateful tracking variables managed securely via stack frames
         private float _prevFilteredSample;
-        private float _flipFlopState = 1f;
-        private float _envelope = 0f;
-        private float _envAttackCoef;
-        private float _envReleaseCoef;
+        private float _flipFlopState;
+        private float _envelope;
+        #endregion
 
+        #region Public Metadata Properties
+        public string Name => "Subharmonic Growl";
+        #endregion
+
+        #region Initialization
         /// <summary>
         /// Initializes the Subharmonic Growl Effect.
         /// </summary>
@@ -32,61 +42,98 @@
         /// <param name="sampleRate">Engine sample rate from VoiceChatSettings.</param>
         public SubharmonicGrowlEffect(float amount, float sampleRate)
         {
-            _amount = Clamp(amount, 0f, 1.5f);
+            // FLUENT API ALIGNMENT: Utilizing pristine clamping straight from your extensions matrix
+            _amount = amount.Clamp(0f, 1.5f);
             float sr = sampleRate > 0f ? sampleRate : 48000f;
 
-            // Filter 1: Isolate vocal fundamental frequency (f0) below 130Hz
-            _inputAnalysisLp.ConfigureLowPass(130f, sr, q: 0.707f);
+            // Filter 1: Isolate vocal fundamental frequency (f0) below 130Hz safely
+            _inputAnalysisLp.ConfigureLowPass(130f, sr, 0.707f);
 
             // Filter 2: Smooth out generated raw square sub-edges below 75Hz into pure sub-bass
-            _subharmonicSmoothLp.ConfigureLowPass(75f, sr, q: 0.85f);
+            _subharmonicSmoothLp.ConfigureLowPass(75f, sr, 0.85f);
 
-            // Envelope follower coefficients (Fast attack, medium release)
-            _envAttackCoef = (float)Math.Exp(-1000.0 / (4f * sr));
-            _envReleaseCoef = (float)Math.Exp(-1000.0 / (45f * sr));
+            // Envelope follower coefficients using float-native math
+            _envAttackCoef = Mathf.Exp(-1000f / (4f * sr));
+            _envReleaseCoef = Mathf.Exp(-1000f / (45f * sr));
+
+            _prevFilteredSample = 0f;
+            _flipFlopState = 1f;
+            _envelope = 0f;
         }
+        #endregion
 
+        #region High-Frequency DSP Hot-Path Loop
         public void Process(float[] pcm, int length)
         {
-            if (length < 1 || _amount < 0.01f) return;
+            if (pcm is null || length < 1 || _amount < 0.01f) return;
+
+            // Pre-computed gain staging mix constants outside the hot-path sweep block.
+            // Eliminates thousands of redundant floating-point multiplications per voice frame buffer.
+            float wetGainFactor = _amount * 0.75f;
+
+            // Cache volatile counters, tracking vectors, and structural filter layouts straight onto stack frame registers.
+            // Prevents heap memory reference chasing overhead completely across high-frequency packet loops.
+            float localEnvelope = _envelope;
+            float localFlipFlop = _flipFlopState;
+            float localPrevSample = _prevFilteredSample;
+
+            BiquadFilter fAnalysis = _inputAnalysisLp;
+            BiquadFilter fSmooth = _subharmonicSmoothLp;
+
+            float att = _envAttackCoef;
+            float rel = _envReleaseCoef;
 
             for (int i = 0; i < length; i++)
             {
                 float inputSample = pcm[i];
 
-                // 1. Track global amplitude envelope for dynamic scaling
-                float absInput = Math.Abs(inputSample);
-                if (absInput > _envelope)
-                    _envelope = _envAttackCoef * _envelope + (1f - _envAttackCoef) * absInput;
-                else
-                    _envelope = _envReleaseCoef * _envelope + (1f - _envReleaseCoef) * absInput;
-
-                // 2. Isolate the low fundamental using the first Biquad filter
-                float fundamentalZone = _inputAnalysisLp.Process(inputSample);
-
-                // 3. Time-domain frequency divider (Zero-Crossing Flip-Flop)
-                // Every full cycle of fundamentalZone triggers half a cycle of _flipFlopState (f0 / 2)
-                if (fundamentalZone > 0f && _prevFilteredSample <= 0f)
+                // 1. Track global amplitude envelope for dynamic scaling via fluent primitives
+                float absInput = inputSample.Abs();
+                if (absInput > localEnvelope)
                 {
-                    _flipFlopState = -_flipFlopState;
+                    localEnvelope = att * localEnvelope + (1f - att) * absInput;
                 }
-                _prevFilteredSample = fundamentalZone;
+                else
+                {
+                    localEnvelope = rel * localEnvelope + (1f - rel) * absInput;
+                }
 
-                // 4. Shape and reconstruct the subharmonic wave
-                float rawSub = _flipFlopState * _envelope;
-                float cleanSubBass = _subharmonicSmoothLp.Process(rawSub);
+                // 2. Isolate the low fundamental using the first cached register Biquad filter
+                float fundamentalZone = fAnalysis.Process(inputSample);
 
-                // 5. Apply polynomial soft-clipping for a warm, guttural monster growl
-                // Fast emulation of saturation without using expensive Math.Tanh
+                // 3. Time-domain frequency divider (Zero-Crossing Flip-Flop execution)
+                // Every full cycle of fundamentalZone triggers half a cycle of _flipFlopState (f0 / 2)
+                if (fundamentalZone > 0f && localPrevSample <= 0f)
+                {
+                    localFlipFlop = -localFlipFlop;
+                }
+                localPrevSample = fundamentalZone;
+
+                // 4. Shape and reconstruct the subharmonic wave inside register windows
+                float rawSub = localFlipFlop * localEnvelope;
+                float cleanSubBass = fSmooth.Process(rawSub);
+
+                // 5. Apply polynomial soft-clipping for a warm, guttural monster growl via fluent abs extensions
                 float drivenSub = cleanSubBass * 1.6f;
-                float saturatedSub = drivenSub / (1f + Math.Abs(drivenSub));
+                float saturatedSub = drivenSub / (1f + drivenSub.Abs());
 
-                // 6. Mix the synthesized cinematic sub-bass back into the primary signal
-                pcm[i] = inputSample + (saturatedSub * _amount * 0.75f);
+                // 6. Mix the synthesized cinematic sub-bass back into the primary signal stream
+                pcm[i] = inputSample + (saturatedSub * wetGainFactor);
             }
-        }
 
-        // High-performance, stack-allocated 2nd order IIR filter structure
+            // Flush calculated stack modifications back into persistent instance data boundaries atomically.
+            _envelope = localEnvelope;
+            _flipFlopState = localFlipFlop;
+            _prevFilteredSample = localPrevSample;
+            _inputAnalysisLp = fAnalysis;
+            _subharmonicSmoothLp = fSmooth;
+        }
+        #endregion
+
+        #region Internal High-Performance Data Substructures
+        /// <summary>
+        /// High-performance, stack-allocated 2nd order IIR filter structure.
+        /// </summary>
         private struct BiquadFilter
         {
             private float _b0, _b1, _b2, _a1, _a2;
@@ -94,9 +141,9 @@
 
             public void ConfigureLowPass(float cutoffFrequency, float sampleRate, float q)
             {
-                float w0 = 2f * (float)Math.PI * cutoffFrequency / sampleRate;
-                float alpha = (float)Math.Sin(w0) / (2f * q);
-                float cosW0 = (float)Math.Cos(w0);
+                float w0 = TwoPi * cutoffFrequency / sampleRate;
+                float alpha = Mathf.Sin(w0) / (2f * q);
+                float cosW0 = Mathf.Cos(w0);
 
                 float a0 = 1f + alpha;
                 _b0 = ((1f - cosW0) / 2f) / a0;
@@ -118,5 +165,6 @@
                 return output;
             }
         }
+        #endregion
     }
 }
