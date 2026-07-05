@@ -1,73 +1,67 @@
-﻿namespace SCP_Immersive_Voice.Decoders
+﻿using LabApi.Extensions;
+using LabApi.Features.Audio;
+using LabApi.Features.Wrappers;
+using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+using SCP_Immersive_Voice.VoiceProfiles;
+using System;
+using VoiceChat;
+using VoiceChat.Codec;
+using VoiceChat.Codec.Enums;
+using VoiceChat.Networking;
+using Logger = LabApi.Extensions.Misc.iLogger;
+
+namespace SCP_Immersive_Voice.Decoders
 {
-    using LabApi.Features.Audio;
-    using LabApi.Features.Wrappers;
-    using SCP_Immersive_Voice.AudioProcessing;
-    using SCP_Immersive_Voice.AudioProcessing.Interfaces;
-    using SCP_Immersive_Voice.VoiceProfiles;
-    using System;
-    using VoiceChat.Codec;
-    using VoiceChat.Codec.Enums;
-    using VoiceChat.Networking;
-
-    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
-
     /// <summary>
-    /// Handles Opus decoding/encoding and applies the SCP voice DSP pipeline
-    /// on float PCM audio. Fully float-native, zero-copy where possible,
-    /// minimal allocations, real-time safe.
+    /// Handles Opus decoding/encoding and applies the SCP voice DSP pipeline on float PCM audio. 
+    /// Fully float-native, zero-copy where possible, minimal allocations, and real-time safe.
     /// </summary>
     public static class ScpVoiceDecoder
     {
-        // Shared Opus decoder: Opus → float PCM
-        private static readonly OpusDecoder _decoder = new OpusDecoder();
+        #region Private Static Audio Hardware Resources
+        // Shared Opus decoder: Opus → float PCM (Target-typed new expression)
+        private static readonly OpusDecoder Decoder = new();
 
         // Shared Opus encoder: float PCM → Opus
-        private static readonly OpusEncoder _encoder = new OpusEncoder(OpusApplicationType.Voip);
+        private static readonly OpusEncoder Encoder = new(OpusApplicationType.Voip);
 
+        private static readonly int SampleRate = VoiceChatSettings.SampleRate;
+        private static readonly int FrameSize = VoiceChatSettings.PacketSizePerChannel;
+        private static readonly float[] FloatBuffer = new float[FrameSize];
+        #endregion
 
-        private static readonly int SampleRate = VoiceChat.VoiceChatSettings.SampleRate;
-        private static readonly int FrameSize = VoiceChat.VoiceChatSettings.PacketSizePerChannel;
-        private static readonly float[] _floatBuffer = new float[FrameSize];
-
-
+        #region Core Decoding & Encoding Pipelines
         /// <summary>
         /// Decodes an incoming VoiceMessage from Opus to float[] PCM (-1..1).
         /// Returns an empty array on invalid or empty data.
         /// </summary>
         public static float[] Decode(VoiceMessage msg)
         {
-            try
-            {
-                if (msg.Data == null || msg.DataLength <= 0)
-                    return Array.Empty<float>();
-            }
-            catch
-            {
-                return Array.Empty<float>();
-            }
-
-            int samples = _decoder.Decode(msg.Data, msg.DataLength, _floatBuffer);
-
-            if (samples <= 0 || samples > FrameSize)
+            // C# 9.0 Pattern Matching structural guard replacing redundant try-catch blocks
+            if (msg.Data is null || msg.DataLength <= 0)
                 return Array.Empty<float>();
 
-            // Copy only valid samples (decoder uses shared buffer)
+            int samples = Decoder.Decode(msg.Data, msg.DataLength, FloatBuffer);
+
+            if (samples is <= 0 || samples > FrameSize)
+                return Array.Empty<float>();
+
+            // Copy only valid samples (decoder uses shared buffer execution space)
             float[] output = new float[samples];
-            Array.Copy(_floatBuffer, output, samples);
+            Array.Copy(FloatBuffer, output, samples);
             return output;
         }
 
         /// <summary>
-        /// Encodes float PCM (-1..1) to Opus using a shared encoder.
+        /// Encodes float PCM (-1..1) to Opus using a shared encoder instance.
         /// </summary>
         public static byte[] EncodeToOpus(float[] pcm)
         {
-            if (pcm == null || pcm.Length == 0)
+            if (pcm is null or { Length: 0 })
                 return Array.Empty<byte>();
 
             byte[] encoded = new byte[AudioTransmitter.MaxEncodedSize];
-            int len = _encoder.Encode(pcm, encoded, pcm.Length);
+            int len = Encoder.Encode(pcm, encoded, pcm.Length);
 
             if (len <= 0)
                 return Array.Empty<byte>();
@@ -79,7 +73,9 @@
             Buffer.BlockCopy(encoded, 0, trimmed, 0, len);
             return trimmed;
         }
+        #endregion
 
+        #region DSP Graph Application Core
         /// <summary>
         /// Applies the SCP voice DSP pipeline. Fully float-native.
         /// <para>
@@ -88,43 +84,42 @@
         /// </summary>
         public static float[] ApplyEffects(float[] pcm, Player scp)
         {
-            if (pcm == null || pcm.Length == 0 || scp == null)
+            if (pcm is null or { Length: 0 } || scp is null)
                 return pcm ?? Array.Empty<float>();
 
-            // 1. Resolve preset
+            // 1. Resolve architectural preset profile
             var activePreset = ScpVoiceProfiles.GetPreset(scp);
-            if (activePreset == null || !activePreset.Enable)
+            if (activePreset is null || !activePreset.Enable)
                 return pcm;
 
-            // 2. AGC (pre‑DSP)
+            // 2. Pre-DSP Automatic Gain Control normalization
             pcm = ApplyAgc(pcm, targetPeak: 0.7f, maxGain: 3f);
 
-            // 3. DSP Pipeline Forensic Processing
+            // 3. DSP Pipeline Forensic Processing Loop
             var pipeline = ScpVoiceProfiles.GetPipelineFor(scp, activePreset);
-            if (pipeline != null)
+            if (pipeline is not null)
             {
                 // INTENT: Fetching a local array reference insulation protects the hot-path loop from out-of-bounds 
                 // crashes if a separate management thread triggers an atomic reference swap mid-execution.
                 IAudioEffect[] localEffects = pipeline.Effects;
                 int effectCount = localEffects.Length;
 
-                // FORENSIC BLOCK: Process effects one-by-one to pinpoint the exact NaN source
                 for (int i = 0; i < effectCount; i++)
                 {
                     var effect = localEffects[i];
-
-                    if (effect == null) continue;
+                    if (effect is null) continue;
 
                     try
                     {
                         effect.Process(pcm, pcm.Length);
 
-                        // Run an unallocated check for NaN or Infinity anomalies
-                        for (int ii = 0; ii < pcm.Length; ii++)
+                        // High-performance hot check looking for arithmetic NaN or Infinity anomalies
+                        for (int sampleIdx = 0; sampleIdx < pcm.Length; sampleIdx++)
                         {
-                            if (float.IsNaN(pcm[ii]) || float.IsInfinity(pcm[ii]))
+                            float sample = pcm[sampleIdx];
+                            if (float.IsNaN(sample) || float.IsInfinity(sample))
                             {
-                                LabApi.Features.Console.Logger.Error($"[DSP-CRASH] Effect '{effect.GetType().Name}' generated an invalid float value ({pcm[ii]}) at sample index {ii}! This effect is silencing the pipeline.");
+                                Logger.Error(nameof(ScpVoiceDecoder), $"[DSP-CRASH] Effect '{effect.GetType().Name}' generated an invalid float value ({sample}) at sample index {sampleIdx}! Defensively silencing the pipeline.");
 
                                 // Defensive safeguard: Force-purge the tainted array back to zero to prevent downstream crash waves
                                 Array.Clear(pcm, 0, pcm.Length);
@@ -134,27 +129,28 @@
                     }
                     catch (Exception ex)
                     {
-                        LabApi.Features.Console.Logger.Error($"[DSP-EXCEPTION] Exception thrown by '{effect.GetType().Name}': {ex.Message}");
+                        Logger.Error(nameof(ScpVoiceDecoder), $"[DSP-EXCEPTION] Exception thrown by audio effect block '{effect.GetType().Name}': {ex.Message}");
                     }
                 }
             }
 
-            // 4. OutputGain
+            // 4. Apply Output Gain spectrum modifiers
             ApplyOutputGain(pcm, activePreset.OutputGain);
 
-            // 5. Limiter
+            // 5. Studio-grade Soft Limiter saturation safety guard
             ApplyLimiter(pcm, threshold: 0.98f);
 
             return pcm;
         }
+        #endregion
 
-
+        #region Advanced Mathematical DSP Sub-Filters
         /// <summary>
-        /// Returns true if the frame is considered silent based on amplitude threshold.
+        /// Returns true if the frame is considered silent based on amplitude threshold metrics.
         /// </summary>
         public static bool IsSilent(float[] pcm, float threshold = 0.01f)
         {
-            if (pcm == null || pcm.Length == 0)
+            if (pcm is null or { Length: 0 })
                 return true;
 
             float absThr = Math.Abs(threshold);
@@ -181,11 +177,12 @@
                 float v = pcm[i];
                 float absV = Math.Abs(v);
 
-                // If sample enters the hot zone, soft-compress it
+                // If sample enters the hot zone, soft-compress it smoothly
                 if (absV > 0.8f)
                 {
                     float excess = absV - 0.8f;
-                    // Fast polynomial soft-knee emulation
+
+                    // Fast polynomial soft-knee emulation block
                     absV = 0.8f + excess / (1f + excess * excess);
 
                     if (absV > t) absV = t;
@@ -199,26 +196,24 @@
         /// <summary>
         /// Applies a post-filter to PCM audio data to reduce ringing artifacts and enhance high-frequency content.
         /// </summary>
-        /// <param name="pcm">An array of floating-point PCM audio samples to process.</param>
         public static void ApplyOpusPostFilter(float[] pcm)
         {
             const float hfBoost = 1.35f;
             const float smoothing = 0.995f;
-
             float prev = 0f;
 
             for (int i = 0; i < pcm.Length; i++)
             {
                 float v = pcm[i];
 
-                // de-ringing
+                // de-ringing phase filtration
                 float smooth = (v * (1f - smoothing)) + (prev * smoothing);
                 prev = smooth;
 
-                // high-frequency restoration
+                // high-frequency harmonic restoration
                 smooth *= hfBoost;
 
-                // clamp
+                // hardware boundary clamping
                 if (smooth > 1f) smooth = 1f;
                 if (smooth < -1f) smooth = -1f;
 
@@ -229,9 +224,6 @@
         /// <summary>
         /// Applies soft compression to a PCM audio sample array using the specified threshold and compression ratio.
         /// </summary>
-        /// <param name="pcm">The array of PCM audio samples to process.</param>
-        /// <param name="threshold">The amplitude threshold above which compression is applied.</param>
-        /// <param name="ratio">The compression ratio for samples exceeding the threshold.</param>
         public static void ApplySoftCompressor(float[] pcm, float threshold, float ratio)
         {
             for (int i = 0; i < pcm.Length; i++)
@@ -280,13 +272,16 @@
         /// </summary>
         private static void ApplyOutputGain(float[] pcm, float gain)
         {
-            gain = Clamp(gain, 0.0f, 3.0f);
-            if (Math.Abs(gain - 1.0f) < 0.001f) return; // Skip loop if gain is neutral
+            // FLUENT API CORE ALIGNMENT: 
+            // Leveraged the custom zero-allocation MathExtensions scalar clamp straight on the float parameter primitive
+            gain = gain.Clamp(0.0f, 3.0f);
+            if (Math.Abs(gain - 1.0f) < 0.001f) return;
 
             for (int i = 0; i < pcm.Length; i++)
             {
                 pcm[i] *= gain;
             }
         }
+        #endregion
     }
 }

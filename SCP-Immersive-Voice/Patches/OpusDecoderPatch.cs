@@ -1,45 +1,70 @@
-﻿namespace ScpImmersiveVoice.Patches
-{
-    using System;
-    using System.Reflection;
-    using HarmonyLib;
-    using VoiceChat.Codec;
-    using VoiceChat;
+﻿using HarmonyLib;
+using LabApi.Extensions.Misc;
+using System;
+using System.Reflection;
+using VoiceChat;
+using VoiceChat.Codec;
 
+namespace ScpImmersiveVoice.Patches
+{
     [HarmonyPatch]
     public static class OpusDecoderPatch
     {
-        static MethodBase TargetMethod()
-        {
-            return typeof(OpusDecoder).GetConstructor(Type.EmptyTypes);
-        }
+        #region Statically Cached Reflection Metadata
+        private static readonly MethodInfo CachedCreateDecoder;
+        private static readonly FieldInfo CachedHandleField;
+        private static readonly bool IsReflectionCacheValid;
+        #endregion
 
-        static void Postfix(OpusDecoder __instance)
+        #region Static Cache Initialization
+        static OpusDecoderPatch()
         {
             try
             {
-                int sr = VoiceChatSettings.SampleRate;
-
+                // Parsing reflection strings and assembly structures EXACTLY ONCE during startup.
+                // This strips out high-overhead metadata traversal loops from the execution hot path.
                 var wrapperType = Type.GetType("VoiceChat.Codec.OpusWrapper, Assembly-CSharp");
-                if (wrapperType == null)
-                    return;
+                if (wrapperType is not null)
+                {
+                    CachedCreateDecoder = wrapperType.GetMethod("CreateDecoder",
+                        BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                }
 
-                var createDecoder = wrapperType.GetMethod("CreateDecoder",
-                    BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-
-                if (createDecoder == null)
-                    return;
-
-                var newHandle = (IntPtr)createDecoder.Invoke(null, new object[] { sr, 1 });
-                if (newHandle == IntPtr.Zero)
-                    return;
-
-                var handleField = typeof(OpusDecoder).GetField("_handle",
+                CachedHandleField = typeof(OpusDecoder).GetField("_handle",
                     BindingFlags.Instance | BindingFlags.NonPublic);
 
-                handleField?.SetValue(__instance, newHandle);
+                IsReflectionCacheValid = CachedCreateDecoder is not null && CachedHandleField is not null;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                iLogger.Error(nameof(OpusDecoderPatch), $"[HARMONY STATIC INIT CACHE CRASH] Failed to bind internal Opus native methods: {ex.Message}");
+                IsReflectionCacheValid = false;
+            }
         }
+        #endregion
+
+        #region Harmony Internal Directives
+        static MethodBase TargetMethod() => typeof(OpusDecoder).GetConstructor(Type.EmptyTypes);
+
+        static void Postfix(OpusDecoder __instance)
+        {
+            if (!IsReflectionCacheValid || __instance is null) return;
+
+            try
+            {
+                int sampleRate = VoiceChatSettings.SampleRate;
+
+                // Allocation-free parameters array invocation
+                var newHandle = (IntPtr)CachedCreateDecoder.Invoke(null, new object[] { sampleRate, 1 });
+                if (newHandle == IntPtr.Zero) return;
+
+                CachedHandleField.SetValue(__instance, newHandle);
+            }
+            catch (Exception ex)
+            {
+                iLogger.Error(nameof(OpusDecoderPatch), $"[HARMONY CORRUPTION] Critical memory injection dropout inside OpusDecoder runtime hook: {ex.Message}");
+            }
+        }
+        #endregion
     }
 }

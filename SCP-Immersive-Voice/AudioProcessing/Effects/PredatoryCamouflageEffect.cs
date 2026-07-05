@@ -1,8 +1,7 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
-    using System;
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
-    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
+    using System;
 
     /// <summary>
     /// SCP-939 biological vocal camouflage layer.

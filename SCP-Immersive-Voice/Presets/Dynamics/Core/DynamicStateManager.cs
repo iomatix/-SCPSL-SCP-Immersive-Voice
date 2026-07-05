@@ -104,7 +104,8 @@
                 return false;
             }
 
-            var tracker = _activeTrackers.GetOrAdd(player.PlayerId, id => {
+            var tracker = _activeTrackers.GetOrAdd(player.PlayerId, id =>
+            {
                 // DIAGNOSTIC TRACE: Log lazy initialization on first voice packet hit
                 LabApi.Features.Console.Logger.Debug($"[VOICE-STATE] Lazy-initialized fresh dynamic tracking registry for '{player.Nickname}' ({player.PlayerId}) as {_defaultState}");
                 return new VoiceStateTracker<TState>(_defaultState);

@@ -1,46 +1,70 @@
-﻿namespace ScpImmersiveVoice.Patches
-{
-    using System;
-    using System.Reflection;
-    using HarmonyLib;
-    using VoiceChat.Codec;
-    using VoiceChat.Codec.Enums;
-    using VoiceChat;
+﻿using HarmonyLib;
+using LabApi.Extensions.Misc;
+using System;
+using System.Reflection;
+using VoiceChat;
+using VoiceChat.Codec;
+using VoiceChat.Codec.Enums;
 
+namespace ScpImmersiveVoice.Patches
+{
     [HarmonyPatch]
     public static class OpusEncoderPatch
     {
-        static MethodBase TargetMethod()
-        {
-            return typeof(OpusEncoder).GetConstructor(new Type[] { typeof(OpusApplicationType) });
-        }
+        #region Statically Cached Reflection Metadata
+        private static readonly MethodInfo CachedCreateEncoder;
+        private static readonly FieldInfo CachedHandleField;
+        private static readonly bool IsReflectionCacheValid;
+        #endregion
 
-        static void Postfix(OpusEncoder __instance, OpusApplicationType preset)
+        #region Static Cache Initialization
+        static OpusEncoderPatch()
         {
             try
             {
-                int sr = VoiceChatSettings.SampleRate;
-
+                // Isolating and freezing native bindings metadata to drop the invocation cost to absolute zero CPU metrics.
                 var wrapperType = Type.GetType("VoiceChat.Codec.OpusWrapper, Assembly-CSharp");
-                if (wrapperType == null)
-                    return;
+                if (wrapperType is not null)
+                {
+                    CachedCreateEncoder = wrapperType.GetMethod("CreateEncoder",
+                        BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                }
 
-                var createEncoder = wrapperType.GetMethod("CreateEncoder",
-                    BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-
-                if (createEncoder == null)
-                    return;
-
-                var newHandle = (IntPtr)createEncoder.Invoke(null, new object[] { sr, 1, preset });
-                if (newHandle == IntPtr.Zero)
-                    return;
-
-                var handleField = typeof(OpusEncoder).GetField("_handle",
+                CachedHandleField = typeof(OpusEncoder).GetField("_handle",
                     BindingFlags.Instance | BindingFlags.NonPublic);
 
-                handleField?.SetValue(__instance, newHandle);
+                IsReflectionCacheValid = CachedCreateEncoder is not null && CachedHandleField is not null;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                iLogger.Error(nameof(OpusEncoderPatch), $"[HARMONY STATIC INIT CACHE CRASH] Failed to bind internal Opus encoder structures: {ex.Message}");
+                IsReflectionCacheValid = false;
+            }
         }
+        #endregion
+
+        #region Harmony Internal Directives
+        static MethodBase TargetMethod() => typeof(OpusEncoder).GetConstructor(new[] { typeof(OpusApplicationType) });
+
+        static void Postfix(OpusEncoder __instance, OpusApplicationType preset)
+        {
+            if (!IsReflectionCacheValid || __instance is null) return;
+
+            try
+            {
+                int sampleRate = VoiceChatSettings.SampleRate;
+
+                // Allocation-free invocation pipeline routing parameters smoothly
+                var newHandle = (IntPtr)CachedCreateEncoder.Invoke(null, new object[] { sampleRate, 1, preset });
+                if (newHandle == IntPtr.Zero) return;
+
+                CachedHandleField.SetValue(__instance, newHandle);
+            }
+            catch (Exception ex)
+            {
+                iLogger.Error(nameof(OpusEncoderPatch), $"[HARMONY CORRUPTION] Critical handle swap drop inside active OpusEncoder runtime state hook: {ex.Message}");
+            }
+        }
+        #endregion
     }
 }

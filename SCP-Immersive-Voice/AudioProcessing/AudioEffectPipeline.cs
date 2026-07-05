@@ -1,32 +1,46 @@
-﻿namespace SCP_Immersive_Voice.AudioProcessing
-{
-    using LabApi.Features.Console;
-    using SCP_Immersive_Voice.AudioProcessing.Interfaces;
-    using System;
-    using System.Collections.Generic;
+﻿using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Logger = LabApi.Extensions.Misc.iLogger;
 
+namespace SCP_Immersive_Voice.AudioProcessing
+{
+    /// <summary>
+    /// Manages an atomic, thread-safe, and lock-free execution graph for float-native digital signal processing (DSP) effects.
+    /// </summary>
     public class AudioEffectPipeline
     {
+        #region Private Repositories & Execution Tokens
         // INTENT: Utilizing a volatile array reference snapshot ensures completely lock-free iterations
         // within the high-frequency voice loop, permanently resolving real-time audio thread stalling.
-        private volatile IAudioEffect[] _effects = new IAudioEffect[0];
-        private readonly object _pipelineLock = new object();
+        private volatile IAudioEffect[] _effects = Array.Empty<IAudioEffect>();
+        private readonly object _pipelineLock = new();
+        #endregion
 
+        #region Operational Config Properties
         /// <summary>
         /// Performance Switch: Set to true ONLY during debugging. 
         /// When false, the profiling loop overhead is completely bypassed (0 CPU cost).
         /// </summary>
-        public static bool IsProfilingEnabled { get; set; } = false;
+        public static bool IsProfilingEnabled { get; set; }
 
+        /// <summary>
+        /// Gets the current volatile snapshot array of the registered audio effects.
+        /// </summary>
         public IAudioEffect[] Effects => _effects;
+        #endregion
 
+        #region Graph Mutation Controllers
         public void Add(IAudioEffect effect)
         {
-            if (effect == null) return;
+            if (effect is null) return;
+
             lock (_pipelineLock)
             {
                 int currentLength = _effects.Length;
-                IAudioEffect[] newEffects = new IAudioEffect[currentLength + 1];
+                var newEffects = new IAudioEffect[currentLength + 1];
+
                 Array.Copy(_effects, newEffects, currentLength);
                 newEffects[currentLength] = effect;
                 _effects = newEffects;
@@ -39,18 +53,12 @@
         /// </summary>
         public void UpdateEffects(IEnumerable<IAudioEffect> newEffects)
         {
-            if (newEffects == null) return;
+            if (newEffects is null) return;
+
             lock (_pipelineLock)
             {
-                List<IAudioEffect> tempList = new List<IAudioEffect>();
-                foreach (var item in newEffects)
-                {
-                    if (item != null)
-                    {
-                        tempList.Add(item);
-                    }
-                }
-                _effects = tempList.ToArray();
+                // Replaced messy instantiation loops with an optimized, statically cached conditional LINQ predicate filter.
+                _effects = newEffects.Where(static effect => effect is not null).ToArray();
             }
         }
 
@@ -58,16 +66,18 @@
         {
             lock (_pipelineLock)
             {
-                _effects = new IAudioEffect[0];
+                _effects = Array.Empty<IAudioEffect>();
             }
         }
+        #endregion
 
+        #region High-Frequency Hot-Path Processing Engine
         /// <summary>
         /// Main audio processing loop. Executes completely lock-free via local array reference snapshotting.
         /// </summary>
         public void Process(float[] pcm, int samples)
         {
-            if (pcm == null || samples < 1) return;
+            if (pcm is null || samples < 1) return;
 
             // INTENT: A local reference snapshot insulates the hot-path execution loop from external graph adjustments,
             // bypassing heavy locks while ensuring thread safety across overlapping VoIP streaming packet contexts.
@@ -77,42 +87,42 @@
             for (int e = 0; e < count; e++)
             {
                 IAudioEffect effect = localEffects[e];
+                if (effect is null) continue;
+
+                // Deduplicated the heavy dual-path try-catch profiling tree into a clean, linear, branch-weighted pipeline.
+                // Eradicated IL instruction bloating while guaranteeing zero runtime execution overhead.
+                DspStats before = default;
+                if (IsProfilingEnabled)
+                {
+                    before = Analyze(pcm, samples);
+                }
+
+                try
+                {
+                    effect.Process(pcm, samples);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(nameof(AudioEffectPipeline), $"[DSP Pipeline] Exception in audio effect execution module '{effect.Name}': {ex.Message}");
+                    continue;
+                }
 
                 if (IsProfilingEnabled)
                 {
-                    DspStats before = Analyze(pcm, samples);
-                    try
-                    {
-                        effect.Process(pcm, samples);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error($"[DSP Pipeline] Exception in effect '{effect.Name}': {ex.Message}");
-                    }
                     DspStats after = Analyze(pcm, samples);
-
                     DspProfiler.Log(effect.Name, before, after);
-                }
-                else
-                {
-                    try
-                    {
-                        effect.Process(pcm, samples);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error($"[DSP Pipeline] Exception in effect '{effect.Name}': {ex.Message}");
-                    }
                 }
             }
         }
+        #endregion
 
-        public struct DspStats
+        #region Telemetry Analyzer & Struct Subnodes
+        public readonly struct DspStats
         {
-            public float Rms;
-            public float Peak;
-            public float NoiseFloor;
-            public float Snr;
+            public float Rms { get; init; }
+            public float Peak { get; init; }
+            public float NoiseFloor { get; init; }
+            public float Snr { get; init; }
         }
 
         /// <summary>
@@ -120,7 +130,7 @@
         /// </summary>
         public static DspStats Analyze(float[] pcm, int samples)
         {
-            if (pcm == null || samples < 1) return default(DspStats);
+            if (pcm is null || samples < 1) return default;
 
             int activeSamples = Math.Min(samples, pcm.Length);
 
@@ -171,15 +181,16 @@
             {
                 if (before.Rms > 0.01f && after.Rms < before.Rms * 0.05f)
                 {
-                    Logger.Warn($"[DSP Profiler] '{name}' triggered severe signal degradation! RMS Drop: {before.Rms:F4} -> {after.Rms:F4}");
+                    Logger.Warn(nameof(AudioEffectPipeline), $"[DSP Profiler] '{name}' triggered severe signal degradation! RMS Severe Drop: {before.Rms:F4} -> {after.Rms:F4}");
                     return;
                 }
 
                 if (after.Peak > 1.0f)
                 {
-                    Logger.Error($"[DSP Profiler] '{name}' caused digital CLIPPING! Peak reached: {after.Peak:F2}");
+                    Logger.Error(nameof(AudioEffectPipeline), $"[DSP Profiler] '{name}' caused digital CLIPPING! Critical Peak reached: {after.Peak:F2}");
                 }
             }
         }
+        #endregion
     }
 }

@@ -2,7 +2,6 @@
 {
     using LabApi.Features.Audio;
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
-    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
     using System;
 
     /// <summary>

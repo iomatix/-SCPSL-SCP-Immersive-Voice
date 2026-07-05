@@ -153,7 +153,6 @@ namespace ScpImmersiveVoice
         private void OnPlayerDied(PlayerDeathEventArgs ev) => PurgePlayerContext(ev?.Player);
 
         /// <summary>
-        /// AAA MASTER-LEVEL ALIGNMENT: 
         /// Consolidated triple-duplicated procedural cleanup loops into a single atomic eviction pipeline.
         /// Guaranteed execution safety across high-frequency role swaps, disconnects, and combat kills.
         /// </summary>

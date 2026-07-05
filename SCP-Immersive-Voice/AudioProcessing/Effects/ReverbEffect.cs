@@ -1,8 +1,6 @@
 ﻿namespace SCP_Immersive_Voice.AudioProcessing.Effects
 {
     using SCP_Immersive_Voice.AudioProcessing.Interfaces;
-    using static SCP_Immersive_Voice.AudioProcessing.Utils.MathUtils;
-    using System;
 
     /// <summary>
     ///  Studio-grade Schroeder-Moorer Reverb Engine.

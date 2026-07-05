@@ -1,53 +1,47 @@
-﻿namespace ScpImmersiveVoice.EventHandlers
-{
-    using LabApi.Events.Arguments.PlayerEvents;
-    using LabApi.Events.Arguments.Scp096Events;
-    using PlayerRoles;
-    using PlayerRoles.PlayableScps.Scp096;
-    using SCP_Immersive_Voice.Presets.Dynamics;
-    using SCP_Immersive_Voice.Presets.Dynamics.Core;
-    using SCP_Immersive_Voice.Presets.Dynamics.Enums;
-    using System;
+﻿using LabApi.Events.Arguments.Scp096Events;
+using PlayerRoles;
+using PlayerRoles.PlayableScps.Scp096;
+using SCP_Immersive_Voice.Presets.Dynamics;
+using SCP_Immersive_Voice.Presets.Dynamics.Core;
+using SCP_Immersive_Voice.Presets.Dynamics.Enums;
 
+namespace ScpImmersiveVoice.EventHandlers
+{
     /// <summary>
     /// Handles discrete game state transitions for SCP-096 and routes them to the generic dynamic voice state manager.
     /// Utilizing the unified core state engine to prevent race conditions.
     /// </summary>
     public class Scp096AudioHandler
     {
+        #region Public Operational Properties
         /// <summary>
         /// Gets the centralized thread-safe state manager for SCP-096.
         /// </summary>
         public DynamicStateManager<Scp096VoiceState> Manager { get; }
+        #endregion
 
+        #region Initialization
         /// <summary>
         /// Initializes a new instance of the <see cref="Scp096AudioHandler"/> class.
         /// </summary>
         public Scp096AudioHandler()
         {
-            Manager = new DynamicStateManager<Scp096VoiceState>(
+            // Target-typed clean constructor instantiation pattern
+            Manager = new(
                 RoleTypeId.Scp096,
                 Scp096VoiceState.Calm,
                 Scp096DynamicPresets.GetPresetForState
             );
         }
+        #endregion
 
-        public void OnPlayerDied(PlayerDeathEventArgs ev)
-        {
-            if (ev != null && ev.Player != null) Manager.RemovePlayer(ev.Player);
-        }
-
-        public void OnChangedRole(PlayerChangedRoleEventArgs ev)
-        {
-            if (ev != null && ev.Player != null) Manager.RemovePlayer(ev.Player);
-        }
-
-        // ==========================================
-        // MASTER STATE ENGINE RECEPTOR (FIX)
-        // ==========================================
+        #region Master State Engine Receptor
+        /// <summary>
+        /// Intercepts native SCP-096 rage lifecycle updates and maps them to floating-native DSP voice states.
+        /// </summary>
         public void On096ChangedState(Scp096ChangedStateEventArgs ev)
         {
-            if (ev == null || ev.Player == null) return;
+            if (ev is null || ev.Player is null) return;
 
             switch (ev.State)
             {
@@ -72,36 +66,36 @@
                     break;
             }
         }
+        #endregion
 
-        // ==========================================
-        // TACTICAL GAMEPLAY OVERLAYS
-        // ==========================================
+        #region Tactical Gameplay Overlays
         public void On096Charging(Scp096ChargingEventArgs ev)
         {
             // Inject bull-rush sprint pressure overlay (automatically expires after 5 seconds)
-            if (ev != null && ev.Player != null)
+            if (ev is not null && ev.Player is not null)
                 Manager.SetState(ev.Player, Scp096VoiceState.Charging, 5.0f);
         }
 
         public void On096Charged(Scp096ChargedEventArgs ev)
         {
             // When the sprint lunge finishes, drop back to the active master rage state
-            if (ev != null && ev.Player != null)
+            if (ev is not null && ev.Player is not null)
                 Manager.SetState(ev.Player, Scp096VoiceState.Enraged);
         }
 
         public void On096PryingGate(Scp096PryingGateEventArgs ev)
         {
             // Severe kinetic door-crushing grunt layout injection
-            if (ev != null && ev.Player != null)
+            if (ev is not null && ev.Player is not null)
                 Manager.SetState(ev.Player, Scp096VoiceState.PryingGate);
         }
 
         public void On096PriedGate(Scp096PriedGateEventArgs ev)
         {
             // Recover from door damage execution back into standard rage
-            if (ev != null && ev.Player != null)
+            if (ev is not null && ev.Player is not null)
                 Manager.SetState(ev.Player, Scp096VoiceState.Enraged);
         }
+        #endregion
     }
 }

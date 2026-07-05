@@ -1,71 +1,67 @@
-﻿namespace ScpImmersiveVoice.EventHandlers
-{
-    using LabApi.Events.Arguments.PlayerEvents;
-    using LabApi.Events.Arguments.Scp939Events;
-    using PlayerRoles;
-    using SCP_Immersive_Voice.Presets;
-    using SCP_Immersive_Voice.Presets.Dynamics;
-    using SCP_Immersive_Voice.Presets.Dynamics.Core;
-    using SCP_Immersive_Voice.Presets.Dynamics.Enums;
+﻿using LabApi.Events.Arguments.Scp939Events;
+using PlayerRoles;
+using SCP_Immersive_Voice.Presets.Dynamics;
+using SCP_Immersive_Voice.Presets.Dynamics.Core;
+using SCP_Immersive_Voice.Presets.Dynamics.Enums;
 
+namespace ScpImmersiveVoice.EventHandlers
+{
     /// <summary>
     /// Routes biomorphic camouflage abilities and combat triggers for SCP-939 to the generic dynamic voice state manager.
     /// Utilizes automated fallback watchdogs to prevent transitional stuck voice states.
     /// </summary>
     public class Scp939AudioHandler
     {
+        #region Public Operational Properties
         /// <summary>
         /// Gets the centralized thread-safe state manager for SCP-939.
         /// </summary>
         public DynamicStateManager<Scp939VoiceState> Manager { get; }
+        #endregion
 
+        #region Initialization
         /// <summary>
         /// Initializes a new instance of the <see cref="Scp939AudioHandler"/> class.
         /// </summary>
         public Scp939AudioHandler()
         {
-            Manager = new DynamicStateManager<Scp939VoiceState>(
+            // Target-typed clean constructor instantiation pattern
+            Manager = new(
                 RoleTypeId.Scp939,
                 Scp939VoiceState.IdleWhisper,
                 Scp939DynamicPresets.GetPresetForState
             );
         }
+        #endregion
 
+        // USUNIĘTO: Słuchacze OnPlayerDied oraz OnChangedRole zostali całkowicie wycięci.
+        // Ewidencję i czyszczenie zasobów realizuje teraz potok ImmersiveScpVoicePlugin.PurgePlayerContext.
+
+        #region Camouflage & Mimicry Listeners
         /// <summary>
-        /// Session cleanup hook triggered upon player death.
+        /// Triggers voice spectrum morphing when the predator begins mimicking environmental audio cues.
         /// </summary>
-        public void OnPlayerDied(PlayerDeathEventArgs ev)
-        {
-            if (ev != null && ev.Player != null)
-            {
-                Manager.RemovePlayer(ev.Player);
-            }
-        }
-
-        /// <summary>
-        /// Session cleanup hook triggered when a player changes their role class.
-        /// </summary>
-        public void OnChangedRole(PlayerChangedRoleEventArgs ev)
-        {
-            if (ev != null && ev.Player != null)
-            {
-                Manager.RemovePlayer(ev.Player);
-            }
-        }
-
         public void On939MimickingEnvironment(Scp939MimickingEnvironmentEventArgs ev)
         {
-            if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.Mimicking);
+            if (ev is not null && ev.Player is not null)
+                Manager.SetState(ev.Player, Scp939VoiceState.Mimicking);
         }
 
+        /// <summary>
+        /// Resets the audio profile immediately back to the standard baseline once mimicry execution ceases.
+        /// </summary>
         public void On939MimickedEnvironment(Scp939MimickedEnvironmentEventArgs ev)
         {
-            if (ev != null) Manager.ResetToDefault(ev.Player);
+            if (ev is not null && ev.Player is not null)
+                Manager.ResetToDefault(ev.Player);
         }
 
+        /// <summary>
+        /// Manages state adjustments when entering or leaving the focused predator stealth overlay.
+        /// </summary>
         public void On939Focused(Scp939FocusedEventArgs ev)
         {
-            if (ev == null || ev.Player == null) return;
+            if (ev is null || ev.Player is null) return;
 
             if (ev.FocusState)
             {
@@ -78,39 +74,68 @@
                 Manager.ResetToDefault(ev.Player);
             }
         }
+        #endregion
 
+        #region Combat & Lunge Mechanics Listeners
+        /// <summary>
+        /// Injects high-frequency aggressive vocal filters when primary claw combat is active.
+        /// </summary>
         public void On939Attacking(Scp939AttackingEventArgs ev)
         {
-            // Protects the combat stream with an absolute 3-second safety watchdog threshold
-            if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.Attacking, 3.0f);
+            // Protects the combat stream with an absolute 3.0-second safety watchdog threshold
+            if (ev is not null && ev.Player is not null)
+                Manager.SetState(ev.Player, Scp939VoiceState.Attacking, 3.0f);
         }
 
+        /// <summary>
+        /// Applies defensive reactive voice distortions when taking damage during engagement.
+        /// </summary>
         public void On939Attacked(Scp939AttackedEventArgs ev)
         {
             // Protects the combat stream with an absolute 1.5-second safety watchdog threshold
-            if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.Attacking, 1.5f);
+            if (ev is not null && ev.Player is not null)
+                Manager.SetState(ev.Player, Scp939VoiceState.Attacking, 1.5f);
         }
 
+        /// <summary>
+        /// Forces short-term physical exertion presets when launching the kinetic leap ability.
+        /// </summary>
         public void On939Lunging(Scp939LungingEventArgs ev)
         {
             // Sets a strict 3.5-second lunge animation window before auto-expiring back to idle
-            if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.Attacking, 3.5f);
+            if (ev is not null && ev.Player is not null)
+                Manager.SetState(ev.Player, Scp939VoiceState.Attacking, 3.5f);
         }
 
+        /// <summary>
+        /// Discharges lunge vocal layers upon completion of the pounce sequence.
+        /// </summary>
         public void On939Lunged(Scp939LungedEventArgs ev)
         {
-            if (ev != null) Manager.ResetToDefault(ev.Player);
+            if (ev is not null && ev.Player is not null)
+                Manager.ResetToDefault(ev.Player);
         }
+        #endregion
 
+        #region Chemical Dispersion Listeners
+        /// <summary>
+        /// Routes voice modifications when releasing amnestic clouds into local facility zones.
+        /// </summary>
         public void On939CreatingAmnesticCloud(Scp939CreatingAmnesticCloudEventArgs ev)
         {
-            // Protects the chemical dispersion stream with a 25-second absolute timer limits
-            if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.AmnesticCloud, 25.0f);
+            // Protects the chemical dispersion stream with a 25.0-second absolute timer watchdog gate
+            if (ev is not null && ev.Player is not null)
+                Manager.SetState(ev.Player, Scp939VoiceState.AmnesticCloud, 25.0f);
         }
 
+        /// <summary>
+        /// Extends the active environmental state duration while the chemical aerosol field remains saturated.
+        /// </summary>
         public void On939CreatedAmnesticCloud(Scp939CreatedAmnesticCloudEventArgs ev)
         {
-            if (ev != null) Manager.SetState(ev.Player, Scp939VoiceState.AmnesticCloud, 60.0f);
+            if (ev is not null && ev.Player is not null)
+                Manager.SetState(ev.Player, Scp939VoiceState.AmnesticCloud, 60.0f);
         }
+        #endregion
     }
 }
