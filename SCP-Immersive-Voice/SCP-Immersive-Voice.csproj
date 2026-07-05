@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
@@ -5,21 +6,28 @@
 		<TargetFramework>net48</TargetFramework>
 		<LangVersion>9.0</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-
-		<AssemblyName Condition="'$(Configuration)' == 'Debug'">SCP-Immersive-Voice-DEBUG</AssemblyName>
-		<AssemblyName Condition="'$(Configuration)' != 'Debug'">SCP-Immersive-Voice</AssemblyName>
-
-		<SCPSL_References Condition="'$(SCPSL_References)' == ''">
-			C:\Program Files (x86)\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed
-		</SCPSL_References>
+		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+		
+		<Version>1.0.0</Version>
+		<AssemblyVersion>1.0.0</AssemblyVersion>
+		<FileVersion>1.0.0</FileVersion>
+		
+		<AssemblyName Condition="'$(Configuration)' == 'Debug'">$(MSBuildProjectName)-DEBUG</AssemblyName>
+		<AssemblyName Condition="'$(Configuration)' != 'Debug'">$(MSBuildProjectName)</AssemblyName>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<SCPSL_References Condition="'$(SCPSL_References)' == ''">C:\Program Files (x86)\Steam\steamapps\common\SCP Secret Laboratory Dedicated Server\SCPSL_Data\Managed</SCPSL_References>
+	</PropertyGroup>
+	
 	<ItemGroup>
 		<PackageReference Include="LabApi.Extensions" Version="0.9.30" />
 		<PackageReference Include="Northwood.LabAPI" Version="1.1.7" />
 		<PackageReference Include="SCPSL-AudioManagerAPI" Version="2.3.6" />
 		<PackageReference Include="YamlDotNet" Version="18.1.0" />
 		<PackageReference Include="Lib.Harmony" Version="2.4.2" />
+		<PackageReference Include="System.Text.Json" Version="10.0.9" />
+		<PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="All" IncludeAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>
