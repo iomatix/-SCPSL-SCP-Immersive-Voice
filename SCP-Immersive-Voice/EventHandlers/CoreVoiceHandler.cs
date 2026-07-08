@@ -65,7 +65,8 @@ namespace ScpImmersiveVoice.EventHandlers
             var msgDataReference = ev.Message.Data;
 
             // DECOUPLED THREAD WORKER DISPATCH: Main/Network thread execution time is now 0ms!
-            ThreadPool.UnsafeQueueUserWorkItem(_ =>
+            ThreadPool.UnsafeQueueUserWorkItem(
+                _ =>
             {
                 int maxFrameSize = VoiceChatSettings.PacketSizePerChannel;
                 float[] tempBuffer = ArrayPool<float>.Shared.Rent(maxFrameSize);
