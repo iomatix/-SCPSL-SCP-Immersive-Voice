@@ -1,6 +1,5 @@
 ﻿using LabApi.Features.Wrappers;
 using SCP_Immersive_Voice.AudioProcessing;
-using SCP_Immersive_Voice.Managers;
 using SCP_Immersive_Voice.Presets;
 using SCP_Immersive_Voice.Presets.Dynamics.Interfaces;
 using ScpImmersiveVoice;

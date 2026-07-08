@@ -9,14 +9,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Avian Syrinx Modeling Engine for creature chirps and anomalous vocalizations.
     /// Driven by pure harmonic sine wave down-sweeps exciting an organic avian resonator.
     /// </summary>
-    public class ChirpEffect : IAudioEffect
+    public class ChirpEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
 
         private readonly float _voiceEnvAttackCoef;
@@ -191,6 +191,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

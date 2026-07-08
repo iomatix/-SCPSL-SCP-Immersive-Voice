@@ -10,14 +10,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Employs a thread-safe local LCG, sample-rate independent biquad filter matrices, 
     /// and fast polynomial LFOs to simulate complex RF interference. Zero-allocation.
     /// </summary>
-    public class StaticNoiseEffect : IAudioEffect
+    public class StaticNoiseEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
         private readonly float _driftIncrement;
         private readonly float _fizzIncrement;
@@ -190,6 +190,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

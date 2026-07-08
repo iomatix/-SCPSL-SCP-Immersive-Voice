@@ -9,14 +9,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Thread-safe organic formant drift utilizing bounded non-linear coefficient morphing.
     /// Fully protected against Nyquist thresholds, infinite feedback explosion, and NaN poisoning.
     /// </summary>
-    public class FormantDriftEffect : IAudioEffect
+    public class FormantDriftEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
 
         // Stateful parameters for low-level register synchronization
         private float _lp;
@@ -109,6 +109,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             _hp = localHp;
             _phase = localPhase;
             _lcgState = localLcgState;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1.5f);
         }
         #endregion
     }

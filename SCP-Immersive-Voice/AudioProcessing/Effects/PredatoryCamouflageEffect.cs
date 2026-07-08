@@ -9,14 +9,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// SCP-939 biological vocal camouflage layer.
     /// Simulates turbulent airflow, throat cavity friction, wet tissue resonance, and predatory breathing texture.
     /// </summary>
-    public sealed class PredatoryCamouflageEffect : IAudioEffect
+    public sealed class PredatoryCamouflageEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
         private readonly float _attackCoef;
         private readonly float _releaseCoef;
@@ -168,6 +168,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

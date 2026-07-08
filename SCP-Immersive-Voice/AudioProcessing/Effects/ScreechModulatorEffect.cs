@@ -9,14 +9,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Utilizes dynamic envelope-driven inharmonic sideband modulation combined with 
     /// a high-Q human ear pain-threshold peaking filter (3150Hz) to synthesize glass-shattering shrieks.
     /// </summary>
-    public class ScreechModulatorEffect : IAudioEffect
+    public class ScreechModulatorEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
         private readonly float _envAttackCoef;
         private readonly float _envReleaseCoef;
@@ -169,6 +169,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             _painResonatorB2 = (1f - (alpha * a)) / a0;
             _painResonatorA1 = (-2f * cosW0) / a0;
             _painResonatorA2 = (1f - (alpha / a)) / a0;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

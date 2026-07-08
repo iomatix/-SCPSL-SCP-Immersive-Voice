@@ -9,7 +9,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Features sub-sample linear interpolation, low-CPU linear boundary crossfading,
     /// and a phase-instability chaos matrix to deliver authentic, tearing high fry shrieks. Zero heap allocations.
     /// </summary>
-    public class VocalShriekShifterEffect : IAudioEffect
+    public class VocalShriekShifterEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const int BufferSize = 16384;
@@ -17,7 +17,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
         private readonly float _crossfadeZone;
         private readonly float _invCrossfadeZone;
@@ -168,6 +168,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
             // Execute pristine linear math blend step
             return sampleA + fraction * (sampleB - sampleA);
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

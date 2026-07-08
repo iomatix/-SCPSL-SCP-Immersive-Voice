@@ -9,14 +9,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Cybernetic Data Burst and Diagnostic Transmission Engine for digital entities.
     /// Employs a high-frequency metallic silicon resonator driven by asymmetric binary square-waves.
     /// </summary>
-    public class DigitalDataBurstEffect : IAudioEffect
+    public class DigitalDataBurstEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
 
         private readonly float _voiceEnvAttackCoef;
@@ -195,6 +195,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

@@ -10,7 +10,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Replaces continuous thermal white noise with a discrete interlocking crystal grid shear matrix.
     /// Uses asymmetric ring modulation to turn human speech into jagged rock grit.
     /// </summary>
-    public class StoneGrindEffect : IAudioEffect
+    public class StoneGrindEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;

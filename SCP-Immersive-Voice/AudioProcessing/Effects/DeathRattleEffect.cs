@@ -10,7 +10,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Employs a voice-envelope driven stochastic LCG bubble generator and a modulated viscous 
     /// comb filter to synthesize realistic death rattle choking textures. Zero heap allocations.
     /// </summary>
-    public class DeathRattleEffect : IAudioEffect
+    public class DeathRattleEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const int CombSize = 256;
@@ -19,7 +19,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
 
         private readonly float _envAttackCoef;
@@ -154,6 +154,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             _bubblePhase = localBubblePhase;
             _lcgState = localLcgState;
             _writePtr = localWritePtr;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

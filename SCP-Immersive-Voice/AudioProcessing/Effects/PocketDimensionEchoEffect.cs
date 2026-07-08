@@ -8,10 +8,10 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Employs a sample-rate independent power-of-two ring buffer, fractional linear interpolation,
     /// fast polynomial LFOs, and an internal feedback All-Pass phase-smear filter. Zero allocations.
     /// </summary>
-    public class PocketDimensionEchoEffect : IAudioEffect
+    public class PocketDimensionEchoEffect : IAdjustableAudioEffect
     {
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
         private readonly float _lfoIncTime;
         private readonly float _lfoIncFb;
@@ -156,6 +156,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             _lfoPhaseTime = localPhaseTime;
             _lfoPhaseFb = localPhaseFb;
             _allPassState = localAllPassState;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1.5f);
         }
         #endregion
     }

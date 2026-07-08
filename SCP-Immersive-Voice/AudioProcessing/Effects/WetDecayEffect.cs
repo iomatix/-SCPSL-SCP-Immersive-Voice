@@ -10,14 +10,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Employs a sample-rate independent micro-diffuser delay line, a stateful low-frequency 
     /// fluid bubble resonator, and an ultra-fast LCG randomizer. Zero-allocation.
     /// </summary>
-    public class WetDecayEffect : IAudioEffect
+    public class WetDecayEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
         private readonly float _envAttackCoef;
         private readonly float _envReleaseCoef;
@@ -217,6 +217,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

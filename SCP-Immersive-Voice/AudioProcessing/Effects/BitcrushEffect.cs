@@ -9,12 +9,12 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Bypasses analog-style dithering smoothers to enforce raw, cold, non-linear mid-tread 
     /// digital step truncation, producing authentic crystalline digital quantization artifacts.
     /// </summary>
-    public class BitcrushEffect : IAudioEffect
+    public class BitcrushEffect : IAdjustableAudioEffect
     {
         #region Private Execution Vectors
+        private float _amount;
         private readonly float _steps;
         private readonly float _invSteps;
-        private readonly float _amount;
 
         // Stateful parameters for the 1st-order DC recovery barrier
         private float _dcX1;
@@ -73,6 +73,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 pcm[i] = saturated;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

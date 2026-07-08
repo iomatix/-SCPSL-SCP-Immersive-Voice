@@ -10,14 +10,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Removes vocal fold dominance while preserving articulation via voice-reactive 
     /// pink-noise biquad resonance tracking. Fully real-time safe and allocation-free.
     /// </summary>
-    public sealed class WhisperFilterEffect : IAudioEffect
+    public sealed class WhisperFilterEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        // Updated live through FastInjectScalarField()
         private float _amount;
         private readonly float _sampleRate;
         private readonly float _attackCoef;
@@ -185,6 +184,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

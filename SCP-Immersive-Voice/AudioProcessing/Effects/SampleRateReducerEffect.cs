@@ -10,7 +10,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Employs a persistent frame-independent phase accumulator, a high-speed LCG clock jitter 
     /// emulator, and a low-quality reconstruction DAC filter to generate authentic aliasing.
     /// </summary>
-    public class SampleRateReducerEffect : IAudioEffect
+    public class SampleRateReducerEffect : IAdjustableAudioEffect
     {
         #region Private Execution Vectors
         private readonly float _amount;

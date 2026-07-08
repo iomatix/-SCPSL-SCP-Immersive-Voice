@@ -9,14 +9,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Tracks the voice fundamental frequency (f0) via zero-crossing detection 
     /// and synthesizes a perfect sub-octave (f0 / 2) sub-bass layer.
     /// </summary>
-    public class SubharmonicGrowlEffect : IAudioEffect
+    public class SubharmonicGrowlEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _envAttackCoef;
         private readonly float _envReleaseCoef;
 
@@ -164,6 +164,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

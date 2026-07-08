@@ -9,7 +9,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Utilizes a dual-head time-domain crossfading delay network with bitwise wrapping 
     /// to synthesize a massive sub-octave layer (-12 semitones) without heap allocations.
     /// </summary>
-    public class DemonicOctaverEffect : IAudioEffect
+    public class DemonicOctaverEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const int BufferSize = 8128; // Power-of-two buffer size for high-speed bitwise wrapping (& 8191)
@@ -18,8 +18,8 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
         #endregion
 
         #region Private Execution Vectors
+        private float _mix;
         private readonly float _sampleRate;
-        private readonly float _mix;
         private readonly float _windowSize;
         private readonly float _invWindowSize;
 
@@ -126,6 +126,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             _writePtr = localWritePtr;
             _readPtr1 = localReadPtr1;
             _readPtr2 = localReadPtr2;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _mix = value.Clamp(0f, 1f);
         }
         #endregion
     }

@@ -9,10 +9,10 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Generates warm even harmonics for biological vocal strain using an optimized 
     /// polynomial waveshaper, an integrated DC-blocker, and high-frequency roll-off.
     /// </summary>
-    public class DistortionEffect : IAudioEffect
+    public class DistortionEffect : IAdjustableAudioEffect
     {
         #region Private Execution Vectors
-        private readonly float _drive;
+        private float _drive;
         private readonly float _makeupGain;
         private readonly float _lpCoef;
 
@@ -110,6 +110,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             _dcX1 = localDcX1;
             _dcY1 = localDcY1;
             _lpState = localLpState;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _drive = value.Clamp(0f, 1f);
         }
         #endregion
     }

@@ -9,14 +9,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Employs a modulated nonlinear feedback comb filter architecture with DC-blocking
     /// to introduce biological, gravelly throat textures. Fully real-time safe and stateless.
     /// </summary>
-    public class GutturalResonanceEffect : IAudioEffect
+    public class GutturalResonanceEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
         private readonly float _envAttackCoef;
         private readonly float _envReleaseCoef;
@@ -151,6 +151,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             _wobblePhase = localWobblePhase;
             _dcState = localDcState;
             _writeIndex = localWriteIndex;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1.5f);
         }
         #endregion
     }

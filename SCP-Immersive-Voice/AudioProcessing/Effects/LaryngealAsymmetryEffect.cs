@@ -9,7 +9,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Simulates biological larynx asymmetry by splitting the vocal stream into two parallel paths 
     /// and introducing a sub-millisecond dynamic phase/delay drift. Zero heap allocations.
     /// </summary>
-    public class LaryngealAsymmetryEffect : IAudioEffect
+    public class LaryngealAsymmetryEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const int BufferSize = 512;
@@ -18,7 +18,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
         private readonly float _lfoIncrement;
 
@@ -118,6 +118,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             // Safely restore calculated stack register data boundaries back into class tracking parameters.
             _writePtr = localWritePtr;
             _lfoPhase = localLfoPhase;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

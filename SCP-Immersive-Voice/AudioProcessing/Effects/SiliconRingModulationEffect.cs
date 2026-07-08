@@ -9,7 +9,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Destroys human harmonic intervals using a tracking low-frequency carrier wave 
     /// and simulates empty server-rack steel cabinet acoustic boundary reflections. Zero allocations.
     /// </summary>
-    public class SiliconRingModulatorEffect : IAudioEffect
+    public class SiliconRingModulatorEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const int CombDelaySamples = 144;
@@ -17,7 +17,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
         private readonly float _envAttackCoef;
         private readonly float _envReleaseCoef;
@@ -135,6 +135,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             _envelope = localEnvelope;
             _carrierPhase = localCarrierPhase;
             _combWritePtr = localCombWritePtr;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

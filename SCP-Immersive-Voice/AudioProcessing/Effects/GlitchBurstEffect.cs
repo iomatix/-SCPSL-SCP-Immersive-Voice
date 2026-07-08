@@ -9,10 +9,10 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Employs sample-rate independent millisecond timing, a thread-safe local LCG, 
     /// sample-and-hold stutter quantization, and an optimized digital foldback waveshaper.
     /// </summary>
-    public class GlitchBurstEffect : IAudioEffect
+    public class GlitchBurstEffect : IAdjustableAudioEffect
     {
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
 
         // Stateful parameters for block tracking managed inside stack register windows
@@ -152,6 +152,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             _glitchHoldSample = localHoldSample;
             _stutterHoldCounter = localStutterCounter;
             _lcgState = localLcgState;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1.5f);
         }
         #endregion
     }

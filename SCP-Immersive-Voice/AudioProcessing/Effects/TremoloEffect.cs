@@ -11,7 +11,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// zombie voices, radio modulation or dimensional instability.
     /// Float‑native, smooth and alias‑free.
     /// </summary>
-    public class TremoloEffect : IAudioEffect
+    public class TremoloEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
@@ -107,6 +107,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             _phase = localPhase;
             _jitterPhase = localJitterPhase;
             _smooth = localSmooth;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

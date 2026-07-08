@@ -9,7 +9,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Uses a cascaded 4-band Biquad Resonator Matrix to shift spectral envelopes 
     /// without altering the fundamental pitch. Zero-allocation and real-time safe.
     /// </summary>
-    public class FormantShiftEffect : IAudioEffect
+    public class FormantShiftEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float F1 = 500f;  // Throat resonance
@@ -20,6 +20,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
         #endregion
 
         #region Private Execution Vectors
+        private float _scale;
         // Cascaded processing filter topologies
         private BiquadFilter _filter1;
         private BiquadFilter _filter2;
@@ -40,15 +41,15 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
         public FormantShiftEffect(float formant, float sampleRate)
         {
             // FLUENT API ALIGNMENT: Utilizing the pristine mathematical clamp straight on the argument payload
-            float scale = formant.Clamp(0.5f, 2.0f);
+            _scale = formant.Clamp(0.5f, 2.0f);
             float sr = sampleRate > 0f ? sampleRate : 48000f;
 
             // Scale the formant centers to simulate expanding or shrinking the physical throat
             // Q values and Gains are tailored to emulate distinct biological cavities safely
-            _filter1.ConfigurePeakingEQ(F1 * scale, sr, 1.5f, 12f);
-            _filter2.ConfigurePeakingEQ(F2 * scale, sr, 2.0f, 10f);
-            _filter3.ConfigurePeakingEQ(F3 * scale, sr, 2.5f, 8f);
-            _filter4.ConfigurePeakingEQ(F4 * scale, sr, 3.0f, 6f);
+            _filter1.ConfigurePeakingEQ(F1 * _scale, sr, 1.5f, 12f);
+            _filter2.ConfigurePeakingEQ(F2 * _scale, sr, 2.0f, 10f);
+            _filter3.ConfigurePeakingEQ(F3 * _scale, sr, 2.5f, 8f);
+            _filter4.ConfigurePeakingEQ(F4 * _scale, sr, 3.0f, 6f);
         }
         #endregion
 
@@ -125,6 +126,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _scale = value.Clamp(0.5f, 2.0f);
         }
         #endregion
     }

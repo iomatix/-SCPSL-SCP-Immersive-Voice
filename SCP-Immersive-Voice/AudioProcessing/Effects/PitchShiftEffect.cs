@@ -10,7 +10,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Uses a circular buffer with dual read pointers and cubic Hermite spline interpolation.
     /// Provides completely natural pitch shifting without time-stretching or metallic artifacts.
     /// </summary>
-    public class PitchShiftEffect : IAudioEffect
+    public class PitchShiftEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
@@ -181,6 +181,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
             // Clamped Horner's scheme calculation structure
             return ((a * frac + b) * frac + c) * frac + d;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            SetPitch(value);
         }
         #endregion
     }

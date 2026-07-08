@@ -10,14 +10,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Combines an ultra-fast local LCG randomizer, vocal envelope tracking, and a slow 
     /// physiological LFO into a custom Biquad Bandpass filter to synthesize organic airflow turbulence.
     /// </summary>
-    public class BreathNoiseEffect : IAudioEffect
+    public class BreathNoiseEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _intensity;
+        private float _intensity;
         private readonly float _sampleRate;
 
         private readonly float _envAttackCoef;
@@ -164,6 +164,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _intensity = value.Clamp(0f, 2.0f);
         }
         #endregion
     }

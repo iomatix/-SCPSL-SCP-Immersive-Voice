@@ -10,7 +10,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Excites a low-frequency high-Q modal concrete resonator matrix using sparse, explosive
     /// impulse streams, while actively cross-modulating the voice buffer to strip humanity.
     /// </summary>
-    public class StoneCrackEffect : IAudioEffect
+    public class StoneCrackEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;

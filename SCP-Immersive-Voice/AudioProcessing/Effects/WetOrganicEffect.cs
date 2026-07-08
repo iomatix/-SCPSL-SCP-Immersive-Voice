@@ -10,14 +10,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Employs a sub-millisecond fractional micro-delay line, sample-rate independent 
     /// biquad high-pass filtering, and a high-speed bitwise LCG randomizer. Zero allocations.
     /// </summary>
-    public class WetOrganicEffect : IAudioEffect
+    public class WetOrganicEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
         private readonly float _envAttackCoef;
         private readonly float _envReleaseCoef;
@@ -213,6 +213,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

@@ -10,14 +10,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Employs an ultra-fast LCG randomizer, voice amplitude envelope tracking, 
     /// and an excited lossy bandpass resonator matrix. Zero allocations, real-time safe.
     /// </summary>
-    public class FleshCrackleEffect : IAudioEffect
+    public class FleshCrackleEffect : IAdjustableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _envAttackCoef;
         private readonly float _envReleaseCoef;
 
@@ -158,6 +158,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1.5f);
         }
         #endregion
     }

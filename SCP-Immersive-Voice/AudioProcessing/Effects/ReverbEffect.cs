@@ -8,10 +8,10 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Employs 4 parallel low-pass feedback comb filters for structural echo density
     /// and 2 cascaded all-pass filters for smooth spectral diffusion. Zero allocations in loop.
     /// </summary>
-    public class ReverbEffect : IAudioEffect
+    public class ReverbEffect : IAdjustableAudioEffect
     {
         #region Private Execution Vectors
-        private readonly float _mix;
+        private float _mix;
 
         // Parallel Low-Pass Feedback Comb Filters (LBCF) for early reflection density
         private LowPassCombFilter _comb1;
@@ -181,6 +181,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _mix = value.Clamp(0f, 1f);
         }
         #endregion
     }
