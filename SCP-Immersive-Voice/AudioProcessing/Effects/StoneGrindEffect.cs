@@ -17,7 +17,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _intensity;
+        private float _intensity;
         private readonly float _sampleRate;
         private readonly float _envAttackCoef;
         private readonly float _envReleaseCoef;
@@ -194,6 +194,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
                 return output;
             }
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _intensity = value.Clamp(0f, 2f);
         }
         #endregion
     }

@@ -18,7 +18,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
         #endregion
 
         #region Private Execution Vectors
-        private readonly float _frequency;
+        private float _frequency;
 
         // Stateful tracking registers managed securely via local stack frames
         private float _phase;
@@ -113,7 +113,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
         #region Operational Parameter Adjustments
         public void AdjustParameter(float value)
         {
-            _amount = value.Clamp(0f, 1f);
+            _frequency = value.Clamp(0.1f, 20f);
         }
         #endregion
     }

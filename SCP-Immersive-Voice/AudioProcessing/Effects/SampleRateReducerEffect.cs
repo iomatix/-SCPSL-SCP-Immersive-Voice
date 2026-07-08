@@ -13,7 +13,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     public class SampleRateReducerEffect : IAdjustableAudioEffect
     {
         #region Private Execution Vectors
-        private readonly float _amount;
+        private float _amount;
         private readonly float _sampleRate;
         private readonly float _jitterLfoIncrement;
 
@@ -132,6 +132,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             _reconstructionState = localReconstructionState;
             _jitterLfoPhase = localJitterLfoPhase;
             _lcgState = localLcgState;
+        }
+        #endregion
+
+        #region Operational Parameter Adjustments
+        public void AdjustParameter(float value)
+        {
+            _amount = value.Clamp(0f, 1f);
         }
         #endregion
     }

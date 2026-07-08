@@ -1,6 +1,7 @@
 ﻿using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Features.Wrappers;
 using SCP_Immersive_Voice.Decoders;
+using SCP_Immersive_Voice.Managers;
 using SCP_Immersive_Voice.VoiceProfiles;
 using ScpImmersiveVoice.Config;
 using System;
