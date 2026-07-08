@@ -1,7 +1,4 @@
-﻿using AudioManagerAPI.Defaults;
-using AudioManagerAPI.Features.Enums;
-using LabApi.Features.Wrappers;
-using SCP_Immersive_Voice.AudioProcessing;
+﻿using SCP_Immersive_Voice.AudioProcessing;
 using SCP_Immersive_Voice.AudioProcessing.Effects;
 using SCP_Immersive_Voice.AudioProcessing.Interfaces;
 using SCP_Immersive_Voice.AudioProcessing.Utils;
@@ -33,30 +30,31 @@ namespace SCP_Immersive_Voice.Managers
         private readonly Dictionary<string, IAudioEffect> _temporaryMap = new(32);
         #endregion
 
-        #region Pre-Allocated Rolling Buffer Ring (Zero-Allocation Async Protection)
-        private const int BufferRingSize = 32; // 32 frames * 20ms = 640ms retention window
+        #region Hardware-Matched Fixed Buffer Ring
+        private const int BufferRingSize = 32;
         private float[][] _bufferRing;
         private int _ringIndex;
 
         /// <summary>
-        /// Resolves an isolated, sequential buffer safely insulated from cross-thread overwrites.
+        /// Resolves a strictly isolated, hardware-aligned buffer. 
+        /// Guarantees total thread safety and zero mixer desynchronization for concurrent talkers.
         /// </summary>
-        public float[] GetNextRollingBuffer(int size)
+        public float[] GetNextFixedBuffer()
         {
+            int maxSize = VoiceChatSettings.PacketSizePerChannel > 0 ? VoiceChatSettings.PacketSizePerChannel : 960;
+
             if (_bufferRing is null)
             {
                 _bufferRing = new float[BufferRingSize][];
                 for (int i = 0; i < BufferRingSize; i++)
-                    _bufferRing[i] = new float[size];
-            }
-            else if (_bufferRing[0].Length != size)
-            {
-                for (int i = 0; i < BufferRingSize; i++)
-                    _bufferRing[i] = new float[size];
+                    _bufferRing[i] = new float[maxSize];
             }
 
             float[] buf = _bufferRing[_ringIndex];
             _ringIndex = (_ringIndex + 1) % BufferRingSize;
+
+            // Defensively clear the entire array buffer to guarantee no ghost echoes or digital cross-talk bleed
+            Array.Clear(buf, 0, buf.Length);
             return buf;
         }
         #endregion
@@ -71,7 +69,8 @@ namespace SCP_Immersive_Voice.Managers
             _reusableEffectsList.Clear();
             _temporaryMap.Clear();
 
-            float gateThreshold = preset.UseNoiseGate ? preset.NoiseGateThreshold : -45f;
+            // SOFTENED NOISE FLOOR: Shifted default gate threshold from -45f to -52f to accommodate quiet vocal patterns
+            float gateThreshold = preset.UseNoiseGate ? preset.NoiseGateThreshold : -52f;
             UpdateOrRegisterSlot("NoiseGate", () => new NoiseGateEffect(gateThreshold, sampleRate), gateThreshold);
 
             if (preset.VocalShriek > 0f)

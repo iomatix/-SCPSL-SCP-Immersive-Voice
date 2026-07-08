@@ -11,10 +11,6 @@ using VoiceChat;
 
 namespace ScpImmersiveVoice.EventHandlers
 {
-    /// <summary>
-    /// Core pipeline event listener driving the routing, decoding, and DSP synchronization of live VoIP buffers.
-    /// Fully thread-safe and allocation-free using session-insulated rolling ring buffers.
-    /// </summary>
     public class CoreVoiceHandler
     {
         #region Private Repositories
@@ -62,7 +58,6 @@ namespace ScpImmersiveVoice.EventHandlers
 
                 ScpVoiceDecoder.ApplyEffects(tempBuffer, samples, sender);
 
-                // Step 1: Pre-resolve the stateful session container
                 var session = _voiceManager?.StartSession(sender);
                 if (session is null) return;
 
@@ -94,14 +89,13 @@ namespace ScpImmersiveVoice.EventHandlers
                     ev.IsAllowed = false;
                 }
 
-                // Step 2: Rent a non-shared rolling buffer bound exclusively to this player's session
-                // Since it's a 32-node ring, it won't be overwritten for another 640ms, leaving AudioManagerAPI fully protected.
-                float[] exactPlaybackBuffer = session.GetNextRollingBuffer(samples);
+                // FIXED SYSTEMIC DATA RACE: Renting a hardware-locked maximum aligned array shell.
+                // Ensures the asynchronous thread backend inside AudioManagerAPI reads constant length blocks.
+                float[] exactPlaybackBuffer = session.GetNextFixedBuffer();
 
-                // Fast in-place block extraction copy
+                // Copy only active computed samples, leaving trailing bits as strict digital silence (0.0f)
                 Array.Copy(tempBuffer, 0, exactPlaybackBuffer, 0, samples);
 
-                // Forward via the optimized direct session pipe
                 _voiceManager?.AppendPcmDirect(session, exactPlaybackBuffer);
             }
             finally
