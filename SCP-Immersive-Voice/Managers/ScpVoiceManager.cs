@@ -90,6 +90,16 @@ namespace SCP_Immersive_Voice.Managers
 
         #region Data Transmission Pipelines
         /// <summary>
+        /// Appends pre-allocated rolling PCM blocks directly into the native stream mixer.
+        /// Bypasses redundant dictionary tracking lookups for maximum execution speed.
+        /// </summary>
+        public void AppendPcmDirect(VoiceSession session, float[] samples)
+        {
+            if (session is null || samples is null || samples.Length == 0) return;
+            DefaultAudioManager.Instance.AppendPcmData(session.SessionId, samples);
+        }
+
+        /// <summary>
         /// Appends raw float PCM sample blocks directly into the stateful session execution pipeline.
         /// </summary>
         public void AppendPcm(Player scp, float[] samples)
@@ -103,7 +113,6 @@ namespace SCP_Immersive_Voice.Managers
 
             if (session is null) return;
 
-            // Wywołanie zgodne z sygnaturą natywnego AudioManagerAPI (2 argumenty)
             DefaultAudioManager.Instance.AppendPcmData(session.SessionId, samples);
         }
         #endregion

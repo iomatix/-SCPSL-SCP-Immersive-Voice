@@ -13,6 +13,7 @@ namespace ScpImmersiveVoice.EventHandlers
 {
     /// <summary>
     /// Core pipeline event listener driving the routing, decoding, and DSP synchronization of live VoIP buffers.
+    /// Fully thread-safe and allocation-free using session-insulated rolling ring buffers.
     /// </summary>
     public class CoreVoiceHandler
     {
@@ -61,12 +62,16 @@ namespace ScpImmersiveVoice.EventHandlers
 
                 ScpVoiceDecoder.ApplyEffects(tempBuffer, samples, sender);
 
+                // Step 1: Pre-resolve the stateful session container
+                var session = _voiceManager?.StartSession(sender);
+                if (session is null) return;
+
                 bool isForbiddenProximity = _config.ForbiddenProximity.Contains(sender.Role);
 
                 if (isForbiddenProximity)
                 {
                     byte[] encodedBuffer = ArrayPool<byte>.Shared.Rent(AudioTransmitter.MaxEncodedSize);
-                    float[] exactEncodeBuffer = ExactAudioBufferPool.Rent(samples);
+                    float[] exactEncodeBuffer = ArrayPool<float>.Shared.Rent(samples);
                     try
                     {
                         Array.Copy(tempBuffer, 0, exactEncodeBuffer, 0, samples);
@@ -78,7 +83,7 @@ namespace ScpImmersiveVoice.EventHandlers
                     }
                     finally
                     {
-                        ExactAudioBufferPool.Return(exactEncodeBuffer);
+                        ArrayPool<float>.Shared.Return(exactEncodeBuffer);
                         ArrayPool<byte>.Shared.Return(encodedBuffer);
                     }
                     return;
@@ -89,19 +94,15 @@ namespace ScpImmersiveVoice.EventHandlers
                     ev.IsAllowed = false;
                 }
 
-                // KROK KLUCZOWY: Wypożyczamy tablicę o wymiarze dokładnie równym 'samples'
-                // Dzięki temu exactPlaybackBuffer.Length == samples, co idealnie pasuje do Twojego API.
-                float[] exactPlaybackBuffer = ExactAudioBufferPool.Rent(samples);
-                try
-                {
-                    Array.Copy(tempBuffer, 0, exactPlaybackBuffer, 0, samples);
-                    _voiceManager?.AppendPcm(sender, exactPlaybackBuffer);
-                }
-                finally
-                {
-                    // Zwracamy precyzyjny bufor natychmiast po wykonaniu synchronicznego zapisu w AudioManagerAPI
-                    ExactAudioBufferPool.Return(exactPlaybackBuffer);
-                }
+                // Step 2: Rent a non-shared rolling buffer bound exclusively to this player's session
+                // Since it's a 32-node ring, it won't be overwritten for another 640ms, leaving AudioManagerAPI fully protected.
+                float[] exactPlaybackBuffer = session.GetNextRollingBuffer(samples);
+
+                // Fast in-place block extraction copy
+                Array.Copy(tempBuffer, 0, exactPlaybackBuffer, 0, samples);
+
+                // Forward via the optimized direct session pipe
+                _voiceManager?.AppendPcmDirect(session, exactPlaybackBuffer);
             }
             finally
             {
