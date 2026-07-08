@@ -1,17 +1,19 @@
 ﻿using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Features.Audio;
 using LabApi.Features.Wrappers;
 using SCP_Immersive_Voice.Decoders;
 using SCP_Immersive_Voice.Managers;
 using SCP_Immersive_Voice.VoiceProfiles;
 using ScpImmersiveVoice.Config;
 using System;
+using System.Buffers;
 using VoiceChat;
+using VoiceChat.Networking;
 
 namespace ScpImmersiveVoice.EventHandlers
 {
     /// <summary>
     /// Core pipeline event listener driving the routing, decoding, and DSP synchronization of live VoIP buffers.
-    /// Operates on high-frequency network threads with strict allocation-free safety gates.
     /// </summary>
     public class CoreVoiceHandler
     {
@@ -29,26 +31,17 @@ namespace ScpImmersiveVoice.EventHandlers
         #endregion
 
         #region Core Network Voice Pipeline Routing
-        /// <summary>
-        /// Intercepts raw network voice envelopes, decodes Opus frames, pushes float-native samples 
-        /// through target DSP graphs, and routes finalized buffers into customized proximity streaming layers.
-        /// </summary>
         public void OnSendingVoiceMessage(PlayerSendingVoiceMessageEventArgs ev)
         {
-            // Step 1: Structural Validation Guards using C# 9.0 pattern syntax
             if (!ImmersiveScpVoicePlugin.IsEnabled || ev is null || ev.Player is null)
                 return;
 
             Player sender = ev.Player;
 
-            // Step 2: Fetch active runtime context preset profile (Dynamic state graphs)
             var preset = ScpVoiceProfiles.GetPreset(sender);
             if (preset is null || !preset.Enable)
                 return;
 
-            // Step 3: Channel Boundary Filtering
-            // HIGH-PERFORMANCE UPGRADE: Compressed complex multi-branch if conditions into a clean
-            // C# 9.0 pattern sequence matching layout, allowing the JIT compiler to optimize branch routing tables.
             if (ev.Message.Channel is VoiceChatChannel.None
                 or VoiceChatChannel.Spectator
                 or VoiceChatChannel.Mimicry
@@ -58,36 +51,63 @@ namespace ScpImmersiveVoice.EventHandlers
                 return;
             }
 
-            // Step 4: Decode compressed network Opus packets into raw floating-native PCM streams
-            float[] pcm = ScpVoiceDecoder.Decode(ev.Message);
-            if (pcm is null || pcm.Length is 0 || ScpVoiceDecoder.IsSilent(pcm, threshold: 0.001f))
-                return;
+            int maxFrameSize = VoiceChatSettings.PacketSizePerChannel;
+            float[] tempBuffer = ArrayPool<float>.Shared.Rent(maxFrameSize);
 
-            // Step 5: Process floating-native DSP pipelines bound exclusively to this player session configuration
-            pcm = ScpVoiceDecoder.ApplyEffects(pcm, sender);
-
-            // Step 6: Enforce administrative role and tactical proxy routing restrictions
-            bool isForbiddenProximity = _config.ForbiddenProximity.Contains(sender.Role);
-
-            if (isForbiddenProximity)
+            try
             {
-                // Re-encode back into raw compressed audio bytes for native SL system tracking hooks
-                byte[] encoded = ScpVoiceDecoder.EncodeToOpus(pcm);
-                if (encoded is not null)
+                int samples = ScpVoiceDecoder.Decode(ev.Message, tempBuffer);
+                if (samples <= 0 || ScpVoiceDecoder.IsSilent(tempBuffer, samples, threshold: 0.001f))
+                    return;
+
+                ScpVoiceDecoder.ApplyEffects(tempBuffer, samples, sender);
+
+                bool isForbiddenProximity = _config.ForbiddenProximity.Contains(sender.Role);
+
+                if (isForbiddenProximity)
                 {
-                    Buffer.BlockCopy(encoded, 0, ev.Message.Data, 0, encoded.Length);
+                    byte[] encodedBuffer = ArrayPool<byte>.Shared.Rent(AudioTransmitter.MaxEncodedSize);
+                    float[] exactEncodeBuffer = ExactAudioBufferPool.Rent(samples);
+                    try
+                    {
+                        Array.Copy(tempBuffer, 0, exactEncodeBuffer, 0, samples);
+                        int encodedLength = ScpVoiceDecoder.EncodeToOpus(exactEncodeBuffer, samples, encodedBuffer);
+                        if (encodedLength > 0)
+                        {
+                            Buffer.BlockCopy(encodedBuffer, 0, ev.Message.Data, 0, encodedLength);
+                        }
+                    }
+                    finally
+                    {
+                        ExactAudioBufferPool.Return(exactEncodeBuffer);
+                        ArrayPool<byte>.Shared.Return(encodedBuffer);
+                    }
+                    return;
                 }
-                return;
-            }
 
-            if (ev.Message.Channel is VoiceChatChannel.ScpChat)
+                if (ev.Message.Channel is VoiceChatChannel.ScpChat)
+                {
+                    ev.IsAllowed = false;
+                }
+
+                // KROK KLUCZOWY: Wypożyczamy tablicę o wymiarze dokładnie równym 'samples'
+                // Dzięki temu exactPlaybackBuffer.Length == samples, co idealnie pasuje do Twojego API.
+                float[] exactPlaybackBuffer = ExactAudioBufferPool.Rent(samples);
+                try
+                {
+                    Array.Copy(tempBuffer, 0, exactPlaybackBuffer, 0, samples);
+                    _voiceManager?.AppendPcm(sender, exactPlaybackBuffer);
+                }
+                finally
+                {
+                    // Zwracamy precyzyjny bufor natychmiast po wykonaniu synchronicznego zapisu w AudioManagerAPI
+                    ExactAudioBufferPool.Return(exactPlaybackBuffer);
+                }
+            }
+            finally
             {
-                // Force proxy streaming engine bypass by disabling native voice broadcasting loops
-                ev.IsAllowed = false;
+                ArrayPool<float>.Shared.Return(tempBuffer);
             }
-
-            // Route the finalized high-fidelity PCM sample set straight into our optimized hardware manager
-            _voiceManager?.AppendPcm(sender, pcm);
         }
         #endregion
     }

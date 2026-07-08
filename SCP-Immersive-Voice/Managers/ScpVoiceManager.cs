@@ -94,7 +94,7 @@ namespace SCP_Immersive_Voice.Managers
         /// </summary>
         public void AppendPcm(Player scp, float[] samples)
         {
-            if (scp is null || samples is null || samples.Length is 0) return;
+            if (scp is null || samples is null || samples.Length == 0) return;
 
             if (!_sessions.TryGetValue(scp.PlayerId, out var session))
             {
@@ -103,6 +103,7 @@ namespace SCP_Immersive_Voice.Managers
 
             if (session is null) return;
 
+            // Wywołanie zgodne z sygnaturą natywnego AudioManagerAPI (2 argumenty)
             DefaultAudioManager.Instance.AppendPcmData(session.SessionId, samples);
         }
         #endregion
