@@ -129,7 +129,7 @@ namespace ScpImmersiveVoice.EventHandlers
             Scp106Events.ChangedVigor += On106ChangedVigor;
             Scp106Events.TeleportingPlayer += On106TeleportingPlayer;
             Scp106Events.UsingHunterAtlas += On106UsingHunterAtlas;
-    
+
 
             ScpVoiceProfiles.DynamicProviders.Enqueue(Manager);
         }

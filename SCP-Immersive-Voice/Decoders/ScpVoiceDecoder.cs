@@ -3,7 +3,6 @@ using LabApi.Features.Wrappers;
 using SCP_Immersive_Voice.AudioProcessing.Interfaces;
 using SCP_Immersive_Voice.VoiceProfiles;
 using System;
-using VoiceChat;
 using VoiceChat.Codec;
 using VoiceChat.Codec.Enums;
 using VoiceChat.Networking;

@@ -2,7 +2,6 @@
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.Handlers;
-using LabApi.Extensions.Plugin;
 using LabApi.Features;
 using LabApi.Features.Wrappers;
 using LabApi.Loader.Features.Plugins;

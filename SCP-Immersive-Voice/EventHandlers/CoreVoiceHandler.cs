@@ -8,7 +8,6 @@ using ScpImmersiveVoice.Config;
 using System;
 using System.Buffers;
 using VoiceChat;
-using VoiceChat.Networking;
 
 namespace ScpImmersiveVoice.EventHandlers
 {
