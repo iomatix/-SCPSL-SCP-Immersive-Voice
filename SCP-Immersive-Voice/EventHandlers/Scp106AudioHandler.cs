@@ -1,15 +1,19 @@
 ﻿using LabApi.Events.Arguments.Scp106Events;
+using LabApi.Events.Handlers;
+using LabApi.Features.Wrappers;
 using PlayerRoles;
+using SCP_Immersive_Voice.AudioProcessing.Interfaces;
 using SCP_Immersive_Voice.Presets.Dynamics;
 using SCP_Immersive_Voice.Presets.Dynamics.Core;
 using SCP_Immersive_Voice.Presets.Dynamics.Enums;
+using SCP_Immersive_Voice.VoiceProfiles;
 
 namespace ScpImmersiveVoice.EventHandlers
 {
     /// <summary>
     /// Processes conditional parameters and active ability flags for SCP-106, translating them to localized voice states.
     /// </summary>
-    public class Scp106AudioHandler
+    public class Scp106AudioHandler : IScpAudioSubsystem
     {
         #region Public Operational Properties
         /// <summary>
@@ -32,9 +36,6 @@ namespace ScpImmersiveVoice.EventHandlers
             );
         }
         #endregion
-
-        // USUNIĘTO: Metody OnPlayerDied oraz OnChangedRole zostały wycięte.
-        // Czyszczenie sesji i pamięci podręcznej realizuje teraz potok ImmersiveScpVoicePlugin.PurgePlayerContext.
 
         #region Extradimensional State Mechanics listeners
         /// <summary>
@@ -118,6 +119,33 @@ namespace ScpImmersiveVoice.EventHandlers
             {
                 Manager.ResetToDefault(ev.Player);
             }
+        }
+        #endregion
+
+        #region Binding
+        public void BindPipelines()
+        {
+            Scp106Events.ChangedStalkMode += On106ChangedStalkMode;
+            Scp106Events.ChangedVigor += On106ChangedVigor;
+            Scp106Events.TeleportingPlayer += On106TeleportingPlayer;
+            Scp106Events.UsingHunterAtlas += On106UsingHunterAtlas;
+    
+
+            ScpVoiceProfiles.DynamicProviders.Enqueue(Manager);
+        }
+
+        public void UnbindPipelines()
+        {
+            Scp106Events.ChangedStalkMode -= On106ChangedStalkMode;
+            Scp106Events.ChangedVigor -= On106ChangedVigor;
+            Scp106Events.TeleportingPlayer -= On106TeleportingPlayer;
+            Scp106Events.UsingHunterAtlas -= On106UsingHunterAtlas;
+        }
+
+        public void PurgePlayer(Player player)
+        {
+            if (player is null) return;
+            Manager?.RemovePlayer(player);
         }
         #endregion
     }

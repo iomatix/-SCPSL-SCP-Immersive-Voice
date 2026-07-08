@@ -1,9 +1,13 @@
 ﻿using LabApi.Events.Arguments.Scp096Events;
+using LabApi.Events.Handlers;
+using LabApi.Features.Wrappers;
 using PlayerRoles;
 using PlayerRoles.PlayableScps.Scp096;
+using SCP_Immersive_Voice.AudioProcessing.Interfaces;
 using SCP_Immersive_Voice.Presets.Dynamics;
 using SCP_Immersive_Voice.Presets.Dynamics.Core;
 using SCP_Immersive_Voice.Presets.Dynamics.Enums;
+using SCP_Immersive_Voice.VoiceProfiles;
 
 namespace ScpImmersiveVoice.EventHandlers
 {
@@ -11,7 +15,7 @@ namespace ScpImmersiveVoice.EventHandlers
     /// Handles discrete game state transitions for SCP-096 and routes them to the generic dynamic voice state manager.
     /// Utilizing the unified core state engine to prevent race conditions.
     /// </summary>
-    public class Scp096AudioHandler
+    public class Scp096AudioHandler : IScpAudioSubsystem
     {
         #region Public Operational Properties
         /// <summary>
@@ -95,6 +99,34 @@ namespace ScpImmersiveVoice.EventHandlers
             // Recover from door damage execution back into standard rage
             if (ev is not null && ev.Player is not null)
                 Manager.SetState(ev.Player, Scp096VoiceState.Enraged);
+        }
+        #endregion
+
+        #region Binding
+        public void BindPipelines()
+        {
+            Scp096Events.ChangedState += On096ChangedState;
+            Scp096Events.Charging += On096Charging;
+            Scp096Events.Charged += On096Charged;
+            Scp096Events.PryingGate += On096PryingGate;
+            Scp096Events.PriedGate += On096PriedGate;
+
+            ScpVoiceProfiles.DynamicProviders.Enqueue(Manager);
+        }
+
+        public void UnbindPipelines()
+        {
+            Scp096Events.ChangedState -= On096ChangedState;
+            Scp096Events.Charging -= On096Charging;
+            Scp096Events.Charged -= On096Charged;
+            Scp096Events.PryingGate -= On096PryingGate;
+            Scp096Events.PriedGate -= On096PriedGate;
+        }
+
+        public void PurgePlayer(Player player)
+        {
+            if (player is null) return;
+            Manager?.RemovePlayer(player);
         }
         #endregion
     }

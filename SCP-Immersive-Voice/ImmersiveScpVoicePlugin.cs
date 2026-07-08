@@ -8,6 +8,7 @@ using LabApi.Features.Wrappers;
 using LabApi.Loader.Features.Plugins;
 using LabApi.Loader.Features.Plugins.Enums;
 using Mirror;
+using SCP_Immersive_Voice.AudioProcessing.Interfaces;
 using SCP_Immersive_Voice.Managers;
 using SCP_Immersive_Voice.VoiceProfiles;
 using ScpImmersiveVoice.Config;
@@ -21,7 +22,7 @@ namespace ScpImmersiveVoice
 {
     /// <summary>
     /// The primary framework lifecycle controller for SCP Immersive Voice.
-    /// Manages patching vectors, modular event routing domains, and thread-safe dynamic graph allocations.
+    /// Governs modular decoupled component boundaries and dynamic sub-feature state transitions.
     /// </summary>
     public class ImmersiveScpVoicePlugin : Plugin<ImmersiveScpVoiceConfig>
     {
@@ -34,13 +35,13 @@ namespace ScpImmersiveVoice
         public override LoadPriority Priority { get; } = LoadPriority.High;
         #endregion
 
-        #region Subsystem Properties
+        #region Core Subsystem Handlers
         internal CoreVoiceHandler CoreVoiceHandler { get; private set; }
-        internal Scp096AudioHandler Scp096AudioHandler { get; private set; }
-        internal Scp939AudioHandler Scp939AudioHandler { get; private set; }
-        internal Scp3114AudioHandler Scp3114AudioHandler { get; private set; }
-        internal Scp106AudioHandler Scp106AudioHandler { get; private set; }
         internal ScpVoiceManager VoiceManager { get; private set; }
+        #endregion
+
+        #region Polymorphic Subsystem Registry Matrix
+        private IScpAudioSubsystem[] _subsystems;
         #endregion
 
         #region Infrastructure Fields
@@ -66,17 +67,20 @@ namespace ScpImmersiveVoice
             _harmony.CreateClassProcessor(typeof(OpusEncoderPatch)).Patch();
             _harmony.CreateClassProcessor(typeof(OpusDecoderPatch)).Patch();
 
-            // FLUENT API ALIGNMENT:
-            // Constructing modular subsystem dependencies potokowo straight through the PluginBuilder engine.
-            PluginBuilder.Create(this)
-                .InitializeModule(() => VoiceManager = new ScpVoiceManager())
-                .InitializeModule(() => CoreVoiceHandler = new CoreVoiceHandler(Config, VoiceManager))
-                .InitializeModule(() => Scp096AudioHandler = new Scp096AudioHandler())
-                .InitializeModule(() => Scp939AudioHandler = new Scp939AudioHandler())
-                .InitializeModule(() => Scp3114AudioHandler = new Scp3114AudioHandler())
-                .InitializeModule(() => Scp106AudioHandler = new Scp106AudioHandler());
-
+            // Construct infrastructure dependencies
+            VoiceManager = new ScpVoiceManager();
+            CoreVoiceHandler = new CoreVoiceHandler(Config, VoiceManager);
             ScpVoiceProfiles.VoiceManagerInstance = VoiceManager;
+
+            // COMPOSITE PATTERN: Registering individual handlers polimorphically inside a flat registry array.
+            // Eliminates OCP violations; adding a new SCP type requires 0 changes to this class framework structure.
+            _subsystems = new IScpAudioSubsystem[]
+            {
+                new Scp096AudioHandler(),
+                new Scp939AudioHandler(),
+                new Scp3114AudioHandler(),
+                new Scp106AudioHandler()
+            };
 
             // Bind systemic engine environment lifecycles
             ServerEvents.RoundStarted += OnRoundStart;
@@ -98,7 +102,12 @@ namespace ScpImmersiveVoice
                 updater.Init(VoiceManager);
             }
 
-            RegisterScpFeaturePipelines();
+            // Execute automated sequential pipeline attachments
+            int count = _subsystems.Length;
+            for (int i = 0; i < count; i++)
+            {
+                _subsystems[i]?.BindPipelines();
+            }
 
             Logger.Info(Name, $"Modular Voice Engine Successfully Online - v{Version} by {Author}");
         }
@@ -118,7 +127,16 @@ namespace ScpImmersiveVoice
             if (CoreVoiceHandler is not null)
                 PlayerEvents.SendingVoiceMessage -= CoreVoiceHandler.OnSendingVoiceMessage;
 
-            DismantleScpFeaturePipelines();
+            // Execute automated sequential pipeline tear-downs via flat array loops
+            if (_subsystems is not null)
+            {
+                int count = _subsystems.Length;
+                for (int i = 0; i < count; i++)
+                {
+                    _subsystems[i]?.UnbindPipelines();
+                }
+                _subsystems = null;
+            }
 
             // Evict background updater thread component from active Unity heap
             if (_updaterObject is not null)
@@ -130,12 +148,8 @@ namespace ScpImmersiveVoice
             ScpVoiceProfiles.DynamicProviders.Clear();
             VoiceManager?.StopAllSessions();
 
-            // Explicitly dereference subsystems to permit immediate clean garbage collection
+            // Explicitly dereference core components to permit immediate clean garbage collection
             CoreVoiceHandler = null;
-            Scp096AudioHandler = null;
-            Scp939AudioHandler = null;
-            Scp3114AudioHandler = null;
-            Scp106AudioHandler = null;
             VoiceManager = null;
             StaticConfig = null;
             IsEnabled = false;
@@ -153,8 +167,8 @@ namespace ScpImmersiveVoice
         private void OnPlayerDied(PlayerDeathEventArgs ev) => PurgePlayerContext(ev?.Player);
 
         /// <summary>
-        /// Consolidated triple-duplicated procedural cleanup loops into a single atomic eviction pipeline.
-        /// Guaranteed execution safety across high-frequency role swaps, disconnects, and combat kills.
+        /// Consolidated dynamic procedural cleanup iteration sweep over active registry modules.
+        /// Guaranteed zero allocation cost across high-frequency entity lifecycle swaps.
         /// </summary>
         private void PurgePlayerContext(Player player)
         {
@@ -163,98 +177,13 @@ namespace ScpImmersiveVoice
             VoiceManager?.StopSession(player);
             ScpVoiceProfiles.ClearCacheFor(player);
 
-            // Evict target entity parameters across individual anomaly handler domains instantly
-            Scp096AudioHandler?.Manager?.RemovePlayer(player);
-            Scp939AudioHandler?.Manager?.RemovePlayer(player);
-            Scp3114AudioHandler?.Manager?.RemovePlayer(player);
-            Scp106AudioHandler?.Manager?.RemovePlayer(player);
-        }
-        #endregion
+            if (_subsystems is null) return;
 
-        #region Pipeline Configurations
-        private void RegisterScpFeaturePipelines()
-        {
-            // --- SCP-096 Pipeline Registration ---
-            Scp096Events.ChangedState += Scp096AudioHandler.On096ChangedState;
-            Scp096Events.Charging += Scp096AudioHandler.On096Charging;
-            Scp096Events.Charged += Scp096AudioHandler.On096Charged;
-            Scp096Events.PryingGate += Scp096AudioHandler.On096PryingGate;
-            Scp096Events.PriedGate += Scp096AudioHandler.On096PriedGate;
-            ScpVoiceProfiles.DynamicProviders.Enqueue(Scp096AudioHandler.Manager);
-
-            // --- SCP-939 Pipeline Registration ---
-            Scp939Events.MimickingEnvironment += Scp939AudioHandler.On939MimickingEnvironment;
-            Scp939Events.MimickedEnvironment += Scp939AudioHandler.On939MimickedEnvironment;
-            Scp939Events.Focused += Scp939AudioHandler.On939Focused;
-            Scp939Events.Attacking += Scp939AudioHandler.On939Attacking;
-            Scp939Events.Attacked += Scp939AudioHandler.On939Attacked;
-            Scp939Events.Lunging += Scp939AudioHandler.On939Lunging;
-            Scp939Events.Lunged += Scp939AudioHandler.On939Lunged;
-            Scp939Events.CreatingAmnesticCloud += Scp939AudioHandler.On939CreatingAmnesticCloud;
-            Scp939Events.CreatedAmnesticCloud += Scp939AudioHandler.On939CreatedAmnesticCloud;
-            ScpVoiceProfiles.DynamicProviders.Enqueue(Scp939AudioHandler.Manager);
-
-            // --- SCP-3114 Pipeline Registration ---
-            Scp3114Events.Disguising += Scp3114AudioHandler.On3114Disguising;
-            Scp3114Events.Disguised += Scp3114AudioHandler.On3114Disguised;
-            Scp3114Events.Revealing += Scp3114AudioHandler.On3114Revealing;
-            Scp3114Events.Revealed += Scp3114AudioHandler.On3114Revealed;
-            Scp3114Events.StrangleStarting += Scp3114AudioHandler.On3114StrangleStarting;
-            Scp3114Events.StrangleStarted += Scp3114AudioHandler.On3114StrangleStarted;
-            Scp3114Events.StrangleAborting += Scp3114AudioHandler.On3114StrangleAborting;
-            Scp3114Events.StrangleAborted += Scp3114AudioHandler.On3114StrangleAborted;
-            ScpVoiceProfiles.DynamicProviders.Enqueue(Scp3114AudioHandler.Manager);
-
-            // --- SCP-106 Pipeline Registration ---
-            Scp106Events.ChangedStalkMode += Scp106AudioHandler.On106ChangedStalkMode;
-            Scp106Events.ChangedVigor += Scp106AudioHandler.On106ChangedVigor;
-            Scp106Events.TeleportingPlayer += Scp106AudioHandler.On106TeleportingPlayer;
-            Scp106Events.UsingHunterAtlas += Scp106AudioHandler.On106UsingHunterAtlas;
-            ScpVoiceProfiles.DynamicProviders.Enqueue(Scp106AudioHandler.Manager);
-        }
-
-        private void DismantleScpFeaturePipelines()
-        {
-            if (Scp096AudioHandler is not null)
+            // Linear traversal across abstractions ensures maximum speed and total code isolation
+            int count = _subsystems.Length;
+            for (int i = 0; i < count; i++)
             {
-                Scp096Events.ChangedState -= Scp096AudioHandler.On096ChangedState;
-                Scp096Events.Charging -= Scp096AudioHandler.On096Charging;
-                Scp096Events.Charged -= Scp096AudioHandler.On096Charged;
-                Scp096Events.PryingGate -= Scp096AudioHandler.On096PryingGate;
-                Scp096Events.PriedGate -= Scp096AudioHandler.On096PriedGate;
-            }
-
-            if (Scp939AudioHandler is not null)
-            {
-                Scp939Events.MimickingEnvironment -= Scp939AudioHandler.On939MimickingEnvironment;
-                Scp939Events.MimickedEnvironment -= Scp939AudioHandler.On939MimickedEnvironment;
-                Scp939Events.Focused -= Scp939AudioHandler.On939Focused;
-                Scp939Events.Attacking -= Scp939AudioHandler.On939Attacking;
-                Scp939Events.Attacked -= Scp939AudioHandler.On939Attacked;
-                Scp939Events.Lunging -= Scp939AudioHandler.On939Lunging;
-                Scp939Events.Lunged -= Scp939AudioHandler.On939Lunged;
-                Scp939Events.CreatingAmnesticCloud -= Scp939AudioHandler.On939CreatingAmnesticCloud;
-                Scp939Events.CreatedAmnesticCloud -= Scp939AudioHandler.On939CreatedAmnesticCloud;
-            }
-
-            if (Scp3114AudioHandler is not null)
-            {
-                Scp3114Events.Disguising -= Scp3114AudioHandler.On3114Disguising;
-                Scp3114Events.Disguised -= Scp3114AudioHandler.On3114Disguised;
-                Scp3114Events.Revealing -= Scp3114AudioHandler.On3114Revealing;
-                Scp3114Events.Revealed -= Scp3114AudioHandler.On3114Revealed;
-                Scp3114Events.StrangleStarting -= Scp3114AudioHandler.On3114StrangleStarting;
-                Scp3114Events.StrangleStarted -= Scp3114AudioHandler.On3114StrangleStarted;
-                Scp3114Events.StrangleAborting -= Scp3114AudioHandler.On3114StrangleAborting;
-                Scp3114Events.StrangleAborted -= Scp3114AudioHandler.On3114StrangleAborted;
-            }
-
-            if (Scp106AudioHandler is not null)
-            {
-                Scp106Events.ChangedStalkMode -= Scp106AudioHandler.On106ChangedStalkMode;
-                Scp106Events.ChangedVigor -= Scp106AudioHandler.On106ChangedVigor;
-                Scp106Events.TeleportingPlayer -= Scp106AudioHandler.On106TeleportingPlayer;
-                Scp106Events.UsingHunterAtlas -= Scp106AudioHandler.On106UsingHunterAtlas;
+                _subsystems[i]?.PurgePlayer(player);
             }
         }
         #endregion

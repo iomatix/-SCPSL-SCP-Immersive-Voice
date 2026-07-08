@@ -7,5 +7,6 @@
         Disguised,
         Revealing,
         Strangling,
+        Dancing
     }
 }

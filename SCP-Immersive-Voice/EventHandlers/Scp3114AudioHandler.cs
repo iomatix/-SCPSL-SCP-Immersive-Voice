@@ -1,15 +1,19 @@
 ﻿using LabApi.Events.Arguments.Scp3114Events;
+using LabApi.Events.Handlers;
+using LabApi.Features.Wrappers;
 using PlayerRoles;
+using SCP_Immersive_Voice.AudioProcessing.Interfaces;
 using SCP_Immersive_Voice.Presets.Dynamics;
 using SCP_Immersive_Voice.Presets.Dynamics.Core;
 using SCP_Immersive_Voice.Presets.Dynamics.Enums;
+using SCP_Immersive_Voice.VoiceProfiles;
 
 namespace ScpImmersiveVoice.EventHandlers
 {
     /// <summary>
     /// Routes gameplay hooks and structural state updates for SCP-3114 to the generic dynamic voice state manager.
     /// </summary>
-    public class Scp3114AudioHandler
+    public class Scp3114AudioHandler : IScpAudioSubsystem
     {
         #region Public Operational Properties
         /// <summary>
@@ -32,9 +36,6 @@ namespace ScpImmersiveVoice.EventHandlers
             );
         }
         #endregion
-
-        // USUNIĘTO: Słuchacze OnPlayerDied oraz OnChangedRole zostali całkowicie wycięci.
-        // Sprzątanie referencji realizuje teraz potok ImmersiveScpVoicePlugin.PurgePlayerContext.
 
         #region Disguise Lifecycle Listeners
         /// <summary>
@@ -101,6 +102,59 @@ namespace ScpImmersiveVoice.EventHandlers
         {
             if (ev is not null && ev.Player is not null)
                 Manager.ResetToDefault(ev.Player);
+        }
+        #endregion
+
+        #region Dance & Movement Listeners
+        public void On3114DanceStarting(Scp3114StartingDanceEventArgs ev)
+        {
+            if (ev is not null && ev.Player is not null)
+                Manager.SetState(ev.Player, Scp3114VoiceState.Dancing);
+        }
+
+        public void On3114Dance(Scp3114StartedDanceEventArgs ev)
+        {
+            if (ev is not null && ev.Player is not null)
+                Manager.SetState(ev.Player, Scp3114VoiceState.Dancing);
+        }
+        #endregion
+
+        #region Binding
+        public void BindPipelines()
+        {
+            Scp3114Events.Disguising += On3114Disguising;
+            Scp3114Events.Disguised += On3114Disguised;
+            Scp3114Events.Revealing += On3114Revealing;
+            Scp3114Events.Revealed += On3114Revealed;
+            Scp3114Events.StrangleAborted += On3114StrangleAborted;
+            Scp3114Events.StrangleAborting += On3114StrangleAborting;
+            Scp3114Events.StrangleStarted += On3114StrangleStarted;
+            Scp3114Events.StrangleStarting += On3114StrangleStarting;
+            Scp3114Events.StartDancing += On3114DanceStarting;
+            Scp3114Events.Dance += On3114Dance;
+
+
+            ScpVoiceProfiles.DynamicProviders.Enqueue(Manager);
+        }
+
+        public void UnbindPipelines()
+        {
+            Scp3114Events.Disguising -= On3114Disguising;
+            Scp3114Events.Disguised -= On3114Disguised;
+            Scp3114Events.Revealing -= On3114Revealing;
+            Scp3114Events.Revealed -= On3114Revealed;
+            Scp3114Events.StrangleAborted -= On3114StrangleAborted;
+            Scp3114Events.StrangleAborting -= On3114StrangleAborting;
+            Scp3114Events.StrangleStarted -= On3114StrangleStarted;
+            Scp3114Events.StrangleStarting -= On3114StrangleStarting;
+            Scp3114Events.StartDancing -= On3114DanceStarting;
+            Scp3114Events.Dance -= On3114Dance;
+        }
+
+        public void PurgePlayer(Player player)
+        {
+            if (player is null) return;
+            Manager?.RemovePlayer(player);
         }
         #endregion
     }

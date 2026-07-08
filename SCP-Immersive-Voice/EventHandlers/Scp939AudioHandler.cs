@@ -1,8 +1,12 @@
 ﻿using LabApi.Events.Arguments.Scp939Events;
+using LabApi.Events.Handlers;
+using LabApi.Features.Wrappers;
 using PlayerRoles;
+using SCP_Immersive_Voice.AudioProcessing.Interfaces;
 using SCP_Immersive_Voice.Presets.Dynamics;
 using SCP_Immersive_Voice.Presets.Dynamics.Core;
 using SCP_Immersive_Voice.Presets.Dynamics.Enums;
+using SCP_Immersive_Voice.VoiceProfiles;
 
 namespace ScpImmersiveVoice.EventHandlers
 {
@@ -10,7 +14,7 @@ namespace ScpImmersiveVoice.EventHandlers
     /// Routes biomorphic camouflage abilities and combat triggers for SCP-939 to the generic dynamic voice state manager.
     /// Utilizes automated fallback watchdogs to prevent transitional stuck voice states.
     /// </summary>
-    public class Scp939AudioHandler
+    public class Scp939AudioHandler : IScpAudioSubsystem
     {
         #region Public Operational Properties
         /// <summary>
@@ -33,9 +37,6 @@ namespace ScpImmersiveVoice.EventHandlers
             );
         }
         #endregion
-
-        // USUNIĘTO: Słuchacze OnPlayerDied oraz OnChangedRole zostali całkowicie wycięci.
-        // Ewidencję i czyszczenie zasobów realizuje teraz potok ImmersiveScpVoicePlugin.PurgePlayerContext.
 
         #region Camouflage & Mimicry Listeners
         /// <summary>
@@ -135,6 +136,42 @@ namespace ScpImmersiveVoice.EventHandlers
         {
             if (ev is not null && ev.Player is not null)
                 Manager.SetState(ev.Player, Scp939VoiceState.AmnesticCloud, 60.0f);
+        }
+        #endregion
+
+        #region Binding
+        public void BindPipelines()
+        {
+            Scp939Events.Attacking += On939Attacking;
+            Scp939Events.Attacked += On939Attacked;
+            Scp939Events.CreatingAmnesticCloud += On939CreatingAmnesticCloud;
+            Scp939Events.CreatedAmnesticCloud += On939CreatedAmnesticCloud;
+            Scp939Events.Focused += On939Focused;
+            Scp939Events.Lunged += On939Lunged;
+            Scp939Events.Lunging += On939Lunging;
+            Scp939Events.MimickingEnvironment += On939MimickingEnvironment;
+            Scp939Events.MimickedEnvironment += On939MimickedEnvironment;
+
+            ScpVoiceProfiles.DynamicProviders.Enqueue(Manager);
+        }
+
+        public void UnbindPipelines()
+        {
+            Scp939Events.Attacking -= On939Attacking;
+            Scp939Events.Attacked -= On939Attacked;
+            Scp939Events.CreatingAmnesticCloud -= On939CreatingAmnesticCloud;
+            Scp939Events.CreatedAmnesticCloud -= On939CreatedAmnesticCloud;
+            Scp939Events.Focused -= On939Focused;
+            Scp939Events.Lunged -= On939Lunged;
+            Scp939Events.Lunging -= On939Lunging;
+            Scp939Events.MimickingEnvironment -= On939MimickingEnvironment;
+            Scp939Events.MimickedEnvironment -= On939MimickedEnvironment;
+        }
+
+        public void PurgePlayer(Player player)
+        {
+            if (player is null) return;
+            Manager?.RemovePlayer(player);
         }
         #endregion
     }
