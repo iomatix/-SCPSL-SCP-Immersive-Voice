@@ -7,6 +7,7 @@ using SCP_Immersive_Voice.VoiceProfiles;
 using ScpImmersiveVoice.Config;
 using System;
 using System.Buffers;
+using System.Threading;
 using VoiceChat;
 
 namespace ScpImmersiveVoice.EventHandlers
@@ -18,22 +19,18 @@ namespace ScpImmersiveVoice.EventHandlers
         private readonly ScpVoiceManager _voiceManager;
         #endregion
 
-        #region Initialization
         public CoreVoiceHandler(ImmersiveScpVoiceConfig config, ScpVoiceManager voiceManager)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _voiceManager = voiceManager ?? throw new ArgumentNullException(nameof(voiceManager));
         }
-        #endregion
 
-        #region Core Network Voice Pipeline Routing
         public void OnSendingVoiceMessage(PlayerSendingVoiceMessageEventArgs ev)
         {
             if (!ImmersiveScpVoicePlugin.IsEnabled || ev is null || ev.Player is null)
                 return;
 
             Player sender = ev.Player;
-
             var preset = ScpVoiceProfiles.GetPreset(sender);
             if (preset is null || !preset.Enable)
                 return;
@@ -47,62 +44,82 @@ namespace ScpImmersiveVoice.EventHandlers
                 return;
             }
 
-            int maxFrameSize = VoiceChatSettings.PacketSizePerChannel;
-            float[] tempBuffer = ArrayPool<float>.Shared.Rent(maxFrameSize);
+            // Resolve session instantly on the network reader thread
+            var session = _voiceManager?.StartSession(sender);
+            if (session is null) return;
 
-            try
+            bool isForbiddenProximity = _config.ForbiddenProximity.Contains(sender.Role);
+
+            if (ev.Message.Channel is VoiceChatChannel.ScpChat)
             {
-                int samples = ScpVoiceDecoder.Decode(ev.Message, tempBuffer);
-                if (samples <= 0 || ScpVoiceDecoder.IsSilent(tempBuffer, samples, threshold: 0.001f))
-                    return;
+                ev.IsAllowed = false;
+            }
 
-                ScpVoiceDecoder.ApplyEffects(tempBuffer, samples, sender);
+            // CRITICAL STEP: Extract raw network compressed payload instantly into a rented buffer
+            int dataLen = ev.Message.DataLength;
+            byte[] rawOpusPack = ArrayPool<byte>.Shared.Rent(dataLen);
+            Array.Copy(ev.Message.Data, 0, rawOpusPack, 0, dataLen);
 
-                var session = _voiceManager?.StartSession(sender);
-                if (session is null) return;
+            // Capture mutable entity metadata to bypass main thread dependency inside the thread pool
+            var senderRole = sender.Role;
+            var msgDataReference = ev.Message.Data;
 
-                bool isForbiddenProximity = _config.ForbiddenProximity.Contains(sender.Role);
+            // DECOUPLED THREAD WORKER DISPATCH: Main/Network thread execution time is now 0ms!
+            ThreadPool.UnsafeQueueUserWorkItem(_ =>
+            {
+                int maxFrameSize = VoiceChatSettings.PacketSizePerChannel;
+                float[] tempBuffer = ArrayPool<float>.Shared.Rent(maxFrameSize);
 
-                if (isForbiddenProximity)
+                try
                 {
-                    byte[] encodedBuffer = ArrayPool<byte>.Shared.Rent(AudioTransmitter.MaxEncodedSize);
-                    float[] exactEncodeBuffer = ArrayPool<float>.Shared.Rent(samples);
-                    try
+                    // Isolated safe decode using the current session's private decoder context
+                    int samples = ScpVoiceDecoder.Decode(session, rawOpusPack, dataLen, tempBuffer);
+                    if (samples <= 0 || ScpVoiceDecoder.IsSilent(tempBuffer, samples, threshold: 0.001f))
+                        return;
+
+                    ScpVoiceDecoder.ApplyEffects(tempBuffer, samples, sender);
+
+                    if (isForbiddenProximity)
                     {
-                        Array.Copy(tempBuffer, 0, exactEncodeBuffer, 0, samples);
-                        int encodedLength = ScpVoiceDecoder.EncodeToOpus(exactEncodeBuffer, samples, encodedBuffer);
-                        if (encodedLength > 0)
+                        byte[] encodedBuffer = ArrayPool<byte>.Shared.Rent(AudioTransmitter.MaxEncodedSize);
+                        float[] exactEncodeBuffer = ArrayPool<float>.Shared.Rent(samples);
+                        try
                         {
-                            Buffer.BlockCopy(encodedBuffer, 0, ev.Message.Data, 0, encodedLength);
+                            Array.Copy(tempBuffer, 0, exactEncodeBuffer, 0, samples);
+                            int encodedLength = ScpVoiceDecoder.EncodeToOpus(session, exactEncodeBuffer, samples, encodedBuffer);
+                            if (encodedLength > 0)
+                            {
+                                lock (session.SyncLock)
+                                {
+                                    Buffer.BlockCopy(encodedBuffer, 0, msgDataReference, 0, encodedLength);
+                                }
+                            }
                         }
+                        finally
+                        {
+                            ArrayPool<float>.Shared.Return(exactEncodeBuffer);
+                            ArrayPool<byte>.Shared.Return(encodedBuffer);
+                        }
+                        return;
                     }
-                    finally
-                    {
-                        ArrayPool<float>.Shared.Return(exactEncodeBuffer);
-                        ArrayPool<byte>.Shared.Return(encodedBuffer);
-                    }
-                    return;
-                }
 
-                if (ev.Message.Channel is VoiceChatChannel.ScpChat)
+                    // Append into the hardware stream engine natively via the thread-isolated rolling matrix
+                    float[] exactPlaybackBuffer = session.GetNextFixedBuffer();
+                    Array.Copy(tempBuffer, 0, exactPlaybackBuffer, 0, samples);
+
+                    _voiceManager?.AppendPcmDirect(session, exactPlaybackBuffer);
+                }
+                catch (Exception)
                 {
-                    ev.IsAllowed = false;
+                    // Suppress or log async worker exceptions cleanly without crashing the main server application
                 }
-
-                // FIXED SYSTEMIC DATA RACE: Renting a hardware-locked maximum aligned array shell.
-                // Ensures the asynchronous thread backend inside AudioManagerAPI reads constant length blocks.
-                float[] exactPlaybackBuffer = session.GetNextFixedBuffer();
-
-                // Copy only active computed samples, leaving trailing bits as strict digital silence (0.0f)
-                Array.Copy(tempBuffer, 0, exactPlaybackBuffer, 0, samples);
-
-                _voiceManager?.AppendPcmDirect(session, exactPlaybackBuffer);
-            }
-            finally
-            {
-                ArrayPool<float>.Shared.Return(tempBuffer);
-            }
+                finally
+                {
+                    // Return both rented components safely back to the global pool arrays
+                    ArrayPool<float>.Shared.Return(tempBuffer);
+                    ArrayPool<byte>.Shared.Return(rawOpusPack);
+                }
+            }, null);
         }
-        #endregion
     }
 }

@@ -7,10 +7,12 @@ using SCP_Immersive_Voice.Presets;
 using System;
 using System.Collections.Generic;
 using VoiceChat;
+using VoiceChat.Codec;
+using VoiceChat.Codec.Enums;
 
 namespace SCP_Immersive_Voice.Managers
 {
-    public class VoiceSession
+    public class VoiceSession : IDisposable
     {
         #region Operational Properties
         public int SessionId { get; set; }
@@ -20,11 +22,12 @@ namespace SCP_Immersive_Voice.Managers
         public ScpVoicePreset LastAppliedPreset { get; set; }
         public DateTime LastPacketReceivedTime { get; set; } = DateTime.MinValue;
         public object SyncLock { get; } = new();
-
-        /// <summary>
-        /// Encapsulates spatial updates inside a high-precision hardware tick boundary layer.
-        /// </summary>
         public SpatializationDebouncer SpatialDebouncer { get; } = new(350f);
+        #endregion
+
+        #region Thread-Isolated Codec Resources
+        public OpusDecoder SessionDecoder { get; } = new();
+        public OpusEncoder SessionEncoder { get; } = new(OpusApplicationType.Voip);
         #endregion
 
         #region Pre-Allocated Reusable Heap Graph Buffers
@@ -37,10 +40,6 @@ namespace SCP_Immersive_Voice.Managers
         private float[][] _bufferRing;
         private int _ringIndex;
 
-        /// <summary>
-        /// Resolves a strictly isolated, hardware-aligned buffer. 
-        /// Guarantees total thread safety and zero mixer desynchronization for concurrent talkers.
-        /// </summary>
         public float[] GetNextFixedBuffer()
         {
             int maxSize = VoiceChatSettings.PacketSizePerChannel > 0 ? VoiceChatSettings.PacketSizePerChannel : 960;
@@ -55,7 +54,6 @@ namespace SCP_Immersive_Voice.Managers
             float[] buf = _bufferRing[_ringIndex];
             _ringIndex = (_ringIndex + 1) % BufferRingSize;
 
-            // Defensively clear the entire array buffer to guarantee no ghost echoes or digital cross-talk bleed
             Array.Clear(buf, 0, buf.Length);
             return buf;
         }
@@ -71,7 +69,6 @@ namespace SCP_Immersive_Voice.Managers
             _reusableEffectsList.Clear();
             _temporaryMap.Clear();
 
-            // SOFTENED NOISE FLOOR: Shifted default gate threshold from -45f to -52f to accommodate quiet vocal patterns
             float gateThreshold = preset.UseNoiseGate ? preset.NoiseGateThreshold : -52f;
             UpdateOrRegisterSlot("NoiseGate", () => new NoiseGateEffect(gateThreshold, sampleRate), gateThreshold);
 
@@ -200,5 +197,11 @@ namespace SCP_Immersive_Voice.Managers
             }
         }
         #endregion
+
+        public void Dispose()
+        {
+            SessionDecoder?.Dispose();
+            SessionEncoder?.Dispose();
+        }
     }
 }

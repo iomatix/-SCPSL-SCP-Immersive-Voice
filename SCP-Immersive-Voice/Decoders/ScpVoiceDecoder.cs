@@ -1,63 +1,37 @@
 ﻿using LabApi.Extensions;
 using LabApi.Features.Wrappers;
 using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+using SCP_Immersive_Voice.Managers;
 using SCP_Immersive_Voice.VoiceProfiles;
 using System;
-using VoiceChat.Codec;
-using VoiceChat.Codec.Enums;
-using VoiceChat.Networking;
 using Logger = LabApi.Extensions.Misc.iLogger;
 
 namespace SCP_Immersive_Voice.Decoders
 {
-    /// <summary>
-    /// Thread-safe lock-free object pool for exact-sized audio buffers preventing trailing garbage in native API streams.
-    /// </summary>
-    internal static class ExactAudioBufferPool
-    {
-        private static readonly System.Collections.Concurrent.ConcurrentBag<float[]> Pool = new();
-
-        public static float[] Rent(int size)
-        {
-            if (Pool.TryTake(out var arr) && arr.Length == size)
-                return arr;
-            return new float[size];
-        }
-
-        public static void Return(float[] arr)
-        {
-            if (arr is null) return;
-            Pool.Add(arr);
-        }
-    }
-
-    /// <summary>
-    /// Handles Opus decoding/encoding and applies the SCP voice DSP pipeline on float PCM audio. 
-    /// Fully float-native, zero-copy, allocation-free via external memory pool buffer bindings.
-    /// </summary>
     public static class ScpVoiceDecoder
     {
-        #region Private Static Audio Hardware Resources
-        private static readonly OpusDecoder Decoder = new();
-        private static readonly OpusEncoder Encoder = new(OpusApplicationType.Voip);
-        #endregion
-
-        #region Core Decoding & Encoding Pipelines
-        public static int Decode(VoiceMessage msg, float[] targetBuffer)
+        #region Core Decoding & Encoding Pipelines (Session-Insulated)
+        /// <summary>
+        /// Decodes an incoming Opus compressed byte payload using the caller session's private isolated hardware decoder codec.
+        /// </summary>
+        public static int Decode(VoiceSession session, byte[] rawOpusData, int dataLength, float[] targetBuffer)
         {
-            if (msg.Data is null || msg.DataLength <= 0 || targetBuffer is null)
+            if (session is null || rawOpusData is null || dataLength <= 0 || targetBuffer is null)
                 return 0;
 
-            int samples = Decoder.Decode(msg.Data, msg.DataLength, targetBuffer);
+            int samples = session.SessionDecoder.Decode(rawOpusData, dataLength, targetBuffer);
             return samples > 0 ? samples : 0;
         }
 
-        public static int EncodeToOpus(float[] pcm, int length, byte[] targetBuffer)
+        /// <summary>
+        /// Encodes a raw float frame using the caller session's private isolated hardware encoder codec.
+        /// </summary>
+        public static int EncodeToOpus(VoiceSession session, float[] pcm, int length, byte[] targetBuffer)
         {
-            if (pcm is null || length <= 0 || targetBuffer is null)
+            if (session is null || pcm is null || length <= 0 || targetBuffer is null)
                 return 0;
 
-            int encodedLen = Encoder.Encode(pcm, targetBuffer, length);
+            int encodedLen = session.SessionEncoder.Encode(pcm, targetBuffer, length);
             return encodedLen > 0 ? encodedLen : 0;
         }
         #endregion
