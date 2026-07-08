@@ -1,4 +1,5 @@
-﻿using SCP_Immersive_Voice.AudioProcessing;
+﻿using LabApi.Features.Wrappers;
+using SCP_Immersive_Voice.AudioProcessing;
 using SCP_Immersive_Voice.AudioProcessing.Effects;
 using SCP_Immersive_Voice.AudioProcessing.Interfaces;
 using SCP_Immersive_Voice.AudioProcessing.Utils;
@@ -13,6 +14,7 @@ namespace SCP_Immersive_Voice.Managers
     {
         #region Operational Properties
         public int SessionId { get; set; }
+        public Player PlayerInstance { get; set; }
         public AudioEffectPipeline Pipeline { get; } = new();
         public Dictionary<string, IAudioEffect> ActiveNodes { get; } = new(32);
         public ScpVoicePreset LastAppliedPreset { get; set; }

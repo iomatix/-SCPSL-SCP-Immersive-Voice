@@ -50,7 +50,7 @@ namespace SCP_Immersive_Voice.Managers
 
                 if (sessionId is 0) return null;
 
-                var session = new VoiceSession { SessionId = sessionId };
+                var session = new VoiceSession { SessionId = sessionId, PlayerInstance = scp };
                 _sessions[scp.PlayerId] = session;
 
                 iLogger.Debug(nameof(ScpVoiceManager), $"[VOICE HARDENING] Session REGISTERED. PlayerId: {scp.PlayerId}, SessionId: {sessionId}", _config.Debug);
@@ -128,7 +128,7 @@ namespace SCP_Immersive_Voice.Managers
 
             foreach (var (playerId, session) in _sessions)
             {
-                Player scp = Player.Get(playerId);
+                Player scp = session.PlayerInstance;
                 if (scp is null || !scp.IsReady)
                 {
                     if (_sessions.TryRemove(playerId, out var deadSession))
