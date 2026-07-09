@@ -27,7 +27,7 @@ namespace ScpImmersiveVoice
         public override string Name => "SCP Immersive Voice";
         public override string Description => "Enables proximity voice chat for SCPs and adds real-time audio DSP effects.";
         public override string Author => "iomatix";
-        public override Version Version => new(2, 2, 2);
+        public override Version Version => new(2, 2, 3);
         public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
         public override LoadPriority Priority { get; } = LoadPriority.High;
         #endregion
