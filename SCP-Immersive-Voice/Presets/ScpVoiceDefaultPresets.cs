@@ -106,12 +106,12 @@
                 {
                     Enable = true,
                     OutputGain = 2.45f,
-                    Pitch = 1.45f,            // Intent: frantic, high-velocity nerve tension frequency
-                    Formant = 1.20f,          // Intent: shrunken, hollow calcium skull space resonance
-                    DryCrackle = 0.90f,       // Intent: dry bone-on-bone friction and snapping skeletal ligaments
-                    FleshCrackle = 0.70f,     // Intent: rapid wet transients of leftover twitching organic tissue
-                    FormantDrift = 0.45f,     // Intent: unstable bone alignment shifting timbre dynamically
-                    Distortion = 0.20f        // Intent: sharp, jagged tearing edges
+                    Pitch = 1.28f,
+                    Formant = 1.15f,
+                    DryCrackle = 0.42f,
+                    FleshCrackle = 0.35f,
+                    FormantDrift = 0.30f,
+                    Distortion = 0.12f
                 },
 
                 // =================================================================
