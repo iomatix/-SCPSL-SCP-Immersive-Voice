@@ -144,16 +144,18 @@
                 {
                     Enable = true,
                     Mode = ScpVoicePresetMode.Default,
-                    OutputGain = 2.45f,
-                    Pitch = 0.76f,            // TUNING: Heavier biological drag (more sluggish)
-                    Formant = 0.50f,          // TUNING: Fully expanded rotted trachea
-                    DeathRattle = 0.85f,      // R&D INJECTION: Dominant visceral choking gurgle
-                    DemonicOctaverMix = 0.20f, // BALANCE: Dropped to a subtle low-end shadow (no longer occult lord)
-                    Guttural = 0.80f,         // Massive false-vocal cord larynx sandpaper abrasion
-                    FleshCrackle = 0.65f,     // Wet snapping bone and stretching tissue transients
-                    Distortion = 0.35f,
-                    LowPass = 1500f,          // Muffled high-frequencies matching heavy physical decay
-                    HighPass = 90f
+                    OutputGain = 3.10f,
+                    Pitch = 0.65f,
+                    Formant = 0.58f,
+                    DeathRattle = 0.75f,
+                    DemonicOctaverMix = 0.00f,
+                    Guttural = 0.25f,
+                    FleshCrackle = 0.20f,
+                    WetOrganic = 0.65f,
+                    WetDecay = 0.40f,
+                    Distortion = 0.15f,
+                    LowPass = 1300f,
+                    HighPass = 80f
                 },
 
                 // =================================================================
