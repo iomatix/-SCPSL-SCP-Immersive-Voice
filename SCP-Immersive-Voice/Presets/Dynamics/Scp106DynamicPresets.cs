@@ -17,19 +17,19 @@
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
-            IsGlobalTransmission = false, // Proximity directional 3D audio boundary
-            OutputGain = 2.45f,
-            Pitch = 0.52f,          // Ancient, sub-octave dimensional depth
-            Formant = 0.46f,        // Collapsed, rotted vocal cavity architecture
+            IsGlobalTransmission = false,
+            OutputGain = 2.65f,     // TUNING: Slight bump to keep him prominent in proximity
+            Pitch = 0.52f,
+            Formant = 0.46f,
             DemonicOctaverMix = 0.25f,
-            Distortion = 0.70f,     // SHARPNESS FIX: Harder waveshaping saturation to add harmonic bite
-            Guttural = 0.48f,       // SHARPNESS FIX: Severe false-vocal cord rasp (corroded throat grit)
-            FleshCrackle = 0.25f,   // SHARPNESS FIX: Liquid tissue degradation transient bubbling
-            LowPass = 1150f,        // SHARPNESS FIX: Opened cutoff window to let sharp abrasive grit slice through
+            Distortion = 0.45f,     // TUNING: Tamed from 0.70f to prevent waveshaper saturation from hashing the low frequencies
+            Guttural = 0.48f,
+            FleshCrackle = 0.25f,
+            LowPass = 1150f,
             Reverb = 0.40f,
-            WetDecay = 0.90f,       // Visceral viscous absorption (slime-coated walls)
-            WetOrganic = 0.35f,     // Slimy throat decomposition mechanics
-            PocketEcho = 0.80f,     // Non-Euclidean phase-inversion echo matrix
+            WetDecay = 0.90f,
+            WetOrganic = 0.35f,
+            PocketEcho = 0.80f,
             FormantDrift = 0.30f
         };
 
@@ -41,15 +41,15 @@
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             IsGlobalTransmission = false,
-            OutputGain = 2.25f,
-            Pitch = 0.48f,          // Voice sinks further into the substrate weight
-            Formant = 0.42f,        // Extreme structural compression
-            LowPass = 550f,         // Drastic cutoff simulating transmission through solid concrete/soil layers
+            OutputGain = 3.60f,
+            Pitch = 0.48f,
+            Formant = 0.42f,
+            LowPass = 550f,
             HighPass = 0f,
-            Distortion = 0.45f,
-            WetDecay = 1.00f,       // Absolute absorption, no air reflections can escape the solid mass
-            WetOrganic = 0.65f,     // Submerged vocal tract choking on corrosion fluid
-            PocketEcho = 0.40f,     // Dimensional link is muffled by local real-world density
+            Distortion = 0.25f,
+            WetDecay = 1.00f,
+            WetOrganic = 0.65f,
+            PocketEcho = 0.40f,
             FormantDrift = 0.20f
         };
 
@@ -61,18 +61,18 @@
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             IsGlobalTransmission = false,
-            OutputGain = 2.60f,
+            OutputGain = 2.85f,
             Pitch = 0.58f,
             Formant = 0.52f,
             DemonicOctaverMix = 0.35f,
-            LowPass = 1400f,        // Sudden acoustic expansion as the entity breaks into open air
-            Distortion = 0.90f,     // Tearing saturation modeling the spatial rupture
-            Guttural = 0.75f,       // Violent, ragged false-vocal cord rasp (spitting black mucosal bile)
-            FleshCrackle = 0.40f,   // Rapid wet popping sound as reality layers tear apart
-            WetDecay = 1.00f,       // Exploding, dripping liquid transients
+            LowPass = 1400f,
+            Distortion = 0.55f,
+            Guttural = 0.75f,
+            FleshCrackle = 0.40f,
+            WetDecay = 1.00f,
             WetOrganic = 0.70f,
             PocketEcho = 0.90f,
-            FormantDrift = 0.50f    // Extreme thermal/spectral instability during phase transit
+            FormantDrift = 0.50f
         };
 
         // =================================================================
@@ -82,20 +82,20 @@
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
-            IsGlobalTransmission = true, // PLUG-N-PLAY ACTIVATION: Broadcasts server-wide to all live clients!
-            OutputGain = 2.65f,     // Boosted headroom for maximum global intelligibility
-            Pitch = 0.48f,          // Deeper pitch floor inside his own core reality domain
+            IsGlobalTransmission = true,
+            OutputGain = 2.85f,
+            Pitch = 0.48f,
             Formant = 0.44f,
             DemonicOctaverMix = 0.45f,
-            LowPass = 1250f,        // SHARPNESS FIX: Opened cutoff so the global voice sounds clean and cutting
-            HighPass = 80f,         // Strip rumble mud out of global broadcast
-            Distortion = 0.75f,     // Heavy asymmetric overdrive edge
-            Guttural = 0.55f,       // SHARPNESS FIX: Direct larynx mucosal abrasion
-            Reverb = 0.80f,         // Massive, hollow space diffusion with maximum absorption loss
+            LowPass = 1250f,
+            HighPass = 80f,
+            Distortion = 0.45f,
+            Guttural = 0.55f,
+            Reverb = 0.80f,
             WetDecay = 0.85f,
             WetOrganic = 0.25f,
-            PocketEcho = 1.00f,     // Absolute phase inversion feedback, stripping local directional cues
-            FormantDrift = 0.65f    // Floating LFO center formants, making the sound morph across the listener's head
+            PocketEcho = 1.00f,
+            FormantDrift = 0.65f
         };
 
         // =================================================================
@@ -106,16 +106,16 @@
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             IsGlobalTransmission = false,
-            OutputGain = 2.35f,
+            OutputGain = 2.55f,
             Pitch = 0.54f,
             Formant = 0.50f,
-            LowPass = 1050f,        // Slightly enhanced boundary visibility passthrough
-            Distortion = 0.55f,
-            Guttural = 0.35f,       // Subdued mechanical rasp while focused
+            LowPass = 1050f,
+            Distortion = 0.35f,
+            Guttural = 0.35f,
             Reverb = 0.50f,
             WetDecay = 0.80f,
             WetOrganic = 0.28f,
-            PocketEcho = 0.85f,     // Steady dimensional background bleed
+            PocketEcho = 0.85f,
             FormantDrift = 0.35f
         };
 
@@ -127,14 +127,14 @@
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             IsGlobalTransmission = false,
-            OutputGain = 2.15f,
-            Pitch = 0.45f,          // Pitch drops to an absolute biological minimum due to loss of nerve energy
-            Formant = 0.40f,        // Drooping, elongated, tired throat volume
+            OutputGain = 3.20f,
+            Pitch = 0.45f,
+            Formant = 0.40f,
             LowPass = 800f,
-            Distortion = 0.50f,
-            Guttural = 0.50f,       // Wet, tired rattling in the larynx
-            Subharmonic = 0.35f,    // Static sub-bass weight dragging down the speech delivery
-            WetDecay = 1.00f,       // Thick, static accumulation of sludge
+            Distortion = 0.30f,
+            Guttural = 0.50f,
+            Subharmonic = 0.35f,
+            WetDecay = 1.00f,
             WetOrganic = 0.55f,
             PocketEcho = 0.70f,
             FormantDrift = 0.40f
@@ -148,14 +148,14 @@
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
             IsGlobalTransmission = false,
-            OutputGain = 2.55f,
-            Pitch = 0.62f,          // Aggressive surge
+            OutputGain = 2.75f,
+            Pitch = 0.62f,
             Formant = 0.55f,
-            HighPass = 220f,        // Remove proximity mud to amplify sharp cutting edges
-            LowPass = 1600f,        // Brightest open window for 106 to scream
-            Distortion = 1.40f,     // Intense waveshaping clipping (tearing sound)
-            Guttural = 0.65f,       // Corroded throat roar rasp
-            Subharmonic = 0.60f,    // Massive cinematic low-end punch to sell kinetic threat
+            HighPass = 220f,
+            LowPass = 1600f,
+            Distortion = 0.65f,
+            Guttural = 0.65f,
+            Subharmonic = 0.60f,
             WetDecay = 0.95f,
             WetOrganic = 0.45f,
             PocketEcho = 0.90f,
