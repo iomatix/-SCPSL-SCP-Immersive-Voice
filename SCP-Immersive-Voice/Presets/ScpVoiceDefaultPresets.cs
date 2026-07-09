@@ -20,15 +20,15 @@
                 {
                     Enable = true,
                     Mode = ScpVoicePresetMode.Default,
-                    OutputGain = 2.80f,       // High output gain to compensate for heavy low-pass absorption
-                    Pitch = 0.82f,            // Intent: deeper, aristocratic, highly controlled pitch
-                    Formant = 0.85f,          // Intent: elongated throat cavity mimicking the ceramic beak shape
-                    LowPass = 2200f,          // Intent: heavy leather mask + fabric hood boundary absorption muffling
-                    Distortion = 0.18f,       // TWEAK: Antique triode saturation mimicking a 19th-century phonograph cylinder
-                    Guttural = 0.12f,         // TWEAK: Subdued laryngeal dry grit representing mature paper-like vocal cords
-                    Reverb = 0.22f,           // TWEAK: Tightened chamber decay to simulate mask interior reflections and boost clarity
-                    WhisperAmount = 0.10f,    // Intent: dry air friction flowing beneath the heavy hood cloth layers
-                    BreathNoise = 0.15f       // Intent: voice-reactive leather mask exhaust valve ventilation
+                    OutputGain = 3.20f,       // TUNING: Boosted from 2.80f to beautifully penetrate through the heavy leather low-pass absorption mask
+                    Pitch = 0.82f,
+                    Formant = 0.85f,
+                    LowPass = 2200f,
+                    Distortion = 0.15f,       // TUNING: Mildly smoothed out for clean antique analog tube warmth
+                    Guttural = 0.12f,
+                    Reverb = 0.22f,
+                    WhisperAmount = 0.10f,
+                    BreathNoise = 0.15f
                 },
 
                 // =================================================================
@@ -37,15 +37,16 @@
                 [RoleTypeId.Scp096] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 2.4f,       // Intent: high gain boost to guarantee readability over textures
-                    Pitch = 1.06f,           // Intent: tense, shrunken, high-panic vocal chords
-                    Formant = 0.88f,         // Intent: uncanny biological mismatch (high pitch + wide hollow throat)
-                    FormantDrift = 0.70f,    // Intent: THE CORE CRACKLE: Aggressive LFO modulation creating a weeping, trembling voice
-                    BreathNoise = 0.75f,     // Intent: High-intensity air rush emulating severe sobbing hyperventilation
-                    WhisperAmount = 0.35f,   // Intent: De-voicing layer to split harmonic chords, making the voice sound broken and crying
-                    Distortion = 0.22f,      // Intent: Severe emotional strain / tearing of the vocal tract
-                    WetOrganic = 0.38f,      // Intent: High lacrimal fluid/saliva saturation from constant weeping
-                    LowPass = 4200f          // Intent: Soften high edges to retain a fragile, miserable character
+                    OutputGain = 2.45f,       // Aligned with the dynamic fallback configurations
+                    Pitch = 1.15f,
+                    Formant = 0.85f,
+                    LowPass = 3800f,
+                    Tremolo = 0.65f,
+                    FormantDrift = 0.60f,
+                    BreathNoise = 0.80f,
+                    WhisperAmount = 0.25f,
+                    Distortion = 0.12f,
+                    WetOrganic = 0.45f
                 },
 
                 // =================================================================
@@ -54,13 +55,16 @@
                 [RoleTypeId.Scp939] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 1.85f,
-                    Pitch = 0.55f,            // Intent: deep, predatory harmonic base
-                    Formant = 0.65f,          // Intent: heavily expanded reptilian vocal tract
-                    PredatoryCamouflage = 0.85f,  // AAA ALIGNMENT: Perfectly binds with our tactical multi-band processor
-                    BreathNoise = 0.50f,      // Intent: constant hissing, cold animalistic exhalation
-                    WetOrganic = 0.45f,       // Intent: dense mucous and saliva coating inside the jaw
-                    Distortion = 0.08f        // Intent: minimal laryngeal gravel
+                    OutputGain = 3.20f,           // Aligned with the dynamic baseline configuration
+                    Pitch = 0.55f,
+                    Formant = 0.65f,
+                    LowPass = 2400f,
+                    HighPass = 260f,
+                    PredatoryCamouflage = 0.65f,
+                    BreathNoise = 0.25f,
+                    WetOrganic = 0.45f,
+                    FormantDrift = 0.22f,
+                    Distortion = 0.08f
                 },
 
                 // =================================================================
@@ -70,14 +74,14 @@
                 {
                     Enable = true,
                     Mode = ScpVoicePresetMode.Default,
-                    OutputGain = 2.60f,       // Boosted to compensate for heavy physical dampening
-                    Pitch = 0.85f,            // Intent: heavy, structural mass slowdown
-                    Formant = 0.50f,          // FIX: Extreme throat cavity collapse to destroy human vowels
-                    StoneCrack = 1.35f,       // Intent: brutal, explosive discrete lattice structural ruptures
-                    StoneGrind = 1.20f,       // Intent: tectonic stick-slip friction scraping layer
-                    Distortion = 0.65f,       // Intent: physical material hardness clipping
-                    LowPass = 1100f,          // FIX: Drastic acoustic muffling inside thick solid cured concrete
-                    HighPass = 80f            // Remove absolute sub-bass mud
+                    OutputGain = 3.55f,       // TUNING: Heavily boosted from 2.60f to restore absolute volume lost to the thick 1100Hz solid concrete barrier absorption
+                    Pitch = 0.85f,
+                    Formant = 0.50f,
+                    StoneCrack = 0.52f,       // TUNING: Reduced from 1.35f. Separates crushing transients so they snap clearly instead of blurring into static hum
+                    StoneGrind = 0.40f,       // TUNING: Toned down from 1.20f for crisp friction texture boundaries
+                    Distortion = 0.22f,       // TUNING: Reduced from 0.65f to prevent the hard brickwall limiter from turning his voice into square-wave noise
+                    LowPass = 1100f,
+                    HighPass = 80f
                 },
 
                 // =================================================================
@@ -86,17 +90,18 @@
                 [RoleTypeId.Scp106] = new ScpVoicePreset
                 {
                     Enable = true,
-                    IsGlobalTransmission = true,
-                    OutputGain = 2.45f,
-                    Pitch = 0.52f,            // Intent: ancient, sub-octave dimensional abyss depth
-                    Formant = 0.48f,          // Intent: fully collapsed, rotted vocal cavity architecture
-                    DemonicOctaverMix = 0.25f, // Sub-bass expander anchoring his physical weight in the sub-frequency floor
-                    Distortion = 0.65f,       // Intent: severe acidic corrosion texture destroying wave boundaries
-                    LowPass = 850f,           // Intent: extreme, suffocating damp mud and subterranean dirt muffling
-                    Reverb = 0.40f,           // Intent: baseline environment containment leakage
-                    WetDecay = 0.95f,         // Intent: visceral viscous absorption (flooded slime walls)
-                    WetOrganic = 0.35f,       // Intent: slimy throat decomposition mechanics
-                    PocketEcho = 0.85f        // Intent: maximum non-Euclidean phase-inversion echo matrix
+                    IsGlobalTransmission = false,
+                    OutputGain = 2.65f,       // Aligned with the dynamic proximity configuration
+                    Pitch = 0.52f,
+                    Formant = 0.46f,
+                    DemonicOctaverMix = 0.25f,
+                    Distortion = 0.45f,
+                    LowPass = 1150f,
+                    Reverb = 0.40f,
+                    WetDecay = 0.90f,
+                    WetOrganic = 0.35f,
+                    PocketEcho = 0.80f,
+                    FormantDrift = 0.30f
                 },
 
                 // =================================================================
@@ -106,7 +111,7 @@
                 {
                     Enable = true,
                     OutputGain = 2.45f,
-                    Pitch = 1.28f,
+                    Pitch = 1.28f,            // Aligned with the optimized dynamic skeleton configuration
                     Formant = 1.15f,
                     DryCrackle = 0.42f,
                     FleshCrackle = 0.35f,
@@ -122,18 +127,18 @@
                     Enable = true,
                     Mode = ScpVoicePresetMode.Default,
                     OutputGain = 2.50f,
-                    Pitch = 0.95f,            // Keep fundamental clear for AI bot voice texturing
+                    Pitch = 0.95f,
                     Formant = 1.05f,
-                    DemonicOctaverMix = 0.17f, // Generates a pixelated dual-voice supercomputer entity layer
-                    SiliconModulation = 0.75f, // Cold, inhuman metallic intermodulation synthesis
-                    Bitcrush = 0.60f,         // Increased to violently fracture the sub-octave into binary steps
-                    SampleRateReduce = 0.55f, // Heavy digital aliasing artifacts
+                    DemonicOctaverMix = 0.17f,
+                    SiliconModulation = 0.75f, // Digital intermodulation ring modulation artifacts are intended here
+                    Bitcrush = 0.60f,
+                    SampleRateReduce = 0.55f,
                     Glitch = 0.40f,
-                    StaticNoise = 0.045f,     // A little of analog fuzz
+                    StaticNoise = 0.045f,
                     Distortion = 0.15f,
-                    Subharmonic = 0.20f,      // Sub-bass room hum
-                    DataBurst = 0.70f,        // High-frequency binary tracks
-                    HighPass = 70f,           // Unblock the new deep octaver floor
+                    Subharmonic = 0.20f,
+                    DataBurst = 0.70f,
+                    HighPass = 70f,
                     LowPass = 7500f
                 },
 
@@ -144,7 +149,7 @@
                 {
                     Enable = true,
                     Mode = ScpVoicePresetMode.Default,
-                    OutputGain = 3.10f,
+                    OutputGain = 3.10f,           // Optimized zombie gurgle configuration
                     Pitch = 0.65f,
                     Formant = 0.58f,
                     DeathRattle = 0.75f,
@@ -164,48 +169,48 @@
                 [RoleTypeId.Flamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 2.22f,
-                    Pitch = 1.55f,            // Intent: hyper-tension avian pitch signature
-                    Formant = 1.20f,          // Intent: tiny bird beak cavity resonance
-                    Chirp = 0.50f,            // Intent: stochastic avian syrinx FM frequency micro-sweeps
-                    Distortion = 0.12f        // Intent: light beak crunch
+                    OutputGain = 2.95f,           // TUNING: Boosted from 2.22f to compensate for severe energy loss in high-pitched transpositions
+                    Pitch = 1.55f,
+                    Formant = 1.20f,
+                    Chirp = 0.50f,
+                    Distortion = 0.12f
                 },
                 [RoleTypeId.AlphaFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 2.22f,
-                    Pitch = 1.42f,            // Intent: slightly larger alpha variant frame
-                    Formant = 1.12f,
+                    OutputGain = 2.95f,           // TUNING: Restored volume presence
+                    Pitch = 1.42f,
+                    Formant = 1.10f,
                     Chirp = 0.45f,
-                    Distortion = 0.20f
+                    Distortion = 0.15f
                 },
                 [RoleTypeId.ZombieFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 2.22f,
-                    Pitch = 1.15f,            // Intent: rotted, dropped avian speed
+                    OutputGain = 3.10f,           // TUNING: Boosted further to ensure rotten avian gurgles are readable
+                    Pitch = 1.15f,
                     Formant = 0.90f,
                     Chirp = 0.30f,
-                    Subharmonic = 0.40f,      // Intent: undead bird gut rattle
-                    Distortion = 0.45f
+                    Subharmonic = 0.40f,
+                    Distortion = 0.25f
                 },
                 [RoleTypeId.NtfFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 2.22f,
+                    OutputGain = 2.95f,
                     Pitch = 1.35f,
                     Formant = 1.10f,
                     Chirp = 0.38f,
-                    Distortion = 0.22f
+                    Distortion = 0.15f
                 },
                 [RoleTypeId.ChaosFlamingo] = new ScpVoicePreset
                 {
                     Enable = true,
-                    OutputGain = 2.25f,
+                    OutputGain = 2.95f,
                     Pitch = 1.25f,
                     Formant = 1.05f,
                     Chirp = 0.35f,
-                    Distortion = 0.30f
+                    Distortion = 0.18f
                 },
             };
         }
