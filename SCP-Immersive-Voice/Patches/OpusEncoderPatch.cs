@@ -13,6 +13,7 @@ namespace ScpImmersiveVoice.Patches
     {
         #region Statically Cached Reflection Metadata
         private static readonly MethodInfo CachedCreateEncoder;
+        private static readonly MethodInfo CachedDestroyEncoder;
         private static readonly FieldInfo CachedHandleField;
         private static readonly bool IsReflectionCacheValid;
         #endregion
@@ -22,18 +23,22 @@ namespace ScpImmersiveVoice.Patches
         {
             try
             {
-                // Isolating and freezing native bindings metadata to drop the invocation cost to absolute zero CPU metrics.
                 var wrapperType = Type.GetType("VoiceChat.Codec.OpusWrapper, Assembly-CSharp");
                 if (wrapperType is not null)
                 {
                     CachedCreateEncoder = wrapperType.GetMethod("CreateEncoder",
+                        BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+
+                    CachedDestroyEncoder = wrapperType.GetMethod("DestroyEncoder",
                         BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
                 }
 
                 CachedHandleField = typeof(OpusEncoder).GetField("_handle",
                     BindingFlags.Instance | BindingFlags.NonPublic);
 
-                IsReflectionCacheValid = CachedCreateEncoder is not null && CachedHandleField is not null;
+                IsReflectionCacheValid = CachedCreateEncoder is not null &&
+                                         CachedDestroyEncoder is not null &&
+                                         CachedHandleField is not null;
             }
             catch (Exception ex)
             {
@@ -52,11 +57,19 @@ namespace ScpImmersiveVoice.Patches
 
             try
             {
-                int sampleRate = VoiceChatSettings.SampleRate;
+                // Capture the original unmanaged handle pointer instantiated by vanilla constructor execution
+                IntPtr oldHandle = (IntPtr)CachedHandleField.GetValue(__instance);
 
-                // Allocation-free invocation pipeline routing parameters smoothly
-                var newHandle = (IntPtr)CachedCreateEncoder.Invoke(null, new object[] { sampleRate, 1, preset });
+                int sampleRate = VoiceChatSettings.SampleRate;
+                IntPtr newHandle = (IntPtr)CachedCreateEncoder.Invoke(null, new object[] { sampleRate, 1, preset });
+
                 if (newHandle == IntPtr.Zero) return;
+
+                // CRITICAL FIX: Safely deallocate the previous native handle to explicitly prevent severe heap memory leaks
+                if (oldHandle != IntPtr.Zero)
+                {
+                    CachedDestroyEncoder.Invoke(null, new object[] { oldHandle });
+                }
 
                 CachedHandleField.SetValue(__instance, newHandle);
             }
