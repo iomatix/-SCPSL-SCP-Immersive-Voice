@@ -44,7 +44,6 @@ namespace ScpImmersiveVoice
         #endregion
 
         #region Infrastructure Fields
-        private Harmony _harmony;
         private GameObject _updaterObject;
         #endregion
 
@@ -59,12 +58,6 @@ namespace ScpImmersiveVoice
         {
             StaticConfig = Config;
             IsDebug = Config?.Debug ?? false;
-
-            _harmony = new Harmony("scp.immersive.voice.opus.patch");
-
-            // Execute dynamic low-level byte patching safely
-            _harmony.CreateClassProcessor(typeof(OpusEncoderPatch)).Patch();
-            _harmony.CreateClassProcessor(typeof(OpusDecoderPatch)).Patch();
 
             // Construct infrastructure dependencies
             VoiceManager = new ScpVoiceManager();
