@@ -153,10 +153,11 @@ namespace SCP_Immersive_Voice.Managers
                                 state.PhysicalSpeaker.SetVolume(activePreset.OutputGain * 0.85f);
                             else
                                 state.PhysicalSpeaker.SetVolume(activePreset.OutputGain);
+                        }
                     }
                 }
             }
+            #endregion
         }
-        #endregion
     }
 }
