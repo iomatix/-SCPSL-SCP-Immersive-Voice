@@ -38,14 +38,20 @@ namespace SCP_Immersive_Voice.Managers
                 if (_sessions.TryGetValue(scp.PlayerId, out existing))
                     return existing;
 
-                int sessionId = DefaultAudioManager.Instance.CreateStreamSession(
+                // Architectural Upgrade: Transitioned to the generic, allocation-free CreateStreamSession pipeline
+                // Passing the 'scp' instance directly as TState avoids reference-capturing closures and heap garbage
+                int sessionId = DefaultAudioManager.Instance.CreateStreamSession<Player>(
                     position: scp.Position,
                     isSpatial: true,
                     minDistance: 4.25f,
                     maxDistance: _config.ProximityDistance,
                     volume: 1f,
+                    state: scp,
+                    validPlayersFilter: (p, scpSource) => p is not null && p.IsReady && p != scpSource,
                     priority: AudioPriority.High,
-                    validPlayersFilter: p => p is not null && p.IsReady && p != scp
+                    persistent: false,
+                    lifespan: null,
+                    autoCleanup: false
                 );
 
                 if (sessionId is 0) return null;
