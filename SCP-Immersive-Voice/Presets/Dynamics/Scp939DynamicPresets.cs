@@ -17,14 +17,14 @@
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
-            OutputGain = 1.85f,
-            Pitch = 0.55f,                // Predatory chest fundamental slowdown
-            Formant = 0.65f,               // Elongated reptilian throat volume
+            OutputGain = 3.20f,
+            Pitch = 0.55f,
+            Formant = 0.65f,
             LowPass = 2400f,
             HighPass = 260f,
-            PredatoryCamouflage = 0.65f,  // Converts speech into a creepy, unvoiced friction whisper
-            BreathNoise = 0.25f,          // Soft, rhythmic lung-air ventilation
-            WetOrganic = 0.45f,           // Saliva coating inside the split jaw
+            PredatoryCamouflage = 0.65f,
+            BreathNoise = 0.25f,
+            WetOrganic = 0.45f,
             FormantDrift = 0.22f,
             Distortion = 0.08f
         };
@@ -36,16 +36,16 @@
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
-            OutputGain = 2.00f,
-            Pitch = 0.98f,                // Matches standard human vocal chord vibration rates
-            Formant = 1.00f,               // Standard human larynx simulation
-            LaryngealAsymmetry = 0.35f,   // UNCANNY FIX: Microscopic phase drift representing non-human asymmetric throat muscles
+            OutputGain = 2.45f,
+            Pitch = 0.98f,
+            Formant = 1.00f,
+            LaryngealAsymmetry = 0.35f,
             LowPass = 5200f,
             HighPass = 0f,
             PredatoryCamouflage = 0.15f,
             BreathNoise = 0.06f,
-            WetOrganic = 0.12f,           // Slight fluid stickiness under the stolen skin
-            FormantDrift = 0.08f,          // Unstable throat muscle imitation drift
+            WetOrganic = 0.12f,
+            FormantDrift = 0.08f,
             Reverb = 0.05f
         };
 
@@ -56,13 +56,13 @@
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
-            OutputGain = 2.10f,
+            OutputGain = 3.65f,
             Pitch = 0.58f,
             Formant = 0.68f,
-            LaryngealAsymmetry = 0.60f,   // UNCANNY FIX: Strips human cues further to signify pure predatory intent
-            HighPass = 800f,              // Cuts chest thuds entirely to isolate cold, airy sibilants
+            LaryngealAsymmetry = 0.60f,
+            HighPass = 800f,
             LowPass = 2800f,
-            PredatoryCamouflage = 0.85f,  // Absolute unvoiced whisper replacement
+            PredatoryCamouflage = 0.85f,
             BreathNoise = 0.35f,
             WetOrganic = 0.50f,
             Distortion = 0.15f,
@@ -76,15 +76,15 @@
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
-            OutputGain = 2.30f,
+            OutputGain = 2.90f,
             Pitch = 0.68f,
             Formant = 0.62f,
-            DeathRattle = 0.40f,          // BIOLOGY FIX: Adds visceral, waterlogged trachea fluid gurgling
-            Guttural = 0.55f,             // Aggressive ventricular fold abrasion rasping
-            DemonicOctaverMix = 0.45f,    // Sub-octave chest reinforcement for kinetic threat
-            Distortion = 1.20f,           // Screaming operational laryngeal strain
+            DeathRattle = 0.40f,
+            Guttural = 0.55f,
+            DemonicOctaverMix = 0.45f,
+            Distortion = 0.75f,
             PredatoryCamouflage = 0.35f,
-            BreathNoise = 0.75f,          // Severe, suffocating lung pressure exhaust
+            BreathNoise = 0.75f,
             WetOrganic = 0.75f,
             WetDecay = 0.42f,
             HighPass = 150f,
@@ -98,13 +98,13 @@
         {
             Mode = ScpVoicePresetMode.Dynamic,
             Enable = true,
-            IsGlobalTransmission = true,  // Global Audio
-            OutputGain = 1.90f,
+            IsGlobalTransmission = true,
+            OutputGain = 2.80f,
             Pitch = 0.85f,
             Formant = 0.80f,
-            LowPass = 1200f,              // Cuts high components to simulate sound travelling through dense gas
+            LowPass = 1200f,
             HighPass = 0f,
-            Reverb = 0.55f,               // Smeared spatial room reflections representing disorientation
+            Reverb = 0.55f,
             PredatoryCamouflage = 0.45f,
             BreathNoise = 0.18f,
             WetOrganic = 0.35f,
