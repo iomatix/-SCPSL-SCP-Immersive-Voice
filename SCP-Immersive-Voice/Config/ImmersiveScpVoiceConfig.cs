@@ -15,7 +15,7 @@ namespace ScpImmersiveVoice.Config
         public bool EnableScpProximityVoice { get; set; } = true;
 
         [Description("SCP proximity chat radius in Unity units")]
-        public float ProximityDistance { get; set; } = 47.75f;
+        public float ProximityDistance { get; set; } = 60.25f;
 
         [Description("Enable audio effects (pitch/formant/distortion) for SCP voices")]
         public bool EnableScpVoiceEffects { get; set; } = true;
