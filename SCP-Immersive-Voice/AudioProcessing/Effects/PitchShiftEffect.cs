@@ -194,7 +194,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
 
         public void ResetState()
         {
-            Array.Clear(_ringBuffer, 0, _ringBuffer.Length);
+            if (_ringBuffer is not null) Array.Clear(_ringBuffer, 0, _ringBuffer.Length);
             _writeIndex = 0;
             _phase = 0f;
             _smoothPitch = _targetPitch;
