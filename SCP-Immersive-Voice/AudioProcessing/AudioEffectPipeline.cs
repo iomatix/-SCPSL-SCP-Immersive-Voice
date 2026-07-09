@@ -1,7 +1,6 @@
 ﻿using SCP_Immersive_Voice.AudioProcessing.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Logger = LabApi.Extensions.Misc.iLogger;
 
 namespace SCP_Immersive_Voice.AudioProcessing

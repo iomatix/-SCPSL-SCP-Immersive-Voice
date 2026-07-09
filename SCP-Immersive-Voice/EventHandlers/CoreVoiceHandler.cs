@@ -78,7 +78,7 @@ namespace ScpImmersiveVoice.EventHandlers
                     if (samples <= 0 || ScpVoiceDecoder.IsSilent(tempBuffer, samples, threshold: 0.001f))
                         return;
 
-                    ScpVoiceDecoder.ApplyEffects(tempBuffer, samples, sender);
+                    ScpVoiceDecoder.ApplyEffects(tempBuffer, samples, sender, session);
 
                     if (isForbiddenProximity)
                     {

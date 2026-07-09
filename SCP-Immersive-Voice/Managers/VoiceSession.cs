@@ -60,7 +60,7 @@ namespace SCP_Immersive_Voice.Managers
         #endregion
 
         #region Zero-Allocation Graph Synchronization Matrix
-        public void SynchronizePipelineGraph(ScpVoicePreset preset)
+        public void SynchronizePipelineGraph(ScpVoicePreset preset, bool forceReset)
         {
             if (preset is null) return;
 
@@ -71,51 +71,51 @@ namespace SCP_Immersive_Voice.Managers
 
             // 1. Dynamics & Gate
             float gateThreshold = preset.UseNoiseGate ? preset.NoiseGateThreshold : -52f;
-            UpdateOrRegisterSlot("Noise Gate", true, (gateThreshold, sampleRate), static s => new NoiseGateEffect(s.gateThreshold, s.sampleRate), gateThreshold);
+            UpdateOrRegisterSlot("Noise Gate", true, (gateThreshold, sampleRate), static s => new NoiseGateEffect(s.gateThreshold, s.sampleRate), gateThreshold, forceReset);
 
             // 2. Biomorphic & Pitch Processing
-            UpdateOrRegisterSlot("Vocal Shriek", preset.VocalShriek > 0f, (preset.VocalShriek, sampleRate), static s => new VocalShriekShifterEffect(s.VocalShriek, s.sampleRate), preset.VocalShriek);
-            UpdateOrRegisterSlot("Pitch Shift", Math.Abs(preset.Pitch - 1f) > 0.01f, (preset.Pitch, sampleRate), static s => new PitchShiftEffect(s.Pitch, s.sampleRate, 40f), preset.Pitch);
-            UpdateOrRegisterSlot("Formant Shift", Math.Abs(preset.Formant - 1f) > 0.01f, (preset.Formant, sampleRate), static s => new FormantShiftEffect(s.Formant, s.sampleRate), preset.Formant);
-            UpdateOrRegisterSlot("Formant Drift", preset.FormantDrift > 0f, preset.FormantDrift, static s => new FormantDriftEffect(s), preset.FormantDrift);
-            UpdateOrRegisterSlot("Laryngeal Asymmetry", preset.LaryngealAsymmetry > 0f, (preset.LaryngealAsymmetry, sampleRate), static s => new LaryngealAsymmetryEffect(s.LaryngealAsymmetry, s.sampleRate), preset.LaryngealAsymmetry);
-            UpdateOrRegisterSlot("Death Rattle", preset.DeathRattle > 0f, (preset.DeathRattle, sampleRate), static s => new DeathRattleEffect(s.DeathRattle, s.sampleRate), preset.DeathRattle);
-            UpdateOrRegisterSlot("Subharmonic Growl", preset.Subharmonic > 0f, (preset.Subharmonic, sampleRate), static s => new SubharmonicGrowlEffect(s.Subharmonic, s.sampleRate), preset.Subharmonic);
-            UpdateOrRegisterSlot("Demonic Octaver", preset.DemonicOctaverMix > 0f, (preset.DemonicOctaverMix, sampleRate), static s => new DemonicOctaverEffect(s.DemonicOctaverMix, s.sampleRate), preset.DemonicOctaverMix);
-            UpdateOrRegisterSlot("Guttural Resonance", preset.Guttural > 0f, (preset.Guttural, sampleRate), static s => new GutturalResonanceEffect(s.Guttural, s.sampleRate), preset.Guttural);
+            UpdateOrRegisterSlot("Vocal Shriek", preset.VocalShriek > 0f, (preset.VocalShriek, sampleRate), static s => new VocalShriekShifterEffect(s.VocalShriek, s.sampleRate), preset.VocalShriek, forceReset);
+            UpdateOrRegisterSlot("Pitch Shift", Math.Abs(preset.Pitch - 1f) > 0.01f, (preset.Pitch, sampleRate), static s => new PitchShiftEffect(s.Pitch, s.sampleRate, 40f), preset.Pitch, forceReset);
+            UpdateOrRegisterSlot("Formant Shift", Math.Abs(preset.Formant - 1f) > 0.01f, (preset.Formant, sampleRate), static s => new FormantShiftEffect(s.Formant, s.sampleRate), preset.Formant, forceReset);
+            UpdateOrRegisterSlot("Formant Drift", preset.FormantDrift > 0f, preset.FormantDrift, static s => new FormantDriftEffect(s), preset.FormantDrift, forceReset);
+            UpdateOrRegisterSlot("Laryngeal Asymmetry", preset.LaryngealAsymmetry > 0f, (preset.LaryngealAsymmetry, sampleRate), static s => new LaryngealAsymmetryEffect(s.LaryngealAsymmetry, s.sampleRate), preset.LaryngealAsymmetry, forceReset);
+            UpdateOrRegisterSlot("Death Rattle", preset.DeathRattle > 0f, (preset.DeathRattle, sampleRate), static s => new DeathRattleEffect(s.DeathRattle, s.sampleRate), preset.DeathRattle, forceReset);
+            UpdateOrRegisterSlot("Subharmonic Growl", preset.Subharmonic > 0f, (preset.Subharmonic, sampleRate), static s => new SubharmonicGrowlEffect(s.Subharmonic, s.sampleRate), preset.Subharmonic, forceReset);
+            UpdateOrRegisterSlot("Demonic Octaver", preset.DemonicOctaverMix > 0f, (preset.DemonicOctaverMix, sampleRate), static s => new DemonicOctaverEffect(s.DemonicOctaverMix, s.sampleRate), preset.DemonicOctaverMix, forceReset);
+            UpdateOrRegisterSlot("Guttural Resonance", preset.Guttural > 0f, (preset.Guttural, sampleRate), static s => new GutturalResonanceEffect(s.Guttural, s.sampleRate), preset.Guttural, forceReset);
 
             // 3. Saturation & Modulation Models
-            UpdateOrRegisterSlot("Distortion", preset.Distortion > 0f, (preset.Distortion, sampleRate), static s => new DistortionEffect(s.Distortion, s.sampleRate), preset.Distortion);
-            UpdateOrRegisterSlot("Silicon Ring Modulator", preset.SiliconModulation > 0f, (preset.SiliconModulation, sampleRate), static s => new SiliconRingModulatorEffect(s.SiliconModulation, s.sampleRate), preset.SiliconModulation);
-            UpdateOrRegisterSlot("Screech Modulator", preset.ScreechModulation > 0f, (preset.ScreechModulation, sampleRate), static s => new ScreechModulatorEffect(s.ScreechModulation, s.sampleRate), preset.ScreechModulation);
-            UpdateOrRegisterSlot("Bitcrush", preset.Bitcrush > 0f, preset.Bitcrush, static s => new BitcrushEffect(s), preset.Bitcrush);
-            UpdateOrRegisterSlot("Sample Rate Reducer", preset.SampleRateReduce > 0f, (preset.SampleRateReduce, sampleRate), static s => new SampleRateReducerEffect(s.SampleRateReduce, s.sampleRate), preset.SampleRateReduce);
-            UpdateOrRegisterSlot("Tremolo", preset.Tremolo > 0f, preset.Tremolo, static s => new TremoloEffect(s), preset.Tremolo);
-            UpdateOrRegisterSlot("Glitch Burst", preset.Glitch > 0f, (preset.Glitch, sampleRate), static s => new GlitchBurstEffect(s.Glitch, s.sampleRate), preset.Glitch);
-            UpdateOrRegisterSlot("Predatory Camouflage", preset.PredatoryCamouflage > 0f, (preset.PredatoryCamouflage, sampleRate), static s => new PredatoryCamouflageEffect(s.PredatoryCamouflage, s.sampleRate), preset.PredatoryCamouflage);
+            UpdateOrRegisterSlot("Distortion", preset.Distortion > 0f, (preset.Distortion, sampleRate), static s => new DistortionEffect(s.Distortion, s.sampleRate), preset.Distortion, forceReset);
+            UpdateOrRegisterSlot("Silicon Ring Modulator", preset.SiliconModulation > 0f, (preset.SiliconModulation, sampleRate), static s => new SiliconRingModulatorEffect(s.SiliconModulation, s.sampleRate), preset.SiliconModulation, forceReset);
+            UpdateOrRegisterSlot("Screech Modulator", preset.ScreechModulation > 0f, (preset.ScreechModulation, sampleRate), static s => new ScreechModulatorEffect(s.ScreechModulation, s.sampleRate), preset.ScreechModulation, forceReset);
+            UpdateOrRegisterSlot("Bitcrush", preset.Bitcrush > 0f, preset.Bitcrush, static s => new BitcrushEffect(s), preset.Bitcrush, forceReset);
+            UpdateOrRegisterSlot("Sample Rate Reducer", preset.SampleRateReduce > 0f, (preset.SampleRateReduce, sampleRate), static s => new SampleRateReducerEffect(s.SampleRateReduce, s.sampleRate), preset.SampleRateReduce, forceReset);
+            UpdateOrRegisterSlot("Tremolo", preset.Tremolo > 0f, preset.Tremolo, static s => new TremoloEffect(s), preset.Tremolo, forceReset);
+            UpdateOrRegisterSlot("Glitch Burst", preset.Glitch > 0f, (preset.Glitch, sampleRate), static s => new GlitchBurstEffect(s.Glitch, s.sampleRate), preset.Glitch, forceReset);
+            UpdateOrRegisterSlot("Predatory Camouflage", preset.PredatoryCamouflage > 0f, (preset.PredatoryCamouflage, sampleRate), static s => new PredatoryCamouflageEffect(s.PredatoryCamouflage, s.sampleRate), preset.PredatoryCamouflage, forceReset);
 
             // 4. Acoustic Respiration & Synthesis Layer
-            UpdateOrRegisterSlot("Whisper Filter", preset.WhisperAmount > 0f, (preset.WhisperAmount, sampleRate), static s => new WhisperFilterEffect(s.WhisperAmount, s.sampleRate), preset.WhisperAmount);
-            UpdateOrRegisterSlot("Breath Noise", preset.BreathNoise > 0f, (preset.BreathNoise, sampleRate), static s => new BreathNoiseEffect(s.BreathNoise, s.sampleRate), preset.BreathNoise);
-            UpdateOrRegisterSlot("Static Noise", preset.StaticNoise > 0f, (preset.StaticNoise, sampleRate), static s => new StaticNoiseEffect(s.StaticNoise, s.sampleRate), preset.StaticNoise);
+            UpdateOrRegisterSlot("Whisper Filter", preset.WhisperAmount > 0f, (preset.WhisperAmount, sampleRate), static s => new WhisperFilterEffect(s.WhisperAmount, s.sampleRate), preset.WhisperAmount, forceReset);
+            UpdateOrRegisterSlot("Breath Noise", preset.BreathNoise > 0f, (preset.BreathNoise, sampleRate), static s => new BreathNoiseEffect(s.BreathNoise, s.sampleRate), preset.BreathNoise, forceReset);
+            UpdateOrRegisterSlot("Static Noise", preset.StaticNoise > 0f, (preset.StaticNoise, sampleRate), static s => new StaticNoiseEffect(s.StaticNoise, s.sampleRate), preset.StaticNoise, forceReset);
 
             // 5. Environmental Textures
-            UpdateOrRegisterSlot("Dry Crackle", preset.DryCrackle > 0f, (preset.DryCrackle, sampleRate), static s => new DryCrackleEffect(s.DryCrackle, s.sampleRate), preset.DryCrackle);
-            UpdateOrRegisterSlot("Flesh Crackle", preset.FleshCrackle > 0f, (preset.FleshCrackle, sampleRate), static s => new FleshCrackleEffect(s.FleshCrackle, s.sampleRate), preset.FleshCrackle);
-            UpdateOrRegisterSlot("Stone Crack", preset.StoneCrack > 0f, (preset.StoneCrack, sampleRate), static s => new StoneCrackEffect(s.StoneCrack, s.sampleRate), preset.StoneCrack);
-            UpdateOrRegisterSlot("Stone Grind", preset.StoneGrind > 0f, (preset.StoneGrind, sampleRate), static s => new StoneGrindEffect(s.StoneGrind, s.sampleRate), preset.StoneGrind);
+            UpdateOrRegisterSlot("Dry Crackle", preset.DryCrackle > 0f, (preset.DryCrackle, sampleRate), static s => new DryCrackleEffect(s.DryCrackle, s.sampleRate), preset.DryCrackle, forceReset);
+            UpdateOrRegisterSlot("Flesh Crackle", preset.FleshCrackle > 0f, (preset.FleshCrackle, sampleRate), static s => new FleshCrackleEffect(s.FleshCrackle, s.sampleRate), preset.FleshCrackle, forceReset);
+            UpdateOrRegisterSlot("Stone Crack", preset.StoneCrack > 0f, (preset.StoneCrack, sampleRate), static s => new StoneCrackEffect(s.StoneCrack, s.sampleRate), preset.StoneCrack, forceReset);
+            UpdateOrRegisterSlot("Stone Grind", preset.StoneGrind > 0f, (preset.StoneGrind, sampleRate), static s => new StoneGrindEffect(s.StoneGrind, s.sampleRate), preset.StoneGrind, forceReset);
 
             // 6. Digital & Aero-Acoustic Signals
-            UpdateOrRegisterSlot("Chirp", preset.Chirp > 0f, (preset.Chirp, sampleRate), static s => new ChirpEffect(s.Chirp, s.sampleRate), preset.Chirp);
-            UpdateOrRegisterSlot("Digital Data Burst", preset.DataBurst > 0f, (preset.DataBurst, sampleRate), static s => new DigitalDataBurstEffect(s.DataBurst, s.sampleRate), preset.DataBurst);
-            UpdateOrRegisterSlot("Wet Organic", preset.WetOrganic > 0f, (preset.WetOrganic, sampleRate), static s => new WetOrganicEffect(s.WetOrganic, s.sampleRate), preset.WetOrganic);
+            UpdateOrRegisterSlot("Chirp", preset.Chirp > 0f, (preset.Chirp, sampleRate), static s => new ChirpEffect(s.Chirp, s.sampleRate), preset.Chirp, forceReset);
+            UpdateOrRegisterSlot("Digital Data Burst", preset.DataBurst > 0f, (preset.DataBurst, sampleRate), static s => new DigitalDataBurstEffect(s.DataBurst, s.sampleRate), preset.DataBurst, forceReset);
+            UpdateOrRegisterSlot("Wet Organic", preset.WetOrganic > 0f, (preset.WetOrganic, sampleRate), static s => new WetOrganicEffect(s.WetOrganic, s.sampleRate), preset.WetOrganic, forceReset);
 
             // 7. Space & Time-Domain FX
-            UpdateOrRegisterSlot("Low-Pass Filter", preset.LowPass > 0f, (preset.LowPass, sampleRate), static s => new LowPassEffect(s.LowPass, s.sampleRate), preset.LowPass);
-            UpdateOrRegisterSlot("High-Pass Filter", preset.HighPass > 0f, (preset.HighPass, sampleRate), static s => new HighPassEffect(s.HighPass, s.sampleRate), preset.HighPass);
-            UpdateOrRegisterSlot("Wet Decay", preset.WetDecay > 0f, (preset.WetDecay, sampleRate), static s => new WetDecayEffect(s.WetDecay, s.sampleRate), preset.WetDecay);
-            UpdateOrRegisterSlot("Pocket Dimension Echo", preset.PocketEcho > 0f, (preset.PocketEcho, sampleRate), static s => new PocketDimensionEchoEffect(s.PocketEcho, s.sampleRate), preset.PocketEcho);
-            UpdateOrRegisterSlot("Reverb", preset.Reverb > 0f, (preset.Reverb, sampleRate), static s => new ReverbEffect(s.Reverb, s.sampleRate), preset.Reverb);
+            UpdateOrRegisterSlot("Low-Pass Filter", preset.LowPass > 0f, (preset.LowPass, sampleRate), static s => new LowPassEffect(s.LowPass, s.sampleRate), preset.LowPass, forceReset);
+            UpdateOrRegisterSlot("High-Pass Filter", preset.HighPass > 0f, (preset.HighPass, sampleRate), static s => new HighPassEffect(s.HighPass, s.sampleRate), preset.HighPass, forceReset);
+            UpdateOrRegisterSlot("Wet Decay", preset.WetDecay > 0f, (preset.WetDecay, sampleRate), static s => new WetDecayEffect(s.WetDecay, s.sampleRate), preset.WetDecay, forceReset);
+            UpdateOrRegisterSlot("Pocket Dimension Echo", preset.PocketEcho > 0f, (preset.PocketEcho, sampleRate), static s => new PocketDimensionEchoEffect(s.PocketEcho, s.sampleRate), preset.PocketEcho, forceReset);
+            UpdateOrRegisterSlot("Reverb", preset.Reverb > 0f, (preset.Reverb, sampleRate), static s => new ReverbEffect(s.Reverb, s.sampleRate), preset.Reverb, forceReset);
 
             Pipeline.UpdateEffects(_reusableEffectsList);
 
@@ -131,7 +131,8 @@ namespace SCP_Immersive_Voice.Managers
             bool isActive,
             TState state,
             Func<TState, TEffect> factory,
-            float runtimeValue) where TEffect : class, IAudioEffect
+            float runtimeValue,
+            bool forceReset) where TEffect : class, IAudioEffect
         {
             if (!isActive) return;
 
@@ -140,6 +141,11 @@ namespace SCP_Immersive_Voice.Managers
                 if (existingInstance is IAdjustableAudioEffect adjustable)
                 {
                     adjustable.AdjustParameter(runtimeValue);
+                }
+
+                if (forceReset && existingInstance is IResettableAudioEffect resettable)
+                {
+                    resettable.ResetState();
                 }
 
                 _temporaryMap[effectName] = existingInstance;

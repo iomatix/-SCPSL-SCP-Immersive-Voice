@@ -8,7 +8,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Stateful Noise Gate utilizing energy-based RMS envelope tracking.
     /// Integrates signal power over time to smoothly transition states and protect vocal sibilants.
     /// </summary>
-    public class NoiseGateEffect : IAdjustableAudioEffect
+    public class NoiseGateEffect : IAdjustableAudioEffect, IResettableAudioEffect
     {
         #region Private Operational Properties
         private float _thresholdLinearSquared;
@@ -109,6 +109,13 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
         {
             float thresholdLinear = value.Clamp(-96f, 0f).DbToLinear();
             _thresholdLinearSquared = thresholdLinear * thresholdLinear;
+        }
+
+        public void ResetState()
+        {
+            _envelope = 0f;
+            _currentGain = 1f;
+            _holdCounter = 0;
         }
     }
 }

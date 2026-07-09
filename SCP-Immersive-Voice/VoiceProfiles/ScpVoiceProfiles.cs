@@ -10,84 +10,54 @@ using System.Collections.Concurrent;
 
 namespace SCP_Immersive_Voice.VoiceProfiles
 {
-    /// <summary>
-    /// Configuration routing facade acting as the primary boundary layer 
-    /// between abstract identity states and stateful live session graphs.
-    /// </summary>
     public static class ScpVoiceProfiles
     {
         #region Public Registry Matrix Channels
         public static ConcurrentQueue<IDynamicVoicePresetProvider> DynamicProviders { get; } = new();
-
-        /// <summary>
-        /// Global bridge property linking the static routing facade directly to the active instance-bound session heap.
-        /// </summary>
         public static ScpVoiceManager VoiceManagerInstance { get; set; }
         #endregion
 
         #region Private Performance Caches
         private static readonly ImmersiveScpVoiceConfig Config = ImmersiveScpVoicePlugin.StaticConfig;
-
-        // PERFORMANCE UPGRADE: Pre-cached single instance configuration preventing 
-        // redundant object allocations on hot execution paths.
         private static readonly ScpVoicePreset DisabledPreset = new() { Enable = false };
-
-        // PERFORMANCE UPGRADE: Statically mapped framework default allocations matrix
-        // preventing continuous dictionary recreation and heap garbage collection cascades.
         private static readonly System.Collections.Generic.Dictionary<PlayerRoles.RoleTypeId, ScpVoicePreset> DefaultPresetsCache = ScpVoiceDefaultPresets.Create();
         #endregion
 
         #region Pipeline Resolution Routing
-        /// <summary>
-        /// Backward-compatible bridge accessing the session-bound pipeline. 
-        /// Safeguards the graph synchronization loop under a thread-safe context lock.
-        /// </summary>
-        public static AudioEffectPipeline GetPipelineFor(Player player, ScpVoicePreset targetPreset)
+        public static (AudioEffectPipeline Pipeline, ScpVoicePreset Preset) ResolvePipelineContext(Player player, VoiceSession session)
         {
-            if (player is null || targetPreset is null || VoiceManagerInstance is null)
-                return null;
+            if (player is null || session is null || VoiceManagerInstance is null)
+                return (null, null);
 
-            var session = VoiceManagerInstance.StartSession(player);
-            if (session is null)
-                return null;
+            var targetPreset = GetPreset(player);
+            if (targetPreset is null || !targetPreset.Enable)
+                return (null, null);
 
             lock (session.SyncLock)
             {
-                // PERFORMANCE UPGRADE: Swapped to UtcNow to bypass localized machine timezone computations
                 DateTime now = DateTime.UtcNow;
 
                 bool presetChanged = session.LastAppliedPreset is null || !ArePresetsAcousticallyIdentical(session.LastAppliedPreset, targetPreset);
                 bool silenceGapTriggered = (now - session.LastPacketReceivedTime).TotalSeconds > 0.5;
 
-                // INTENT: Rebuild the DSP graph if the structural configuration profile mutates, 
-                // OR flush internal delay lines/buffers if a transmission gap suggests a new phrase has started.
                 if (presetChanged || silenceGapTriggered)
                 {
-                    session.SynchronizePipelineGraph(targetPreset);
+                    session.SynchronizePipelineGraph(targetPreset, forceReset: silenceGapTriggered);
                     session.LastAppliedPreset = targetPreset.Clone();
                 }
 
-                // Maintain the temporal tracking reference to monitor incoming packet frequency.
                 session.LastPacketReceivedTime = now;
             }
 
-            return session.Pipeline;
+            return (session.Pipeline, targetPreset);
         }
 
-        /// <summary>
-        /// Forces an immediate structural teardown of the subject's stream, flushing both hardware and DSP allocations.
-        /// </summary>
         public static void ClearCacheFor(Player player)
         {
             if (player is null || VoiceManagerInstance is null) return;
-
-            // Terminating the session natively disposes of both the circular buffer arrays and filters simultaneously
             VoiceManagerInstance.StopSession(player);
         }
 
-        /// <summary>
-        /// Resolves and extracts the current active DSP configuration profile assigned to the target player entity context.
-        /// </summary>
         public static ScpVoicePreset GetPreset(Player player)
         {
             if (player is null)
@@ -97,7 +67,6 @@ namespace SCP_Immersive_Voice.VoiceProfiles
 
             if (Config is not null && Config.EnableDynamicStates)
             {
-                // Enumerating concurrent collections cleanly via C# 9.0 primitives
                 foreach (var provider in DynamicProviders)
                 {
                     if (provider is not null && provider.TryGetDynamicPreset(player, out var dynamicPreset))
@@ -112,7 +81,6 @@ namespace SCP_Immersive_Voice.VoiceProfiles
                 return preset;
             }
 
-            // Route through our cached, allocation-free baseline map instead of continuously recreating dictionaries
             return DefaultPresetsCache.TryGetValue(role, out var defaultPreset)
                 ? defaultPreset
                 : DisabledPreset;
@@ -120,16 +88,11 @@ namespace SCP_Immersive_Voice.VoiceProfiles
         #endregion
 
         #region Diagnostic Delta Arithmetic
-        /// <summary>
-        /// Evaluates float-precision metrics to avoid redundant, expensive DSP graph rebuild constraints.
-        /// </summary>
         public static bool ArePresetsAcousticallyIdentical(ScpVoicePreset a, ScpVoicePreset b)
         {
             if (ReferenceEquals(a, b)) return true;
             if (a is null || b is null) return false;
 
-            // MASTER-LEVEL ARCHITECTURE ALIGNMENT: 
-            // Normalized comparison step thresholds using uniform relational layouts to optimize JIT execution pipelines.
             return Math.Abs(a.Pitch - b.Pitch) < 0.001f &&
                    Math.Abs(a.Formant - b.Formant) < 0.001f &&
                    Math.Abs(a.LowPass - b.LowPass) < 0.001f &&

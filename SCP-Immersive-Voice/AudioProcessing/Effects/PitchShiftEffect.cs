@@ -1,5 +1,6 @@
 ﻿using LabApi.Extensions;
 using SCP_Immersive_Voice.AudioProcessing.Interfaces;
+using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -10,7 +11,7 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
     /// Uses a circular buffer with dual read pointers and cubic Hermite spline interpolation.
     /// Provides completely natural pitch shifting without time-stretching or metallic artifacts.
     /// </summary>
-    public class PitchShiftEffect : IAdjustableAudioEffect
+    public class PitchShiftEffect : IAdjustableAudioEffect, IResettableAudioEffect
     {
         #region Private Constants
         private const float TwoPi = 2f * Mathf.PI;
@@ -190,5 +191,14 @@ namespace SCP_Immersive_Voice.AudioProcessing.Effects
             SetPitch(value);
         }
         #endregion
+
+        public void ResetState()
+        {
+            Array.Clear(_ringBuffer, 0, _ringBuffer.Length);
+            _writeIndex = 0;
+            _phase = 0f;
+            _smoothPitch = _targetPitch;
+        }
+
     }
 }
