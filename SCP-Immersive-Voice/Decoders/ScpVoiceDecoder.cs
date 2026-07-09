@@ -10,19 +10,12 @@ namespace SCP_Immersive_Voice.Decoders
     public static class ScpVoiceDecoder
     {
         #region Stateful DSP Session Context Container
-        /// <summary>
-        /// Context class to persist DSP and filter states across discrete frame boundaries.
-        /// </summary>
         private class SessionDspContext
         {
-            public float CurrentGain = 1.0f;
             public float LastX = 0.0f;
             public float LastY = 0.0f;
         }
 
-        /// <summary>
-        /// Thread-safe weak association table dynamically mapping DSP contexts to active VoiceSessions.
-        /// </summary>
         private static readonly ConditionalWeakTable<VoiceSession, SessionDspContext> SessionContexts = new();
         #endregion
 
@@ -62,25 +55,16 @@ namespace SCP_Immersive_Voice.Decoders
 
                 // 1. Hardware DC Blocker (Subsonic High-Pass Filter)
                 // Removes unmanaged DC hardware offset and microphone baseline electricity.
-                // This stops dynamic gain modulators from converting flat voltage offsets into an audible buzz.
                 ApplyDcBlocker(pcm, length, dspContext);
 
-                // 2. Pre-Processing Gate (Executed on CLEANED audio data)
-                // Now accurately identifies genuine environmental silence since hardware hum has been stripped.
-                if (IsSilent(pcm, length, 0.004f))
-                {
-                    Array.Clear(pcm, 0, length);
-                    return;
-                }
+                // [USUNIĘTO AGC] - Pozwalamy naturalnej dynamice głosu napędzać łańcuch efektów.
+                // Wbudowany w potok NoiseGateEffect dba o wycinanie tła bez kompresowania sygnału.
 
-                // 3. Stateful Predictive Smooth AGC Processing
-                ApplyAgcStateful(pcm, length, dspContext, targetPeak: 0.65f, maxGain: 2.5f);
-
-                // 4. Core DSP Effect Pipeline Execution
+                // 2. Core DSP Effect Pipeline Execution
                 pipeline.Process(pcm, length);
 
-                // 5. Consolidated Post-Processing Master Out & Soft Brickwall Limiter
-                ExecutePostDspPipeline(pcm, length, preset.OutputGain, threshold: 0.98f);
+                // 3. Consolidated Post-Processing Master Out (Pristine transparent limit)
+                ExecutePostDspPipeline(pcm, length, preset.OutputGain);
             }
         }
         #endregion
@@ -88,15 +72,13 @@ namespace SCP_Immersive_Voice.Decoders
         #region Advanced Mathematical DSP Sub-Filters
         private static void ApplyDcBlocker(float[] pcm, int length, SessionDspContext context)
         {
-            const float R = 0.995f; // Pole coefficient tuning cutoff to ~25Hz at 48kHz sample rate
+            const float R = 0.995f;
             float lastX = context.LastX;
             float lastY = context.LastY;
 
             for (int i = 0; i < length; i++)
             {
                 float x = pcm[i];
-
-                // y[n] = x[n] - x[n-1] + R * y[n-1]
                 float y = x - lastX + R * lastY;
 
                 if (float.IsNaN(y) || float.IsInfinity(y))
@@ -127,47 +109,9 @@ namespace SCP_Immersive_Voice.Decoders
             return true;
         }
 
-        private static void ApplyAgcStateful(float[] pcm, int length, SessionDspContext context, float targetPeak, float maxGain)
+        private static void ExecutePostDspPipeline(float[] pcm, int length, float gain)
         {
-            float peak = 0.0f;
-            for (int i = 0; i < length; i++)
-            {
-                float absVal = Math.Abs(pcm[i]);
-                if (absVal > peak) peak = absVal;
-            }
-
-            float targetGain = context.CurrentGain;
-            if (peak > 0.001f)
-            {
-                targetGain = targetPeak / peak;
-                if (targetGain > maxGain) targetGain = maxGain;
-                if (targetGain < 0.15f) targetGain = 0.15f;
-            }
-            else
-            {
-                targetGain = 1.0f;
-            }
-
-            // Asymmetric smoothing window coefficients (Fast attack, relaxed release decay)
-            float smoothingFactor = (targetGain < context.CurrentGain) ? 0.20f : 0.03f;
-            float startGain = context.CurrentGain;
-            float endGain = startGain + (targetGain - startGain) * smoothingFactor;
-
-            // Sample-accurate linear interpolation over the discrete frame buffer block
-            for (int i = 0; i < length; i++)
-            {
-                float t = (float)i / length;
-                float currentSampleGain = startGain + (endGain - startGain) * t;
-                pcm[i] *= currentSampleGain;
-            }
-
-            context.CurrentGain = endGain;
-        }
-
-        private static void ExecutePostDspPipeline(float[] pcm, int length, float gain, float threshold)
-        {
-            float t = Math.Abs(threshold);
-            gain = gain.Clamp(0.0f, 3.0f);
+            gain = gain.Clamp(0.0f, 4.0f);
             bool skipGain = Math.Abs(gain - 1.0f) < 0.001f;
 
             for (int i = 0; i < length; i++)
@@ -183,16 +127,8 @@ namespace SCP_Immersive_Voice.Decoders
                     v *= gain;
                 }
 
-                // Smooth analog emulation transfer curve clip
-                float absV = Math.Abs(v);
-                if (absV > 0.8f)
-                {
-                    float excess = absV - 0.8f;
-                    absV = 0.8f + excess / (1.0f + excess * excess);
-
-                    if (absV > t) absV = t;
-                    v = Math.Sign(v) * absV;
-                }
+                if (v > 1.0f) v = 1.0f;
+                else if (v < -1.0f) v = -1.0f;
 
                 pcm[i] = v;
             }
