@@ -10,9 +10,6 @@ using System.Collections.Concurrent;
 
 namespace SCP_Immersive_Voice.Managers
 {
-    /// <summary>
-    /// Thread-safe central manager governing multi-threaded stream allocations and temporal positional tracking matrices.
-    /// </summary>
     public class ScpVoiceManager
     {
         #region Private Repositories & Thread Guards
@@ -22,9 +19,6 @@ namespace SCP_Immersive_Voice.Managers
         #endregion
 
         #region Session Management Lifecycle
-        /// <summary>
-        /// Establishes and tracks a hardware streaming channel for a specific anomalous unit using double-checked pattern matching.
-        /// </summary>
         public VoiceSession StartSession(Player scp)
         {
             if (scp is null) return null;
@@ -34,12 +28,9 @@ namespace SCP_Immersive_Voice.Managers
 
             lock (_allocationLock)
             {
-                // Double-checked locking thread validation guard
                 if (_sessions.TryGetValue(scp.PlayerId, out existing))
                     return existing;
 
-                // Architectural Upgrade: Transitioned to the generic, allocation-free CreateStreamSession pipeline
-                // Passing the 'scp' instance directly as TState avoids reference-capturing closures and heap garbage
                 int sessionId = DefaultAudioManager.Instance.CreateStreamSession<Player>(
                     position: scp.Position,
                     isSpatial: true,
@@ -64,9 +55,6 @@ namespace SCP_Immersive_Voice.Managers
             }
         }
 
-        /// <summary>
-        /// Tears down an active hardware streaming session for a target unit and purges tracking references.
-        /// </summary>
         public void StopSession(Player scp)
         {
             if (scp is null) return;
@@ -75,18 +63,21 @@ namespace SCP_Immersive_Voice.Managers
             if (_sessions.TryRemove(key, out var session))
             {
                 DefaultAudioManager.Instance.DestroySession(session.SessionId);
+                session.Dispose();
                 iLogger.Debug(nameof(ScpVoiceManager), $"[VOICE HARDENING] Audio Streaming Session no. {session.SessionId} successfully destroyed for {scp.Nickname}", _config.Debug);
             }
         }
 
-        /// <summary>
-        /// Systematically cuts all active audio channels from the native sound engine heap.
-        /// </summary>
         public void StopAllSessions()
         {
             foreach (var (_, session) in _sessions)
             {
-                try { DefaultAudioManager.Instance.DestroySession(session.SessionId); } catch { }
+                try
+                {
+                    DefaultAudioManager.Instance.DestroySession(session.SessionId);
+                    session.Dispose();
+                }
+                catch { }
             }
 
             iLogger.Debug(nameof(ScpVoiceManager), "[VOICE HARDENING] All active audio streaming slots cleared from native heap.", _config.Debug);
@@ -95,19 +86,12 @@ namespace SCP_Immersive_Voice.Managers
         #endregion
 
         #region Data Transmission Pipelines
-        /// <summary>
-        /// Appends pre-allocated rolling PCM blocks directly into the native stream mixer.
-        /// Bypasses redundant dictionary tracking lookups for maximum execution speed.
-        /// </summary>
         public void AppendPcmDirect(VoiceSession session, float[] samples)
         {
             if (session is null || samples is null || samples.Length == 0) return;
             DefaultAudioManager.Instance.AppendPcmData(session.SessionId, samples);
         }
 
-        /// <summary>
-        /// Appends raw float PCM sample blocks directly into the stateful session execution pipeline.
-        /// </summary>
         public void AppendPcm(Player scp, float[] samples)
         {
             if (scp is null || samples is null || samples.Length == 0) return;
@@ -124,10 +108,6 @@ namespace SCP_Immersive_Voice.Managers
         #endregion
 
         #region Positional & Spatialization Tick Processor
-        /// <summary>
-        /// Traverses tracked channels, updates hardware positional transforms, and evaluates spatial filters.
-        /// Executed at a high frequency on the primary server tick thread.
-        /// </summary>
         public void UpdatePositions()
         {
             if (_sessions.IsEmpty) return;
@@ -139,13 +119,17 @@ namespace SCP_Immersive_Voice.Managers
                 {
                     if (_sessions.TryRemove(playerId, out var deadSession))
                     {
-                        try { DefaultAudioManager.Instance.DestroySession(deadSession.SessionId); } catch { }
+                        try
+                        {
+                            DefaultAudioManager.Instance.DestroySession(deadSession.SessionId);
+                            deadSession.Dispose();
+                        }
+                        catch { }
                         iLogger.Warn(nameof(ScpVoiceManager), $"[VOICE SECURITY] Pruned voice session {deadSession.SessionId} for disconnected PlayerId: {playerId}");
                     }
                     continue;
                 }
 
-                // Push vector changes straight into the native engine layer
                 DefaultAudioManager.Instance.SetSessionPosition(session.SessionId, scp.Position);
 
                 var state = DefaultAudioManager.Instance.GetSessionState(session.SessionId);
@@ -155,8 +139,6 @@ namespace SCP_Immersive_Voice.Managers
                 if (activePreset is not null)
                 {
                     bool targetSpatialization = !activePreset.IsGlobalTransmission;
-
-                    // Route requests into the clean temporal debouncer context to shelter buffers from flushes
                     bool debouncedSpatialization = session.SpatialDebouncer.UpdateState(targetSpatialization);
 
                     if (state.IsSpatial != debouncedSpatialization)
@@ -169,7 +151,8 @@ namespace SCP_Immersive_Voice.Managers
 
                             if (!debouncedSpatialization)
                                 state.PhysicalSpeaker.SetVolume(activePreset.OutputGain * 0.85f);
-                        }
+                            else
+                                state.PhysicalSpeaker.SetVolume(activePreset.OutputGain);
                     }
                 }
             }
