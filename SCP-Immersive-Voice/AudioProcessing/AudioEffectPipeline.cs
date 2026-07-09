@@ -51,14 +51,13 @@ namespace SCP_Immersive_Voice.AudioProcessing
         /// Atomically replaces the active effect stack under a full pipeline lock 
         /// to prevent concurrent processing threads from executing a partially rebuilt graph.
         /// </summary>
-        public void UpdateEffects(IEnumerable<IAudioEffect> newEffects)
+        public void UpdateEffects(List<IAudioEffect> newEffects)
         {
             if (newEffects is null) return;
 
             lock (_pipelineLock)
             {
-                // Replaced messy instantiation loops with an optimized, statically cached conditional LINQ predicate filter.
-                _effects = newEffects.Where(static effect => effect is not null).ToArray();
+                _effects = newEffects.ToArray();
             }
         }
 
