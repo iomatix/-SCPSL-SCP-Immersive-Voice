@@ -9,22 +9,24 @@ namespace SCP_Immersive_Voice.Decoders
 {
     public static class ScpVoiceDecoder
     {
-        #region Stateful AGC Ephemeral Context
+        #region Stateful DSP Session Context Container
         /// <summary>
-        /// Context class to persist AGC state and target gain across discrete packet boundaries.
+        /// Context class to persist DSP and filter states across discrete frame boundaries.
         /// </summary>
-        private class AgcState
+        private class SessionDspContext
         {
             public float CurrentGain = 1.0f;
+            public float LastX = 0.0f;
+            public float LastY = 0.0f;
         }
 
         /// <summary>
-        /// Thread-safe weak association table to dynamically map AGC states to VoiceSessions without modifying their structure.
+        /// Thread-safe weak association table dynamically mapping DSP contexts to active VoiceSessions.
         /// </summary>
-        private static readonly ConditionalWeakTable<VoiceSession, AgcState> SessionAgcStates = new();
+        private static readonly ConditionalWeakTable<VoiceSession, SessionDspContext> SessionContexts = new();
         #endregion
 
-        #region Core Decoding & Encoding Pipelines (Session-Insulated)
+        #region Core Decoding & Encoding Pipelines
         public static int Decode(VoiceSession session, byte[] rawOpusData, int dataLength, float[] targetBuffer)
         {
             if (session is null || rawOpusData is null || dataLength <= 0 || targetBuffer is null)
@@ -56,28 +58,59 @@ namespace SCP_Immersive_Voice.Decoders
 
             lock (session.SyncLock)
             {
-                // 1. Pre-Processing Hardware Gate
-                // Prevents ambient or cable static hum from bypassing the processing chain during microphone idle states.
-                if (IsSilent(pcm, length, 0.0035f))
+                var dspContext = SessionContexts.GetOrCreateValue(session);
+
+                // 1. Hardware DC Blocker (Subsonic High-Pass Filter)
+                // Removes unmanaged DC hardware offset and microphone baseline electricity.
+                // This stops dynamic gain modulators from converting flat voltage offsets into an audible buzz.
+                ApplyDcBlocker(pcm, length, dspContext);
+
+                // 2. Pre-Processing Gate (Executed on CLEANED audio data)
+                // Now accurately identifies genuine environmental silence since hardware hum has been stripped.
+                if (IsSilent(pcm, length, 0.004f))
                 {
                     Array.Clear(pcm, 0, length);
                     return;
                 }
 
-                // 2. Stateful Look-Ahead Smooth AGC Processing
-                // Stabilizes signal amplitude with zero boundary phase splits.
-                ApplyAgcStateful(session, pcm, length, targetPeak: 0.65f, maxGain: 2.5f);
+                // 3. Stateful Predictive Smooth AGC Processing
+                ApplyAgcStateful(pcm, length, dspContext, targetPeak: 0.65f, maxGain: 2.5f);
 
-                // 3. Core DSP Pipeline Execution
+                // 4. Core DSP Effect Pipeline Execution
                 pipeline.Process(pcm, length);
 
-                // 4. Consolidated Single-Pass Post-Processing & Soft-Clipping
+                // 5. Consolidated Post-Processing Master Out & Soft Brickwall Limiter
                 ExecutePostDspPipeline(pcm, length, preset.OutputGain, threshold: 0.98f);
             }
         }
         #endregion
 
         #region Advanced Mathematical DSP Sub-Filters
+        private static void ApplyDcBlocker(float[] pcm, int length, SessionDspContext context)
+        {
+            const float R = 0.995f; // Pole coefficient tuning cutoff to ~25Hz at 48kHz sample rate
+            float lastX = context.LastX;
+            float lastY = context.LastY;
+
+            for (int i = 0; i < length; i++)
+            {
+                float x = pcm[i];
+
+                // y[n] = x[n] - x[n-1] + R * y[n-1]
+                float y = x - lastX + R * lastY;
+
+                if (float.IsNaN(y) || float.IsInfinity(y))
+                    y = 0.0f;
+
+                lastX = x;
+                lastY = y;
+                pcm[i] = y;
+            }
+
+            context.LastX = lastX;
+            context.LastY = lastY;
+        }
+
         public static bool IsSilent(float[] pcm, int length, float threshold = 0.01f)
         {
             if (pcm is null || length <= 0)
@@ -94,6 +127,43 @@ namespace SCP_Immersive_Voice.Decoders
             return true;
         }
 
+        private static void ApplyAgcStateful(float[] pcm, int length, SessionDspContext context, float targetPeak, float maxGain)
+        {
+            float peak = 0.0f;
+            for (int i = 0; i < length; i++)
+            {
+                float absVal = Math.Abs(pcm[i]);
+                if (absVal > peak) peak = absVal;
+            }
+
+            float targetGain = context.CurrentGain;
+            if (peak > 0.001f)
+            {
+                targetGain = targetPeak / peak;
+                if (targetGain > maxGain) targetGain = maxGain;
+                if (targetGain < 0.15f) targetGain = 0.15f;
+            }
+            else
+            {
+                targetGain = 1.0f;
+            }
+
+            // Asymmetric smoothing window coefficients (Fast attack, relaxed release decay)
+            float smoothingFactor = (targetGain < context.CurrentGain) ? 0.20f : 0.03f;
+            float startGain = context.CurrentGain;
+            float endGain = startGain + (targetGain - startGain) * smoothingFactor;
+
+            // Sample-accurate linear interpolation over the discrete frame buffer block
+            for (int i = 0; i < length; i++)
+            {
+                float t = (float)i / length;
+                float currentSampleGain = startGain + (endGain - startGain) * t;
+                pcm[i] *= currentSampleGain;
+            }
+
+            context.CurrentGain = endGain;
+        }
+
         private static void ExecutePostDspPipeline(float[] pcm, int length, float gain, float threshold)
         {
             float t = Math.Abs(threshold);
@@ -106,19 +176,19 @@ namespace SCP_Immersive_Voice.Decoders
 
                 if (float.IsNaN(v) || float.IsInfinity(v))
                 {
-                    v = 0f;
+                    v = 0.0f;
                 }
                 else if (!skipGain)
                 {
                     v *= gain;
                 }
 
-                // Soft-knee brickwall analog emulation clipping
+                // Smooth analog emulation transfer curve clip
                 float absV = Math.Abs(v);
                 if (absV > 0.8f)
                 {
                     float excess = absV - 0.8f;
-                    absV = 0.8f + excess / (1f + excess * excess);
+                    absV = 0.8f + excess / (1.0f + excess * excess);
 
                     if (absV > t) absV = t;
                     v = Math.Sign(v) * absV;
@@ -126,48 +196,6 @@ namespace SCP_Immersive_Voice.Decoders
 
                 pcm[i] = v;
             }
-        }
-
-        private static void ApplyAgcStateful(VoiceSession session, float[] pcm, int length, float targetPeak, float maxGain)
-        {
-            var state = SessionAgcStates.GetOrCreateValue(session);
-
-            float peak = 0f;
-            for (int i = 0; i < length; i++)
-            {
-                float absVal = Math.Abs(pcm[i]);
-                if (absVal > peak) peak = absVal;
-            }
-
-            // Target gain resolution logic based on current envelope peak
-            float targetGain = state.CurrentGain;
-            if (peak > 0.001f)
-            {
-                targetGain = targetPeak / peak;
-                if (targetGain > maxGain) targetGain = maxGain;
-                if (targetGain < 0.15f) targetGain = 0.15f;
-            }
-            else
-            {
-                // Smoothly decay back to standard unity gain when input drops to absolute silence
-                targetGain = 1.0f;
-            }
-
-            // Attack/Release asymmetric response smoothing coefficients
-            float smoothingFactor = (targetGain < state.CurrentGain) ? 0.25f : 0.04f;
-            float endGain = state.CurrentGain + (targetGain - state.CurrentGain) * smoothingFactor;
-            float startGain = state.CurrentGain;
-
-            // Sample-by-sample linear interpolation of the gain multiplier across the audio frame buffer.
-            // This guarantees flawless continuous wave boundaries, permanently eradicating the 50Hz switching buzz.
-            for (int i = 0; i < length; i++)
-            {
-                float interpolationFactor = (float)i / length;
-                float currentSampleGain = startGain + (endGain - startGain) * interpolationFactor;
-                pcm[i] *= currentSampleGain;
-            }
-
-            state.CurrentGain = endGain;
         }
         #endregion
     }

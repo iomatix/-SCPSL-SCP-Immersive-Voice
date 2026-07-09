@@ -1,5 +1,4 @@
-﻿using HarmonyLib;
-using LabApi.Events.Arguments.PlayerEvents;
+﻿using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features;
@@ -12,7 +11,6 @@ using SCP_Immersive_Voice.Managers;
 using SCP_Immersive_Voice.VoiceProfiles;
 using ScpImmersiveVoice.Config;
 using ScpImmersiveVoice.EventHandlers;
-using ScpImmersiveVoice.Patches;
 using System;
 using UnityEngine;
 using Logger = LabApi.Extensions.Misc.iLogger;
@@ -29,7 +27,7 @@ namespace ScpImmersiveVoice
         public override string Name => "SCP Immersive Voice";
         public override string Description => "Enables proximity voice chat for SCPs and adds real-time audio DSP effects.";
         public override string Author => "iomatix";
-        public override Version Version => new(2, 2, 1);
+        public override Version Version => new(2, 2, 2);
         public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
         public override LoadPriority Priority { get; } = LoadPriority.High;
         #endregion
@@ -106,7 +104,6 @@ namespace ScpImmersiveVoice
 
         public override void Disable()
         {
-            _harmony?.UnpatchAll("scp.immersive.voice.opus.patch");
 
             // Detach macro server tracking lifecycles
             ServerEvents.RoundStarted -= OnRoundStart;
