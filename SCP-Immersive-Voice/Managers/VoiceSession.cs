@@ -126,10 +126,6 @@ namespace SCP_Immersive_Voice.Managers
             }
         }
 
-        /// <summary>
-        /// Odizolowana, generyczna metoda synchronizacji slotu. 
-        /// Statyczna lambda w połączeniu z generycznym parametrem TState gwarantuje całkowity brak alokacji na stercie (0 GC Cost).
-        /// </summary>
         private void UpdateOrRegisterSlot<TEffect, TState>(
             string effectName,
             bool isActive,
